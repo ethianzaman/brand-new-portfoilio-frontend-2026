@@ -193,65 +193,104 @@ export function AboutCMS({ initial }: { initial: AboutData }) {
 
   // ── Hero ──────────────────────────────────────────────────
 
+  // const handleSaveHero = async (
+  //   values: Partial<AboutHero> & {
+  //     imageFile?: File | null;
+  //   },
+  // ) => {
+  //   try {
+  //     const formData = new FormData();
+  //     console.log("INPUT VALUES:", values);
+  //     console.log("BIO specifically:", values.bio);
+
+  //     for (const pair of formData.entries()) {
+  //       console.log("FORM:", pair[0], pair[1]);
+  //     }
+
+  //     if (values.name) formData.append("name", values.name);
+  //     if (values.title) formData.append("title", values.title);
+  //     if (values.subtitle) formData.append("subtitle", values.subtitle);
+  //     if (values.location) formData.append("location", values.location);
+  //     if (values.experience) {
+  //       formData.append("experience", values.experience);
+  //     }
+
+  //     if (values.resumeUrl) {
+  //       formData.append("resumeUrl", values.resumeUrl);
+  //     }
+
+  //     if (values.bio) {
+  //       formData.append("bio", JSON.stringify(values.bio));
+  //     }
+
+  //     // ✅ FILE upload (Cloudinary)
+  //     if (values.imageFile) {
+  //       formData.append("image", values.imageFile);
+  //     }
+
+  //     // ✅ URL upload (IMPORTANT FIX)
+  //     else if (values.image) {
+  //       formData.append("image", values.image);
+  //     }
+
+  //     for (const pair of formData.entries()) {
+  //       console.log("FORM:", pair[0], pair[1]);
+  //     }
+
+  //     const updatedHero = await dashboardUpdateHero(formData);
+
+  //     setHero(updatedHero);
+
+  //     setShowHeroModal(false);
+
+  //     showToast("Hero section updated successfully");
+  //   } catch (error: unknown) {
+  //     const errMessage =
+  //       error instanceof Error ? error.message : "Failed to update hero";
+  //     console.error("Error updating hero:", error);
+
+  //     showToast(errMessage);
+  //   }
+  // };
+
   const handleSaveHero = async (
-    values: Partial<AboutHero> & {
-      imageFile?: File | null;
-    },
+    values: Partial<AboutHero> & { imageFile?: File | null },
   ) => {
     try {
       const formData = new FormData();
+
       if (values.name) formData.append("name", values.name);
       if (values.title) formData.append("title", values.title);
       if (values.subtitle) formData.append("subtitle", values.subtitle);
       if (values.location) formData.append("location", values.location);
-      if (values.experience) {
-        formData.append("experience", values.experience);
-      }
+      if (values.experience) formData.append("experience", values.experience);
+      if (values.resumeUrl) formData.append("resumeUrl", values.resumeUrl);
+      if (values.bio) formData.append("bio", JSON.stringify(values.bio));
 
-      if (values.resumeUrl) {
-        formData.append("resumeUrl", values.resumeUrl);
-      }
-
-      if (values.bio) {
-        formData.append("bio", JSON.stringify(values.bio));
-      }
-
-
-      // ✅ FILE upload (Cloudinary)
       if (values.imageFile) {
         formData.append("image", values.imageFile);
-      }
-
-      // ✅ URL upload (IMPORTANT FIX)
-      else if (values.image) {
+      } else if (values.image) {
         formData.append("image", values.image);
       }
 
-      for (const pair of formData.entries()) {
-        console.log("FORM:", pair[0], pair[1]);
-      }
-
       const updatedHero = await dashboardUpdateHero(formData);
-
       setHero(updatedHero);
-
       setShowHeroModal(false);
-
       showToast("Hero section updated successfully");
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const errMessage =
+        error instanceof Error ? error.message : "Failed to update hero";
       console.error("Error updating hero:", error);
-
-      showToast(error.message || "Failed to update hero");
+      showToast(errMessage);
     }
   };
-
   // ── Experience CRUD ───────────────────────────────────────
   async function handleSaveExp(data: Omit<Experience, "id">) {
     if (editExp) {
-      const updated = await dashboardUpdateExperience(editExp.id, data);
+      const updated = await dashboardUpdateExperience(editExp._id, data);
       if (updated)
         setExperiences((prev) =>
-          prev.map((e) => (e.id === editExp.id ? updated : e)),
+          prev.map((e) => (e._id === editExp._id ? updated : e)),
         );
       showToast("Experience updated");
     } else {
@@ -266,10 +305,10 @@ export function AboutCMS({ initial }: { initial: AboutData }) {
   // ── Education CRUD ────────────────────────────────────────
   async function handleSaveEdu(data: Omit<Education, "id">) {
     if (editEdu) {
-      const updated = await dashboardUpdateEducation(editEdu.id, data);
+      const updated = await dashboardUpdateEducation(editEdu._id, data);
       if (updated)
         setEducations((prev) =>
-          prev.map((e) => (e.id === editEdu.id ? updated : e)),
+          prev.map((e) => (e._id === editEdu._id ? updated : e)),
         );
       showToast("Education updated");
     } else {
@@ -284,10 +323,10 @@ export function AboutCMS({ initial }: { initial: AboutData }) {
   // ── Values CRUD ───────────────────────────────────────────
   async function handleSaveVal(data: Omit<Value, "id">) {
     if (editVal) {
-      const updated = await dashboardUpdateValue(editVal.id, data);
+      const updated = await dashboardUpdateValue(editVal._id, data);
       if (updated)
         setValues((prev) =>
-          prev.map((v) => (v.id === editVal.id ? updated : v)),
+          prev.map((v) => (v._id === editVal._id ? updated : v)),
         );
       showToast("Value updated");
     } else {
@@ -304,20 +343,25 @@ export function AboutCMS({ initial }: { initial: AboutData }) {
     if (!deleteTarget) return;
     if (deleteTarget.type === "exp") {
       await dashboardDeleteExperience(deleteTarget.id);
-      setExperiences((prev) => prev.filter((e) => e.id !== deleteTarget.id));
+      setExperiences((prev) =>
+        prev.filter((e) => e._id?.toString() !== deleteTarget.id),
+      );
       showToast("Experience deleted");
     } else if (deleteTarget.type === "edu") {
       await dashboardDeleteEducation(deleteTarget.id);
-      setEducations((prev) => prev.filter((e) => e.id !== deleteTarget.id));
+      setEducations(
+        (prev) => prev.filter((e) => e._id?.toString() !== deleteTarget.id), // ✅ fixed
+      );
       showToast("Education deleted");
     } else {
       await dashboardDeleteValue(deleteTarget.id);
-      setValues((prev) => prev.filter((v) => v.id !== deleteTarget.id));
+      setValues((prev) =>
+        prev.filter((v) => v._id?.toString() !== deleteTarget.id),
+      );
       showToast("Value deleted");
     }
     setDeleteTarget(null);
   }
-
   return (
     <>
       {/* ── Stats ── */}
@@ -516,7 +560,7 @@ export function AboutCMS({ initial }: { initial: AboutData }) {
           <div className="divide-y divide-zinc-100 dark:divide-zinc-800">
             {filteredExps.map((exp) => (
               <div
-                key={exp.id}
+                key={exp._id?.toString()}
                 className="grid grid-cols-12 gap-4 px-5 py-4 items-center
                            hover:bg-zinc-50 dark:hover:bg-zinc-800/40
                            transition-colors"
@@ -594,7 +638,7 @@ export function AboutCMS({ initial }: { initial: AboutData }) {
                     onClick={() =>
                       setDeleteTarget({
                         type: "exp",
-                        id: exp.id,
+                        id: exp._id?.toString(),
                         label: exp.role,
                       })
                     }
@@ -682,7 +726,7 @@ export function AboutCMS({ initial }: { initial: AboutData }) {
           <div className="divide-y divide-zinc-100 dark:divide-zinc-800">
             {filteredEdus.map((edu) => (
               <div
-                key={edu.id}
+                key={edu._id?.toString()}
                 className="grid grid-cols-12 gap-4 px-5 py-4 items-center
                            hover:bg-zinc-50 dark:hover:bg-zinc-800/40 transition-colors"
               >
@@ -736,7 +780,7 @@ export function AboutCMS({ initial }: { initial: AboutData }) {
                     onClick={() =>
                       setDeleteTarget({
                         type: "edu",
-                        id: edu.id,
+                        id: edu._id?.toString(),
                         label: edu.degree,
                       })
                     }
@@ -823,7 +867,7 @@ export function AboutCMS({ initial }: { initial: AboutData }) {
           <div className="divide-y divide-zinc-100 dark:divide-zinc-800">
             {filteredVals.map((val) => (
               <div
-                key={val.id}
+                key={val._id?.toString()}
                 className="grid grid-cols-12 gap-4 px-5 py-4 items-center
                            hover:bg-zinc-50 dark:hover:bg-zinc-800/40 transition-colors"
               >
@@ -873,7 +917,7 @@ export function AboutCMS({ initial }: { initial: AboutData }) {
                     onClick={() =>
                       setDeleteTarget({
                         type: "val",
-                        id: val.id,
+                        id: val._id?.toString(),
                         label: val.title,
                       })
                     }
@@ -930,7 +974,7 @@ export function AboutCMS({ initial }: { initial: AboutData }) {
 
       {showExpModal && (
         <ExperienceModal
-          key={editExp?.id ?? "new-exp"}
+          key={editExp?._id ?? "new-exp"}
           experience={editExp}
           onSave={handleSaveExp}
           onCancel={() => {
@@ -942,7 +986,7 @@ export function AboutCMS({ initial }: { initial: AboutData }) {
 
       {showEduModal && (
         <EducationModal
-          key={editEdu?.id ?? "new-edu"}
+          key={editEdu?._id ?? "new-edu"}
           education={editEdu}
           onSave={handleSaveEdu}
           onCancel={() => {
@@ -954,7 +998,7 @@ export function AboutCMS({ initial }: { initial: AboutData }) {
 
       {showValModal && (
         <ValueModal
-          key={editVal?.id ?? "new-val"}
+          key={editVal?._id ?? "new-val"}
           value={editVal}
           onSave={handleSaveVal}
           onCancel={() => {

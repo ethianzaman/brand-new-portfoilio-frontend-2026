@@ -32,7 +32,7 @@ export function AboutValues({ values }: { values: Value[] }) {
         {values.map((val) => {
           const Icon = ICON_MAP[val.icon] ?? Code2
           return (
-            <div key={val.id}
+            <div key={val._id?.toString()}
               className="flex flex-col gap-4 p-6 rounded-2xl
                          bg-white dark:bg-zinc-900
                          border border-zinc-200 dark:border-zinc-800

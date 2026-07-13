@@ -101,9 +101,7 @@ export function HeroModal({ hero, onSave, onCancel }: Props) {
       location,
       experience,
       resumeUrl,
-      // bio: bio.filter((p) => p.trim()),
-      // imageFile: selectedFile,
-
+      bio: bio.filter((p) => p.trim()), 
       image: uploadMode === "url" ? image : undefined,
       imageFile: selectedFile,
     });

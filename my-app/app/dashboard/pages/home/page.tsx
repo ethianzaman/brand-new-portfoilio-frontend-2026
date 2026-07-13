@@ -14,8 +14,8 @@ export default function HomeCMS() {
   const [formData, setFormData] = useState({
     hero: {
       name: 'Ethian Dev',
-      title: 'Full Stack Developer',
-      bio: 'I build fast, scalable, and beautiful web applications...',
+      title: 'Full Stack Engineer',
+      bio: 'I build fast, scalable,and beautiful web applications...',
       image: 'https://i.ibb.co/jZwLHrfT/IMG-20260318-213819.png',
     },
     stats: [

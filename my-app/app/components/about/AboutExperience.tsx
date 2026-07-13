@@ -30,7 +30,7 @@ export function AboutExperience({ experiences }: { experiences: Experience[] }) 
                         hidden sm:block" />
 
         {experiences.map((exp) => (
-          <div key={exp.id}
+          <div key={exp._id?.toString()}
             className="relative flex gap-6 pb-10 last:pb-0">
 
             {/* Dot on timeline */}

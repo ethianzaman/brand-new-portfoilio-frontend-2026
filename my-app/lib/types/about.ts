@@ -10,7 +10,7 @@ export interface AboutHero {
 }
 
 export interface Experience {
-  id:           string
+  _id:           string
   role:         string
   company:      string
   type:         string
@@ -21,7 +21,7 @@ export interface Experience {
 }
 
 export interface Education {
-  id:          string
+  _id:          string
   degree:      string
   school:      string
   period:      string
@@ -30,7 +30,7 @@ export interface Education {
 }
 
 export interface Value {
-  id:    string
+  _id:    string
   icon:  string
   title: string
   desc:  string

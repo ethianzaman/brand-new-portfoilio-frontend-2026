@@ -10,6 +10,7 @@ const ICONS = [
   'Shield', 'Zap', 'Cloud', 'Lock',
 ]
 
+
 const COLORS = [
   '#6366f1', '#8b5cf6', '#ec4899', '#10b981',
   '#06b6d4', '#f59e0b', '#ef4444', '#f97316',
@@ -36,16 +37,6 @@ const labelCls = 'text-xs font-semibold text-zinc-600 dark:text-zinc-400 upperca
 export function ServiceFormModal({ service, onSave, onCancel }: Props) {
   const isEdit = !!service
   const [loading,   setLoading]   = useState(false)
-  // const [title,     setTitle]     = useState('')
-  // const [desc,      setDesc]      = useState('')
-  // const [icon,      setIcon]      = useState('Monitor')
-  // const [color,     setColor]     = useState('#6366f1')
-  // const [popular,   setPopular]   = useState(false)
-  // const [tags,      setTags]      = useState('')
-  // const [features,  setFeatures]  = useState<ServiceFeature[]>([{ text: '' }])
-
-  
-  
   const [title, setTitle] = useState(service?.title ?? '')
   const [desc, setDesc] = useState(service?.description ?? '')
   const [icon, setIcon] = useState(service?.icon ?? 'Monitor')
@@ -57,23 +48,6 @@ export function ServiceFormModal({ service, onSave, onCancel }: Props) {
       ? service.features 
       : [{ text: '' }]
   )
-
-  // Populate when editing
-  // useEffect(() => {
-  //   if (service) {
-  //     setTitle(service.title)
-  //     setDesc(service.description)
-  //     setIcon(service.icon)
-  //     setColor(service.color)
-  //     setPopular(service.popular ?? false)
-  //     setTags(service.tags.join(', '))
-  //     setFeatures(
-  //       service.features.length > 0
-  //         ? service.features
-  //         : [{ text: '' }]
-  //     )
-  //   }
-  // }, [service])
 
   // ── Feature list helpers ───────────────────────────────────
   function addFeature() {
@@ -95,6 +69,7 @@ export function ServiceFormModal({ service, onSave, onCancel }: Props) {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     if (!title.trim() || !desc.trim()) return
+    console.log("Form is submitting data..."); 
     setLoading(true)
     await onSave({
       title:       title.trim(),

@@ -163,23 +163,10 @@ export async function dashboardGetAbout(): Promise<AboutData> {
 }
 
 // ── HERO (উইথ ইমেজ আপলোড - FormData) ──────────────────────────────
-// export async function dashboardUpdateHero(
-//   formData: FormData // 👈 নোট: ফ্রন্টএন্ড ফর্ম থেকে এবার সরাসরি FormData পাঠাতে হবে
-// ): Promise<AboutData['hero']> {
-//   const res = await fetch(`${API_BASE_URL}/about/hero`, {
-//     method: 'PUT',
-//     // নোট: FormData পাঠালে Content-Type হেডার ম্যানুয়ালি সেট করতে হয় না, ব্রাউজার নিজে করে নেয়
-//     body: formData,
-//   });
-//   if (!res.ok) throw new Error('Failed to update hero');
-//   const data = await res.json();
-//   return data.hero;
-// }
 
-// lib/services/about.services.ts এর ভেতরের অংশ
 export async function dashboardUpdateHero(formData: FormData) {
   // আপনার সঠিক ব্যাকএন্ড ইউআরএলটি এখানে বসানো হলো
-  const res = await fetch("http://localhost:5000/api/about/hero", {
+  const res = await fetch(`${API_BASE_URL}/about/hero`, {
     method: "PUT", // ব্যাকএন্ডের router.put এর সাথে মিল রেখে PUT করা হলো
     body: formData, // এখানে ফ্রন্টএন্ডের FormData (যার ভেতর image ও bio আছে) পাঠানো হচ্ছে
     // নোট: FormData পাঠানোর সময় 'Content-Type' হেডার দেওয়ার প্রয়োজন নেই, ব্রাউজার নিজে থেকেই তা সেট করে নেয়।
@@ -198,15 +185,26 @@ export async function dashboardUpdateHero(formData: FormData) {
 
 // ── EXPERIENCE ──────────────────────────────────────────
 export async function dashboardCreateExperience(
-  data: Omit<Experience, "id">,
+  data: Omit<Experience, "_id">,
 ): Promise<Experience> {
   const res = await fetch(`${API_BASE_URL}/about/experiences`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: {
+      "Content-Type": "application/json",
+    },
     body: JSON.stringify(data),
   });
-  if (!res.ok) throw new Error("Failed to create experience");
+
+  console.log("Response status:", res.status);
+
   const result = await res.json();
+
+  console.log("Backend response:", result);
+
+  if (!res.ok) {
+    throw new Error(result.message || "Failed to create experience");
+  }
+
   return result.experience;
 }
 
@@ -231,9 +229,8 @@ export async function dashboardDeleteExperience(id: string): Promise<boolean> {
   return res.ok;
 }
 
-// ── EDUCATION ───────────────────────────────────────────
 export async function dashboardCreateEducation(
-  data: Omit<Education, "id">,
+  data: Omit<Education, "_id">,
 ): Promise<Education> {
   const res = await fetch(`${API_BASE_URL}/about/educations`, {
     method: "POST",
@@ -242,25 +239,27 @@ export async function dashboardCreateEducation(
   });
   if (!res.ok) throw new Error("Failed to create education");
   const result = await res.json();
+  console.log("CREATE EDU RESULT:", result); // ← add
   return result.education;
 }
 
 export async function dashboardUpdateEducation(
-  id: string,
-  data: Partial<Omit<Education, "id">>,
+  _id: string,
+  data: Partial<Omit<Education, "_id">>,
 ): Promise<Education | null> {
-  const res = await fetch(`${API_BASE_URL}/about/educations/${id}`, {
+  console.log("SERVICE CALLED WITH ID:", _id); // ← add
+  const res = await fetch(`${API_BASE_URL}/about/educations/${_id}`, {
     method: "PUT",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(data),
   });
-  if (!res.ok) return null;
   const result = await res.json();
+  console.log("SERVICE RESULT:", result); // ← add
+  if (!res.ok) return null;
   return result.education;
 }
-
-export async function dashboardDeleteEducation(id: string): Promise<boolean> {
-  const res = await fetch(`${API_BASE_URL}/about/educations/${id}`, {
+export async function dashboardDeleteEducation(_id: string): Promise<boolean> {
+  const res = await fetch(`${API_BASE_URL}/about/educations/${_id}`, {
     method: "DELETE",
   });
   return res.ok;
@@ -268,7 +267,7 @@ export async function dashboardDeleteEducation(id: string): Promise<boolean> {
 
 // ── VALUES ──────────────────────────────────────────────
 export async function dashboardCreateValue(
-  data: Omit<Value, "id">,
+  data: Omit<Value, "_id">,
 ): Promise<Value> {
   const res = await fetch(`${API_BASE_URL}/about/values`, {
     method: "POST",
@@ -281,10 +280,10 @@ export async function dashboardCreateValue(
 }
 
 export async function dashboardUpdateValue(
-  id: string,
-  data: Partial<Omit<Value, "id">>,
+  _id: string,
+  data: Partial<Omit<Value, "_id">>,
 ): Promise<Value | null> {
-  const res = await fetch(`${API_BASE_URL}/about/values/${id}`, {
+  const res = await fetch(`${API_BASE_URL}/about/values/${_id}`, {
     method: "PUT",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(data),
@@ -294,8 +293,8 @@ export async function dashboardUpdateValue(
   return result.value;
 }
 
-export async function dashboardDeleteValue(id: string): Promise<boolean> {
-  const res = await fetch(`${API_BASE_URL}/about/values/${id}`, {
+export async function dashboardDeleteValue(_id: string): Promise<boolean> {
+  const res = await fetch(`${API_BASE_URL}/about/values/${_id}`, {
     method: "DELETE",
   });
   return res.ok;

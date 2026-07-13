@@ -23,7 +23,7 @@ export function AboutEducation({ educations }: { educations: Education[] }) {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
         {educations.map(edu => (
-          <div key={edu.id}
+          <div key={edu._id?.toString()}
             className="flex flex-col gap-4 p-6 rounded-2xl
                        bg-white dark:bg-zinc-900
                        border border-zinc-200 dark:border-zinc-800

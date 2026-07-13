@@ -1,33 +1,53 @@
-'use client'
-import { useState } from 'react'
-import { Trash2, AlertTriangle, X, Loader2 } from 'lucide-react'
-import { Service } from '@/lib/types/services'
+"use client";
+import { useState } from "react";
+import { Trash2, AlertTriangle, X, Loader2 } from "lucide-react";
+import { Service } from "@/lib/types/services";
 
 interface Props {
-  service:   Service
-  onConfirm: () => Promise<void>
-  onCancel:  () => void
+  service: Service;
+  onConfirm: () => Promise<void>;
+  onCancel: () => void;
 }
 
 export function ServiceDeleteModal({ service, onConfirm, onCancel }: Props) {
-  const [loading, setLoading] = useState(false)
+  const [loading, setLoading] = useState(false);
+
+  // async function handleConfirm() {
+  //   setLoading(true)
+  //   await onConfirm()
+  //   setLoading(false)
+  // }
 
   async function handleConfirm() {
-    setLoading(true)
-    await onConfirm()
-    setLoading(false)
+    console.log("===== MODAL DELETE BUTTON CLICKED =====");
+
+    setLoading(true);
+
+    try {
+      await onConfirm();
+      console.log("===== onConfirm FINISHED =====");
+    } catch (err) {
+      console.error("onConfirm Error:", err);
+    }
+
+    setLoading(false);
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4
-                    bg-zinc-950/60 backdrop-blur-sm">
-      <div className="w-full max-w-md bg-white dark:bg-zinc-900
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-4
+                    bg-zinc-950/60 backdrop-blur-sm"
+    >
+      <div
+        className="w-full max-w-md bg-white dark:bg-zinc-900
                       rounded-2xl border border-zinc-200 dark:border-zinc-800
-                      shadow-2xl">
-
+                      shadow-2xl"
+      >
         <div className="flex items-center justify-between p-6 pb-0">
-          <div className="w-12 h-12 rounded-2xl bg-red-50 dark:bg-red-950
-                          flex items-center justify-center">
+          <div
+            className="w-12 h-12 rounded-2xl bg-red-50 dark:bg-red-950
+                          flex items-center justify-center"
+          >
             <AlertTriangle className="w-6 h-6 text-red-500" />
           </div>
           <button
@@ -44,11 +64,12 @@ export function ServiceDeleteModal({ service, onConfirm, onCancel }: Props) {
             Delete service?
           </h3>
           <p className="text-sm text-zinc-500 dark:text-zinc-400 leading-relaxed">
-            You are about to delete{' '}
+            You are about to delete{" "}
             <span className="font-semibold text-zinc-900 dark:text-white">
               {service.title}
             </span>
-            . This will remove it from your public services page. This action cannot be undone.
+            . This will remove it from your public services page. This action
+            cannot be undone.
           </p>
         </div>
 
@@ -70,13 +91,18 @@ export function ServiceDeleteModal({ service, onConfirm, onCancel }: Props) {
                        bg-red-600 hover:bg-red-700
                        disabled:opacity-60 text-white transition-colors"
           >
-            {loading
-              ? <><Loader2 className="w-4 h-4 animate-spin" /> Deleting...</>
-              : <><Trash2 className="w-4 h-4" /> Delete</>
-            }
+            {loading ? (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin" /> Deleting...
+              </>
+            ) : (
+              <>
+                <Trash2 className="w-4 h-4" /> Delete
+              </>
+            )}
           </button>
         </div>
       </div>
     </div>
-  )
+  );
 }

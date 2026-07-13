@@ -368,31 +368,52 @@ export function ServicesTable({ initial }: { initial: Service[] }) {
   const popularCount = services.filter((s) => s.popular).length;
   const featureCount = services.reduce((acc, s) => acc + s.features.length, 0);
 
-  // ── CRUD ──────────────────────────────────────────────────
   async function handleSave(data: Omit<Service, "id">) {
-    if (editService) {
-      const updated = await dashboardUpdateService(editService.id, data);
-      if (updated) {
-        setServices((prev) =>
-          prev.map((s) => (s.id === updated.id ? updated : s)),
-        );
-        showToast("Service updated successfully");
+    try {
+      if (editService) {
+        // ── UPDATE ──
+        const updated = await dashboardUpdateService(editService.id, data);
+        if (updated) {
+          setServices((prev) =>
+            prev.map((item) => (item.id === updated.id ? updated : item)),
+          );
+          showToast("Service updated successfully");
+        }
+      } else {
+        // ── CREATE ──
+        const created = await dashboardCreateService(data);
+        if (created) {
+          setServices((prev) => [...prev, created]);
+          showToast("Service created successfully");
+        }
       }
-    } else {
-      const created = await dashboardCreateService(data);
-      setServices((prev) => [...prev, created]);
-      showToast("Service created successfully");
+    } catch (err) {
+      console.error("handleSave error:", err);
+      showToast("Something went wrong. Please try again.");
+    } finally {
+      setShowForm(false);
+      setEditService(null);
     }
-    setShowForm(false);
-    setEditService(null);
   }
 
   async function handleDelete() {
-    if (!deleteService) return;
+    console.log("===== HANDLE DELETE =====");
+    console.log("deleteService =", deleteService);
+
+    if (!deleteService) {
+      console.log("deleteService is NULL");
+      return;
+    }
+
+    console.log("Calling API...");
+
     const ok = await dashboardDeleteService(deleteService.id);
+
+    console.log("API Result =", ok);
+
     if (ok) {
       setServices((prev) => prev.filter((s) => s.id !== deleteService.id));
-      showToast("Service deleted");
+      showToast("Deleted");
     }
     setDeleteService(null);
   }
