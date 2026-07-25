@@ -1,72 +1,117 @@
-import { ContactData, ContactInfo, FAQ } from '@/lib/types/contact'
-import { DEMO_CONTACT } from '@/lib/data/contact.demo'
+import { ContactApiData, ContactData, ContactInfo, FAQ } from "@/lib/types/contact";
+import { DEMO_CONTACT } from "@/lib/data/contact.demo";
 
-// ─────────────────────────────────────────────────────────────
-// Same pattern as projects/skills/services
-// In-memory — no separate store file
-// LATER: replace each function body with fetch() to your API
-// ─────────────────────────────────────────────────────────────
+const API_BASE_URL = "http://localhost:5000/api/contact";
 
-const store: ContactData = JSON.parse(JSON.stringify(DEMO_CONTACT))
+function normalizeContact(contact: ContactApiData): ContactData {
+  return {
+    info: contact.info,
+    faqs: contact.faqs.map((faq) => ({
+      id: faq._id,
+      question: faq.question,
+      answer: faq.answer,
+      order: faq.order,
+    })),
+  }
+}
+
+// const store: ContactData = JSON.parse(JSON.stringify(DEMO_CONTACT));
 
 export async function dashboardGetContact(): Promise<ContactData> {
-  // LATER: return fetch(`${API}/contact`).then(r => r.json())
-  return JSON.parse(JSON.stringify(store))
+  try {
+    const response = await fetch(`${API_BASE_URL}`, {
+      cache: "no-store",
+    });
+
+    if (!response.ok) {
+      throw new Error("Failed to fetch contact");
+    }
+
+    const json = await response.json();
+
+    return normalizeContact(json.contact);
+  } catch {
+    return JSON.parse(JSON.stringify(DEMO_CONTACT));
+  }
 }
 
 export async function dashboardUpdateInfo(
-  data: Partial<ContactInfo>
+  data: Partial<ContactInfo>,
 ): Promise<ContactInfo> {
-  // LATER:
-  // return fetch(`${API}/contact/info`, {
-  //   method: 'PUT',
-  //   headers: { 'Content-Type': 'application/json' },
-  //   body: JSON.stringify(data),
-  // }).then(r => r.json())
-  store.info = { ...store.info, ...data }
-  return JSON.parse(JSON.stringify(store.info))
+  const response = await fetch(`${API_BASE_URL}/info`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(data),
+  });
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => null);
+
+    throw new Error(error?.message ?? "Unable to update contact information.");
+  }
+
+  const json = await response.json();
+
+  return json.info;
 }
 
 export async function dashboardCreateFAQ(
-  data: Omit<FAQ, 'id' | 'order'>
+  data: Omit<FAQ, "id" | "order">,
 ): Promise<FAQ> {
-  // LATER:
-  // return fetch(`${API}/contact/faqs`, {
-  //   method: 'POST',
-  //   headers: { 'Content-Type': 'application/json' },
-  //   body: JSON.stringify(data),
-  // }).then(r => r.json())
-  const created: FAQ = {
-    ...data,
-    id:    `faq-${Date.now()}`,
-    order: store.faqs.length + 1,
+  const response = await fetch(`${API_BASE_URL}/faq`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(data),
+  });
+
+  if (!response.ok) {
+    throw new Error("Failed to create FAQ");
   }
-  store.faqs = [...store.faqs, created]
-  return JSON.parse(JSON.stringify(created))
+
+  const json = await response.json();
+
+  return {
+    id: json.faq.id ?? json.faq._id,
+    question: json.faq.question,
+    answer: json.faq.answer,
+    order: json.faq.order,
+  };
 }
 
 export async function dashboardUpdateFAQ(
-  id:   string,
-  data: Partial<Omit<FAQ, 'id'>>
+  id: string,
+  data: Partial<Omit<FAQ, "id">>,
 ): Promise<FAQ | null> {
-  // LATER:
-  // return fetch(`${API}/contact/faqs/${id}`, {
-  //   method: 'PUT',
-  //   headers: { 'Content-Type': 'application/json' },
-  //   body: JSON.stringify(data),
-  // }).then(r => r.json())
-  const index = store.faqs.findIndex(f => f.id === id)
-  if (index === -1) return null
-  store.faqs[index] = { ...store.faqs[index], ...data }
-  return JSON.parse(JSON.stringify(store.faqs[index]))
+  const response = await fetch(`${API_BASE_URL}/faq/${id}`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(data),
+  });
+
+  if (!response.ok) {
+    throw new Error("Unable to save changes. Please try again.");
+  }
+
+  const json = await response.json();
+
+  return {
+    id: json.faq.id ?? json.faq._id,
+    question: json.faq.question,
+    answer: json.faq.answer,
+    order: json.faq.order,
+  };
 }
 
 export async function dashboardDeleteFAQ(id: string): Promise<boolean> {
-  // LATER:
-  // return fetch(`${API}/contact/faqs/${id}`, {
-  //   method: 'DELETE',
-  // }).then(r => r.ok)
-  const before = store.faqs.length
-  store.faqs = store.faqs.filter(f => f.id !== id)
-  return store.faqs.length < before
+  const response = await fetch(`${API_BASE_URL}/faq/${id}`, {
+    method: "DELETE",
+  });
+
+  return response.ok;
 }

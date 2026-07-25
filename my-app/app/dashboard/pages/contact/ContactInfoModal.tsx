@@ -167,13 +167,14 @@ export function ContactInfoModal({ info, onSave, onCancel }: Props) {
               <button type="button"
                 onClick={() => setAvailable(a => !a)}
                 className={cn(
-                  'w-12 h-6 rounded-full relative transition-colors duration-200',
+                  // 'w-12 h-6 rounded-full relative transition-colors duration-200',
+                  'relative inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full transition-colors duration-200 focus:outline-none',
                   available ? 'bg-green-500' : 'bg-zinc-300 dark:bg-zinc-600'
                 )}>
                 <span className={cn(
                   'absolute top-1 w-4 h-4 rounded-full bg-white shadow-sm',
                   'transition-transform duration-200',
-                  available ? 'translate-x-7' : 'translate-x-1'
+                  available ? 'translate-x-6' : 'translate-x-1'
                 )} />
               </button>
             </div>

@@ -159,7 +159,6 @@ const [role, setRole] = useState(experience?.role ?? '')
                   current ? 'translate-x-7' : 'translate-x-1'
                 )} />
               </button> */}
-
               <button
                 type="button"
                 onClick={() => setCurrent(c => !c)}
