@@ -1,4 +1,9 @@
-import { ContactApiData, ContactData, ContactInfo, FAQ } from "@/lib/types/contact";
+import {
+  ContactApiData,
+  ContactData,
+  ContactInfo,
+  FAQ,
+} from "@/lib/types/contact";
 import { DEMO_CONTACT } from "@/lib/data/contact.demo";
 
 const API_BASE_URL = "http://localhost:5000/api/contact";
@@ -12,7 +17,7 @@ function normalizeContact(contact: ContactApiData): ContactData {
       answer: faq.answer,
       order: faq.order,
     })),
-  }
+  };
 }
 
 // const store: ContactData = JSON.parse(JSON.stringify(DEMO_CONTACT));
@@ -108,10 +113,22 @@ export async function dashboardUpdateFAQ(
   };
 }
 
-export async function dashboardDeleteFAQ(id: string): Promise<boolean> {
-  const response = await fetch(`${API_BASE_URL}/faq/${id}`, {
-    method: "DELETE",
-  });
+export async function dashboardDeleteFAQ(
+  id: string
+): Promise<boolean> {
+  try {
+    const response = await fetch(`${API_BASE_URL}/faq/${id}`, {
+      method: "DELETE",
+    });
 
-  return response.ok;
+    if (!response.ok) {
+      throw new Error("Failed to delete FAQ.");
+    }
+
+    return true;
+  } catch {
+    throw new Error(
+      "Unable to connect to the server. Please try again."
+    );
+  }
 }

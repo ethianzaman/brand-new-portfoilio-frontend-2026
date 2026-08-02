@@ -1,10 +1,17 @@
 export interface Skill {
-  name: string
-  icon: string        // image path or url
+  name: string;
+  icon: string; // image path or url
 }
 
 export interface SkillCategory {
-  id: string
-  label: string
-  skills: Skill[]
+  id: string;
+  label: string;
+  skills: Skill[];
+}
+
+export interface SkillFormData {
+  name: string;
+  icon?: string;
+  file?: File | null;
+  targetCategoryId?: string;
 }

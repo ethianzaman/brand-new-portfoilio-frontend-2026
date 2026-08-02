@@ -1,125 +1,304 @@
-import { DEMO_SKILLS } from "../data/skills.demo"
-import { Skill, SkillCategory } from "../types/skill"
+import { DEMO_SKILLS } from "../data/skills.demo";
+import { Skill, SkillCategory, SkillFormData } from "../types/skill";
 
-// // lib/services/skill.service.ts
-// export async function fetchSkills(): Promise<SkillCategory[]> {
-//   if (!process.env.NEXT_PUBLIC_API_URL) {
-//     return DEMO_SKILLS              // demo
-//   }
-//   const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/skills`)
-//   return res.json()                 // real API
-// }
+const API_BASE_URL = "http://localhost:5000/api/skills";
 
+function normalizeSkills(data: {
+  categories: Array<{
+    id?: string;
+    _id?: string;
+    label: string;
+    skills: Skill[];
+  }>;
+}): SkillCategory[] {
+  return data.categories.map((category) => ({
+    id: category.id ?? category._id ?? "",
+    label: category.label,
+    skills: category.skills,
+  }));
+}
 
-
-// ─────────────────────────────────────────────────────────────
-// Dashboard CRUD — skills
-// NOW:   in-memory demo store
-// LATER: replace each function body with real API call
-//        shape stays identical — zero component changes needed
-// ─────────────────────────────────────────────────────────────
-
-let store: SkillCategory[] = JSON.parse(JSON.stringify(DEMO_SKILLS))
+let store: SkillCategory[] = JSON.parse(JSON.stringify(DEMO_SKILLS));
 
 // ── GET all categories ─────────────────────────────────────
 export async function dashboardGetSkills(): Promise<SkillCategory[]> {
-  // LATER: return fetch(`${API}/skills`).then(r => r.json())
-  return JSON.parse(JSON.stringify(store))
+  try {
+    const response = await fetch(API_BASE_URL);
+
+    if (!response.ok) {
+      throw new Error();
+    }
+
+    const json = await response.json();
+
+    const normalizedSkills = normalizeSkills(json);
+
+    return JSON.parse(JSON.stringify(normalizedSkills));
+  } catch {
+    return JSON.parse(JSON.stringify(store));
+  }
 }
 
 // ── CREATE category ────────────────────────────────────────
 export async function dashboardCreateCategory(
-  data: Omit<SkillCategory, 'skills'>
+  data: Omit<SkillCategory, "skills">,
 ): Promise<SkillCategory> {
-  // LATER:
-  // return fetch(`${API}/skills/categories`, {
-  //   method: 'POST', body: JSON.stringify(data)
-  // }).then(r => r.json())
-  const newCat: SkillCategory = { ...data, skills: [] }
-  store = [...store, newCat]
-  return newCat
+  const response = await fetch(`${API_BASE_URL}/categories`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      label: data.label,
+    }),
+  });
+
+  const json = await response.json();
+
+  if (!response.ok) {
+    throw new Error(json.message || "Failed to create category");
+  }
+
+  const created: SkillCategory = {
+    id: json.category.id ?? json.category._id,
+    label: json.category.label,
+    skills: json.category.skills ?? [],
+  };
+
+  store.push(created);
+
+  return created;
 }
 
 // ── UPDATE category ────────────────────────────────────────
 export async function dashboardUpdateCategory(
   id: string,
-  data: Partial<Omit<SkillCategory, 'skills'>>
+  data: Partial<Omit<SkillCategory, "skills">>,
 ): Promise<SkillCategory | null> {
-  // LATER:
-  // return fetch(`${API}/skills/categories/${id}`, {
-  //   method: 'PUT', body: JSON.stringify(data)
-  // }).then(r => r.json())
-  const index = store.findIndex(c => c.id === id)
-  if (index === -1) return null
-  store[index] = { ...store[index], ...data }
-  return store[index]
+  const response = await fetch(`${API_BASE_URL}/categories/${id}`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(data),
+  });
+
+  if (!response.ok) {
+    throw new Error("Failed to update.");
+  }
+
+  const json = await response.json();
+
+  const updated: SkillCategory = {
+    id: json.category.id ?? json.category._id,
+    label: json.category.label,
+    skills: json.category.skills,
+  };
+
+  store = store.map((c) => (c.id === id ? updated : c));
+
+  return updated;
 }
 
 // ── DELETE category ────────────────────────────────────────
 export async function dashboardDeleteCategory(id: string): Promise<boolean> {
-  // LATER:
-  // return fetch(`${API}/skills/categories/${id}`, {
-  //   method: 'DELETE'
-  // }).then(r => r.ok)
-  const before = store.length
-  store = store.filter(c => c.id !== id)
-  return store.length < before
+  const response = await fetch(`${API_BASE_URL}/categories/${id}`, {
+    method: "DELETE",
+  });
+
+  if (!response.ok) {
+    throw new Error("Delete failed.");
+  }
+
+  store = store.filter((c) => c.id !== id);
+
+  return true;
 }
 
 // ── CREATE skill inside category ───────────────────────────
+// export async function dashboardCreateSkill(
+//   categoryId: string,
+//   data: {
+//     name: string;
+//     icon?: string;
+//     file?: File;
+//   },
+// ): Promise<SkillCategory | null> {
+//   const formData = new FormData();
+
+//   formData.append("name", data.name);
+
+//   if (data.file) {
+//     formData.append("icon", data.file);
+//   } else if (data.icon) {
+//     formData.append("icon", data.icon);
+//   }
+
+//   const response = await fetch(
+//     `${API_BASE_URL}/categories/${categoryId}/skills`,
+//     {
+//       method: "POST",
+//       body: formData,
+//     },
+//   );
+
+//   if (!response.ok) {
+//     throw new Error("Create failed.");
+//   }
+
+//   const json = await response.json();
+
+//   const updated: SkillCategory = {
+//     id: json.category.id ?? json.category._id,
+//     label: json.category.label,
+//     skills: json.category.skills,
+//   };
+
+//   store = store.map((c) => (c.id === categoryId ? updated : c));
+
+//   return updated;
+// }
 export async function dashboardCreateSkill(
   categoryId: string,
-  data: Skill
+  data: SkillFormData,
 ): Promise<SkillCategory | null> {
-  // LATER:
-  // return fetch(`${API}/skills/categories/${categoryId}/skills`, {
-  //   method: 'POST', body: JSON.stringify(data)
-  // }).then(r => r.json())
-  const index = store.findIndex(c => c.id === categoryId)
-  if (index === -1) return null
-  store[index] = {
-    ...store[index],
-    skills: [...store[index].skills, data],
-  }
-  return store[index]
-}
+  const formData = new FormData();
 
+  formData.append("name", data.name);
+
+  if (data.file) {
+    formData.append("icon", data.file);
+  } else if (data.icon) {
+    formData.append("icon", data.icon);
+  }
+
+  const response = await fetch(
+    `${API_BASE_URL}/categories/${categoryId}/skills`,
+    {
+      method: "POST",
+      body: formData,
+    },
+  );
+
+  if (!response.ok) {
+    throw new Error("Create failed.");
+  }
+
+  const json = await response.json();
+
+  const updated: SkillCategory = {
+    id: json.category.id ?? json.category._id,
+    label: json.category.label,
+    skills: json.category.skills,
+  };
+
+  store = store.map((c) => (c.id === categoryId ? updated : c));
+
+  return updated;
+}
 // ── UPDATE skill inside category ───────────────────────────
 export async function dashboardUpdateSkill(
   categoryId: string,
-  skillName:  string,
-  data:       Partial<Skill>
-): Promise<SkillCategory | null> {
-  // LATER:
-  // return fetch(`${API}/skills/categories/${categoryId}/skills/${skillName}`, {
-  //   method: 'PUT', body: JSON.stringify(data)
-  // }).then(r => r.json())
-  const catIndex = store.findIndex(c => c.id === categoryId)
-  if (catIndex === -1) return null
-  store[catIndex] = {
-    ...store[catIndex],
-    skills: store[catIndex].skills.map(s =>
-      s.name === skillName ? { ...s, ...data } : s
-    ),
+  skillName: string,
+  data: SkillFormData,
+): Promise<{
+  source: SkillCategory;
+  destination: SkillCategory;
+} | null> {
+  const formData = new FormData();
+
+  formData.append("name", data.name);
+  if (data.targetCategoryId) {
+    formData.append("targetCategoryId", data.targetCategoryId);
   }
-  return store[catIndex]
+
+  if (data.file) {
+    formData.append("icon", data.file);
+  } else if (data.icon) {
+    formData.append("icon", data.icon);
+  }
+
+  const response = await fetch(
+    `${API_BASE_URL}/categories/${categoryId}/skills/${encodeURIComponent(skillName)}`,
+    {
+      method: "PUT",
+      body: formData,
+    },
+  );
+
+  const json = await response.json();
+
+  if (!response.ok) {
+    throw new Error(json.message || "Update failed.");
+  }
+
+  // Move হয়েছে
+  if (json.sourceCategory && json.destinationCategory) {
+    const source: SkillCategory = {
+      id: json.sourceCategory.id ?? json.sourceCategory._id,
+      label: json.sourceCategory.label,
+      skills: json.sourceCategory.skills,
+    };
+
+    const destination: SkillCategory = {
+      id: json.destinationCategory.id ?? json.destinationCategory._id,
+      label: json.destinationCategory.label,
+      skills: json.destinationCategory.skills,
+    };
+
+    store = store.map((c) => {
+      if (c.id === source.id) return source;
+      if (c.id === destination.id) return destination;
+      return c;
+    });
+
+    return {
+      source,
+      destination,
+    };
+  }
+
+  // Same category update
+  const category: SkillCategory = {
+    id: json.category.id ?? json.category._id,
+    label: json.category.label,
+    skills: json.category.skills,
+  };
+
+  store = store.map((c) => (c.id === category.id ? category : c));
+
+  return {
+    source: category,
+    destination: category,
+  };
 }
 
 // ── DELETE skill inside category ───────────────────────────
 export async function dashboardDeleteSkill(
   categoryId: string,
-  skillName:  string
+  skillName: string,
 ): Promise<boolean> {
-  // LATER:
-  // return fetch(`${API}/skills/categories/${categoryId}/skills/${skillName}`, {
-  //   method: 'DELETE'
-  // }).then(r => r.ok)
-  const index = store.findIndex(c => c.id === categoryId)
-  if (index === -1) return false
-  const before = store[index].skills.length
-  store[index] = {
-    ...store[index],
-    skills: store[index].skills.filter(s => s.name !== skillName),
+  const response = await fetch(
+    `${API_BASE_URL}/categories/${categoryId}/skills/${encodeURIComponent(skillName)}`,
+    {
+      method: "DELETE",
+    },
+  );
+
+  if (!response.ok) {
+    throw new Error("Delete failed.");
   }
-  return store[index].skills.length < before
+
+  store = store.map((category) => {
+    if (category.id !== categoryId) {
+      return category;
+    }
+
+    return {
+      ...category,
+      skills: category.skills.filter((skill) => skill.name !== skillName),
+    };
+  });
+
+  return true;
 }

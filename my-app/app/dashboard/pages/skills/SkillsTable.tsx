@@ -12,7 +12,7 @@ import {
   Search,
   Check,
 } from "lucide-react";
-import { SkillCategory, Skill } from "@/lib/types/skill";
+import { SkillCategory, Skill, SkillFormData } from "@/lib/types/skill";
 import { SkillFormModal } from "./SkillFormModal";
 import { CategoryFormModal } from "./CategoryFormModal";
 import { DeleteConfirmModal } from "../projects/DeleteConfirmModal";
@@ -113,26 +113,39 @@ export function SkillsTable({ initial }: { initial: SkillCategory[] }) {
   // ── Skill CRUD ─────────────────────────────────────────────
   async function handleSaveSkill(
     categoryId: string,
-    skill: Skill,
+    data: SkillFormData,
     oldName?: string,
   ) {
+    console.log("categoryId =", categoryId);
+    console.log("data =", data);
     if (editSkill && oldName) {
-      const updated = await dashboardUpdateSkill(categoryId, oldName, skill);
+      const updated = await dashboardUpdateSkill(categoryId, oldName, data);
+
       if (updated) {
         setCategories((prev) =>
-          prev.map((c) => (c.id === updated.id ? updated : c)),
+          prev.map((c) => {
+            if (c.id === updated.source.id) return updated.source;
+            if (c.id === updated.destination.id) return updated.destination;
+            return c;
+          }),
         );
+
         showToast("Skill updated");
       }
     } else {
-      const updated = await dashboardCreateSkill(categoryId, skill);
+      const targetCategoryId = data.targetCategoryId || categoryId;
+
+      const updated = await dashboardCreateSkill(targetCategoryId, data);
+
       if (updated) {
         setCategories((prev) =>
           prev.map((c) => (c.id === updated.id ? updated : c)),
         );
+
         showToast("Skill added");
       }
     }
+
     setShowSkillForm(false);
     setEditSkill(null);
   }
@@ -280,7 +293,7 @@ export function SkillsTable({ initial }: { initial: SkillCategory[] }) {
         <button
           onClick={() => {
             setEditSkill(null);
-            setEditSkillCatId(categories[0]?.id ?? "");
+            setEditSkillCatId("");
             setShowSkillForm(true);
           }}
           className="flex items-center gap-2 px-4 py-2.5 rounded-xl

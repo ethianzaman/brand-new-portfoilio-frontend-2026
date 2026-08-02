@@ -1,18 +1,23 @@
 "use client";
 import { useState, useRef } from "react";
-import { X, Loader2, Save, ImageIcon, Upload } from "lucide-react";
-import { Skill, SkillCategory } from "@/lib/types/skill";
+import { X, Loader2, Save, ImageIcon, Upload, ChevronDown } from "lucide-react";
+import { Skill, SkillCategory, SkillFormData } from "@/lib/types/skill";
 import { cn } from "@/lib/utils";
 import Image from "next/image";
 
 interface Props {
-  skill?: Skill | null; // null = create
+  skill?: Skill | null;
   categoryId: string;
   categories: SkillCategory[];
-  onSave: (categoryId: string, skill: Skill, oldName?: string) => Promise<void>;
+
+  onSave: (
+    categoryId: string,
+    data: SkillFormData,
+    oldName?: string,
+  ) => Promise<void>;
+
   onCancel: () => void;
 }
-
 const inputCls = cn(
   "w-full px-4 py-2.5 rounded-xl text-sm",
   "bg-zinc-50 dark:bg-zinc-800",
@@ -39,35 +44,44 @@ export function SkillFormModal({
   const [loading, setLoading] = useState(false);
   const [name, setName] = useState(skill?.name ?? "");
   const [icon, setIcon] = useState(skill?.icon ?? "");
-  const [selCatId, setSelCatId] = useState(categoryId);
+  // const [selCatId, setSelCatId] = useState(categoryId);
+  const [selCatId, setSelCatId] = useState(categoryId || "");
   const [iconError, setIconError] = useState(false);
+  const [file, setFile] = useState<File | null>(null);
 
   // New State: Toggle between 'url' and 'upload'
   const [uploadMode, setUploadMode] = useState<"url" | "upload">(
     skill?.icon?.startsWith("data:") ? "upload" : "url",
   );
 
-  // Handle Image Upload and convert to Base64
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setIcon(reader.result as string);
-        setIconError(false);
-      };
-      reader.readAsDataURL(file);
-    }
+    const selected = e.target.files?.[0];
+
+    if (!selected) return;
+
+    setFile(selected);
+
+    // preview
+    setIcon(URL.createObjectURL(selected));
   };
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+
+    console.log("categoryId prop =", categoryId);
+    console.log("selCatId =", selCatId);
+    console.log("isEdit =", isEdit);
     if (!name.trim() || !icon.trim()) return;
     setLoading(true);
     await onSave(
-      selCatId,
-      { name: name.trim(), icon: icon.trim() },
-      isEdit ? skill!.name : undefined,
+      categoryId, // original category
+      {
+        name: name.trim(),
+        icon: uploadMode === "url" ? icon.trim() : undefined,
+        file,
+        targetCategoryId: selCatId,
+      },
+      isEdit ? skill?.name : undefined,
     );
     setLoading(false);
   }
@@ -92,21 +106,30 @@ export function SkillFormModal({
 
         <form onSubmit={handleSubmit}>
           <div className="p-6 flex flex-col gap-5">
-            {/* 1. Category Selector (Re-added) */}
             <div className="flex flex-col gap-1.5">
               <label className={labelCls}>Category *</label>
-              <select
-                value={selCatId}
-                onChange={(e) => setSelCatId(e.target.value)}
-                className={inputCls}
-                required
-              >
-                {categories.map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.label}
-                  </option>
-                ))}
-              </select>
+
+              <div className="relative">
+                <select
+                  value={selCatId}
+                  onChange={(e) => setSelCatId(e.target.value)}
+                  className={cn(inputCls, "appearance-none pr-12")}
+                  required
+                >
+                  <option value="">Select Category</option>
+
+                  {categories.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.label}
+                    </option>
+                  ))}
+                </select>
+
+                <ChevronDown
+                  className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2
+                 h-4 w-4 text-zinc-500"
+                />
+              </div>
             </div>
 
             {/* Category & Name */}
