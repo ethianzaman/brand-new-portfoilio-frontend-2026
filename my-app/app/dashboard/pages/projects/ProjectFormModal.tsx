@@ -10,6 +10,8 @@ const CATEGORIES: { value: Category; label: string }[] = [
   { value: "fullstack", label: "Full-Stack" },
   { value: "backend", label: "Backend" },
   { value: "mobile", label: "Mobile App" },
+  { value: "devops", label: "DevOps" },
+  { value: "ai", label: "AI / ML" },
 ];
 
 const COLORS = [
@@ -38,7 +40,8 @@ type FormData = Omit<Project, "id" | "tags" | "thumbnail"> & {
 
 interface Props {
   project?: Project | null; // null = create, Project = edit
-  onSave: (data: Omit<Project, "id">) => Promise<void>;
+  // onSave: (data: Omit<Project, "id">) => Promise<void>;
+  onSave: (data: Omit<Project, "id">, image?: File) => Promise<void>;
   onCancel: () => void;
 }
 
@@ -58,6 +61,7 @@ const labelCls =
 export function ProjectFormModal({ project, onSave, onCancel }: Props) {
   const isEdit = !!project;
   const [loading, setLoading] = useState(false);
+  const [imageFile, setImageFile] = useState<File | null>(null);
   const [form, setForm] = useState<FormData>({
     title: project?.title ?? "",
     description: project?.description ?? "",
@@ -69,7 +73,6 @@ export function ProjectFormModal({ project, onSave, onCancel }: Props) {
     color: project?.color ?? "#6366f1",
     featured: project?.featured ?? false,
   });
-
 
   // Inside ProjectFormModal
   function set<K extends keyof FormData>(key: K, val: FormData[K]) {
@@ -91,7 +94,8 @@ export function ProjectFormModal({ project, onSave, onCancel }: Props) {
       thumbnail: form.thumbnail.trim() || undefined,
     };
 
-    await onSave(payload);
+    // await onSave(payload);
+    await onSave(payload, imageFile ?? undefined);
     setLoading(false);
   }
 
@@ -258,13 +262,22 @@ export function ProjectFormModal({ project, onSave, onCancel }: Props) {
                   id="project-image-upload"
                   className="hidden"
                   accept="image/*"
+                  // onChange={(e) => {
+                  //   const file = e.target.files?.[0];
+                  //   if (file) {
+                  //     // Creates a temporary local URL for previewing
+                  //     const localUrl = URL.createObjectURL(file);
+                  //     set("thumbnail", localUrl);
+                  //   }
+                  // }}
                   onChange={(e) => {
                     const file = e.target.files?.[0];
-                    if (file) {
-                      // Creates a temporary local URL for previewing
-                      const localUrl = URL.createObjectURL(file);
-                      set("thumbnail", localUrl);
-                    }
+
+                    if (!file) return;
+
+                    setImageFile(file);
+
+                    set("thumbnail", URL.createObjectURL(file));
                   }}
                 />
 

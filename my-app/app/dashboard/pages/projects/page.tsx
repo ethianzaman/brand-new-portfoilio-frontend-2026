@@ -1,9 +1,10 @@
 import { Briefcase } from 'lucide-react'
 import { ProjectsTable } from './ProjectsTable' 
-import { dashboardGetProjects } from '@/lib/services/project.services'
+import { dashboardGetProjectsAll } from '@/lib/services/project.services'
 
 export default async function DashboardProjectsPage() {
-  const projects = await dashboardGetProjects()
+  // const projects = await dashboardGetProjects()
+  const projects = await dashboardGetProjectsAll()
 
   return (
     <div className="flex flex-col gap-6">
