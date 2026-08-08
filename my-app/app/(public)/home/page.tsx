@@ -11,6 +11,7 @@ import {
   TwitterIcon,
 } from '@/app/components/icon/brandIcons'
 
+
 const skills = [
   {
     label: 'Frontend',
@@ -233,3 +234,5 @@ export default function HomePage() {
     </div>
   )
 }
+
+

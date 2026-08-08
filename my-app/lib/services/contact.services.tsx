@@ -4,7 +4,7 @@ import {
   ContactInfo,
   FAQ,
 } from "@/lib/types/contact";
-import { DEMO_CONTACT } from "@/lib/data/contact.demo";
+// import { DEMO_CONTACT } from "@/lib/data/contact.demo";
 
 const API_BASE_URL = "http://localhost:5000/api/contact";
 
@@ -22,21 +22,56 @@ function normalizeContact(contact: ContactApiData): ContactData {
 
 // const store: ContactData = JSON.parse(JSON.stringify(DEMO_CONTACT));
 
+// export async function dashboardGetContact(): Promise<ContactData> {
+//   try {
+//     const response = await fetch(`${API_BASE_URL}`, {
+//       cache: "no-store",
+//     });
+
+//     if (!response.ok) {
+//       throw new Error("Failed to fetch contact");
+//     }
+
+//     const json = await response.json();
+
+//     return normalizeContact(json.contact);
+//   } catch {
+//     return JSON.parse(JSON.stringify(DEMO_CONTACT));
+//   }
+// }
+
 export async function dashboardGetContact(): Promise<ContactData> {
   try {
-    const response = await fetch(`${API_BASE_URL}`, {
+    const response = await fetch(API_BASE_URL, {
       cache: "no-store",
     });
 
     if (!response.ok) {
-      throw new Error("Failed to fetch contact");
+      throw new Error(`Contact API failed: ${response.status}`);
     }
 
     const json = await response.json();
 
     return normalizeContact(json.contact);
-  } catch {
-    return JSON.parse(JSON.stringify(DEMO_CONTACT));
+  } catch (error) {
+    console.error("Failed to fetch contact:", error);
+
+    return {
+      info: {
+        email: "",
+        phone: "",
+        location: "",
+        responseTime: "",
+        available: false,
+        availableText: "",
+        socials: {
+          github: "",
+          linkedin: "",
+          twitter: "",
+        },
+      },
+      faqs: [],
+    };
   }
 }
 
@@ -113,9 +148,7 @@ export async function dashboardUpdateFAQ(
   };
 }
 
-export async function dashboardDeleteFAQ(
-  id: string
-): Promise<boolean> {
+export async function dashboardDeleteFAQ(id: string): Promise<boolean> {
   try {
     const response = await fetch(`${API_BASE_URL}/faq/${id}`, {
       method: "DELETE",
@@ -127,8 +160,6 @@ export async function dashboardDeleteFAQ(
 
     return true;
   } catch {
-    throw new Error(
-      "Unable to connect to the server. Please try again."
-    );
+    throw new Error("Unable to connect to the server. Please try again.");
   }
 }

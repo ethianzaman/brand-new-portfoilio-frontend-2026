@@ -3,7 +3,7 @@ import {
   Project,
   ProjectsParams,
   ProjectsResponse,
-  Category,
+  // Category,
 } from "@/lib/types/project";
 // import { PAGE_SIZE } from '@/lib/constants/project'
 
@@ -42,65 +42,101 @@ async function fetchFromApi<T>(
 }
 
 // ── Internal: demo pagination logic ───────────────────────────────
-function paginateDemo(
-  all: Project[],
-  page: number,
-  pageSize: number,
-): ProjectsResponse {
-  const start = (page - 1) * pageSize;
-  const sliced = all.slice(start, start + pageSize);
-  return {
-    projects: sliced,
-    total: all.length,
-    hasMore: start + pageSize < all.length,
-  };
-}
+// function paginateDemo(
+//   all: Project[],
+//   page: number,
+//   pageSize: number,
+// ): ProjectsResponse {
+//   const start = (page - 1) * pageSize;
+//   const sliced = all.slice(start, start + pageSize);
+//   return {
+//     projects: sliced,
+//     total: all.length,
+//     hasMore: start + pageSize < all.length,
+//   };
+// }
 
 // ── Internal: placeholder cards when category has no projects ──────
-function makePlaceholders(category: Category): Project[] {
-  return Array.from({ length: 3 }, (_, i) => ({
-    id: `placeholder-${category}-${i}`,
-    title: "Project Coming Soon",
-    description: `A new ${category} project is currently in development. Check back soon to see what's being built!`,
-    category,
-    tags: ["Coming Soon"],
-    liveUrl: "#",
-    githubUrl: "#",
-    color: "#94a3b8",
-    isPlaceholder: true,
-  }));
-}
+// function makePlaceholders(category: Category): Project[] {
+//   return Array.from({ length: 3 }, (_, i) => ({
+//     id: `placeholder-${category}-${i}`,
+//     title: "Project Coming Soon",
+//     description: `A new ${category} project is currently in development. Check back soon to see what's being built!`,
+//     category,
+//     tags: ["Coming Soon"],
+//     liveUrl: "#",
+//     githubUrl: "#",
+//     color: "#94a3b8",
+//     isPlaceholder: true,
+//   }));
+// }
 
 // ─────────────────────────────────────────────────────────────────
 //  PUBLIC API — components only call these functions
 // ─────────────────────────────────────────────────────────────────
 
 // Get paginated projects (called on page load + See More)
+// export async function fetchProjects(
+//   params: ProjectsParams,
+// ): Promise<ProjectsResponse> {
+//   const { category, page, pageSize } = params;
+
+//   // ── DEMO ──────────────────────────────────────────────────────
+//   if (isDemo()) {
+//     const filtered =
+//       category === "all"
+//         ? DEMO_PROJECTS
+//         : DEMO_PROJECTS.filter((p) => p.category === category);
+
+//     const data = filtered.length > 0 ? filtered : makePlaceholders(category);
+
+//     return paginateDemo(data, page, pageSize);
+//   }
+
+//   // ── REAL API (uncomment when backend ready) ────────────────────
+//   // Backend should accept: GET /projects?category=frontend&page=1&pageSize=3
+//   // Backend should return: { projects: Project[], total: number, hasMore: boolean }
+//   return fetchFromApi<ProjectsResponse>("/projects", {
+//     ...(category !== "all" && { category }),
+//     page: String(page),
+//     pageSize: String(pageSize),
+//   });
+// }
+
 export async function fetchProjects(
-  params: ProjectsParams,
+  params: ProjectsParams
 ): Promise<ProjectsResponse> {
-  const { category, page, pageSize } = params;
+  try {
+    const query = new URLSearchParams({
+      page: String(params.page),
+      pageSize: String(params.pageSize),
+    });
 
-  // ── DEMO ──────────────────────────────────────────────────────
-  if (isDemo()) {
-    const filtered =
-      category === "all"
-        ? DEMO_PROJECTS
-        : DEMO_PROJECTS.filter((p) => p.category === category);
+    if (params.category !== "all") {
+      query.append("category", params.category);
+    }
 
-    const data = filtered.length > 0 ? filtered : makePlaceholders(category);
+    const res = await fetch(
+      `${API_BASE_URL}?${query.toString()}`,
+      {
+        cache: "no-store",
+      }
+    );
 
-    return paginateDemo(data, page, pageSize);
+    if (!res.ok) {
+      throw new Error("API Error");
+    }
+
+    return await res.json();
+  } catch (error) {
+    console.error(error);
+
+    return {
+      projects: [],
+      total: 0,
+      hasMore: false,
+    };
   }
-
-  // ── REAL API (uncomment when backend ready) ────────────────────
-  // Backend should accept: GET /projects?category=frontend&page=1&pageSize=3
-  // Backend should return: { projects: Project[], total: number, hasMore: boolean }
-  return fetchFromApi<ProjectsResponse>("/projects", {
-    ...(category !== "all" && { category }),
-    page: String(page),
-    pageSize: String(pageSize),
-  });
 }
 
 // Get single project by ID
@@ -137,7 +173,6 @@ const store: Project[] = [...DEMO_PROJECTS];
 // ── GET all ───────────────────────────────────────────────────
 export async function dashboardGetProjects(): Promise<Project[]> {
   const response = await fetch(API_BASE_URL);
-  // const response = await fetch(`${API_BASE_URL}?page=1&pageSize=100000`);
 
   if (!response.ok) {
     throw new Error("Failed to fetch projects.");
@@ -284,10 +319,7 @@ export async function dashboardUpdateProject(
 //   return store.length < before;
 // }
 
-
-export async function dashboardDeleteProject(
-  id: string,
-): Promise<boolean> {
+export async function dashboardDeleteProject(id: string): Promise<boolean> {
   const response = await fetch(`${API_BASE_URL}/${id}`, {
     method: "DELETE",
   });
@@ -301,11 +333,29 @@ export async function dashboardDeleteProject(
 
 
 export async function dashboardGetProjectsAll(): Promise<Project[]> {
-  const res = await fetch(`${API_BASE_URL}/all`, {
-    cache: "no-store",
-  });
+  try {
+    const res = await fetch(`${API_BASE_URL}/all`, {
+      cache: "no-store",
+    });
 
-  const json = await res.json();
+    if (!res.ok) {
+      console.error(`Fetch failed with status: ${res.status}`);
+      return [];
+    }
 
-  return json.projects;
+    const json = await res.json();
+
+    if (Array.isArray(json?.projects)) {
+      return json.projects;
+    }
+
+    if (Array.isArray(json)) {
+      return json;
+    }
+
+    return [];
+  } catch (error) {
+    console.error("Failed to load projects from dashboard API:", error);
+    return [];
+  }
 }

@@ -154,7 +154,7 @@ function ServiceRow({
             )}
           </div>
           <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5 truncate">
-            {service.description.slice(0, 80)}...
+            {service.description?.slice(0, 80) ?? 'No description available.'}
           </p>
         </div>
 

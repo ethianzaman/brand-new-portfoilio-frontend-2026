@@ -17,6 +17,7 @@ export default async function ProjectsPage() {
     pageSize: PAGE_SIZE,
   });
 
+
   return (
     <div className="min-h-screen bg-white dark:bg-zinc-950">
       <div className="max-w-6xl mx-auto px-4 py-16 md:py-24">

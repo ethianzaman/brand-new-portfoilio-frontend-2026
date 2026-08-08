@@ -21,21 +21,43 @@ function normalizeSkills(data: {
 let store: SkillCategory[] = JSON.parse(JSON.stringify(DEMO_SKILLS));
 
 // ── GET all categories ─────────────────────────────────────
+// export async function dashboardGetSkills(): Promise<SkillCategory[]> {
+//   try {
+//     const response = await fetch(API_BASE_URL);
+
+//     if (!response.ok) {
+//       throw new Error();
+//     }
+
+//     const json = await response.json();
+
+//     const normalizedSkills = normalizeSkills(json);
+
+//     return JSON.parse(JSON.stringify(normalizedSkills));
+//   } catch {
+//     return JSON.parse(JSON.stringify(store));
+//   }
+// }
+
 export async function dashboardGetSkills(): Promise<SkillCategory[]> {
   try {
-    const response = await fetch(API_BASE_URL);
+    const response = await fetch(API_BASE_URL, {
+      cache: "no-store",
+    });
 
     if (!response.ok) {
-      throw new Error();
+      throw new Error(`Skills API failed: ${response.status}`);
     }
 
     const json = await response.json();
 
     const normalizedSkills = normalizeSkills(json);
 
-    return JSON.parse(JSON.stringify(normalizedSkills));
-  } catch {
-    return JSON.parse(JSON.stringify(store));
+    return normalizedSkills;
+  } catch (error) {
+    console.error("Failed to fetch skills:", error);
+
+    return [];
   }
 }
 

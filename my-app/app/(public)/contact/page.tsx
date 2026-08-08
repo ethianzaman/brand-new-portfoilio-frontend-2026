@@ -2,13 +2,20 @@ import { ContactForm } from './ContactForm'
 import { ContactInfo } from './ContactInfo'
 import { ContactFAQ } from './ContactFAQ'
 import { MessageCircle } from 'lucide-react'
+import { dashboardGetContact } from '@/lib/services/contact.services'
+
+
 
 export const metadata = {
-  title: 'Contact — John Dev',
+  title: 'Contact — Ethian Dev',
   description: 'Get in touch for project inquiries, collaborations or just a chat.',
 }
 
-export default function ContactPage() {
+
+
+export default async function  ContactPage() {
+  const contactData = await dashboardGetContact() 
+  const {info, faqs} = contactData
   return (
     <div className="min-h-screen bg-white dark:bg-zinc-950">
       <div className="max-w-6xl mx-auto px-4 py-16 md:py-24">
@@ -44,12 +51,12 @@ export default function ContactPage() {
             <ContactForm />
           </div>
           <div className="lg:col-span-2">
-            <ContactInfo />
+            <ContactInfo info={info}/>
           </div>
         </div>
 
         {/* ── FAQ ── */}
-        <ContactFAQ />
+        <ContactFAQ faqs={faqs} />
 
       </div>
     </div>

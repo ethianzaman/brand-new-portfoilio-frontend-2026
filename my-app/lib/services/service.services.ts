@@ -1,46 +1,70 @@
 import { Service } from "@/lib/types/services";
-import { DEMO_SERVICES } from "@/lib/data/services.demo";
+// import { DEMO_SERVICES } from "@/lib/data/services.demo";
 
 const API_BASE_URL = "http://localhost:5000/api/services"; // 👈 ব্যাকএন্ড এপিআই ইউআরএল
 
-const store: Service[] = JSON.parse(JSON.stringify(DEMO_SERVICES));
+// const store: Service[] = JSON.parse(JSON.stringify(DEMO_SERVICES));
 
 type ApiService = Service & { _id?: string };
 
+// export async function dashboardGetServices(): Promise<Service[]> {
+//   try {
+
+//     const res = await fetch(`${API_BASE_URL}`);
+
+//     if (!res.ok) {
+//       return store;
+//     }
+
+//     const data = await res.json();
+
+//     const services: ApiService[] = Array.isArray(data?.services)
+//       ? data.services
+//       : [];
+
+//     if (services.length === 0) {
+//       return store;
+//     }
+
+//     return services.map((s) => ({
+//       ...s,
+//       id: s._id ?? s.id ?? crypto.randomUUID(), // fallback safe id
+//     }));
+//   } catch (error) {
+//     return store;
+//   }
+// }
+
 export async function dashboardGetServices(): Promise<Service[]> {
   try {
-    console.log("🚀 API CALL START");
+    const response = await fetch(API_BASE_URL, {
+      cache: "no-store",
+    });
 
-    const res = await fetch(`${API_BASE_URL}`);
-
-    if (!res.ok) {
-      console.warn("⚠️ API failed → using demo data");
-      return store;
+    if (!response.ok) {
+      throw new Error(`Services API failed: ${response.status}`);
     }
 
-    const data = await res.json();
+    const data = await response.json();
 
     const services: ApiService[] = Array.isArray(data?.services)
       ? data.services
       : [];
 
     if (services.length === 0) {
-      console.warn("⚠️ API EMPTY → using demo data");
-      return store;
+      return [];
     }
 
-    console.log("✅ API DATA USED");
-
-    return services.map((s) => ({
-      ...s,
-      id: s._id ?? s.id ?? crypto.randomUUID(), // fallback safe id
+    return services.map((service) => ({
+      ...service,
+      id: service._id ?? service.id,
     }));
   } catch (error) {
-    console.error("❌ API ERROR → using demo data", error);
-    return store;
+    console.error("Failed to fetch services:", error);
+
+    return [];
   }
 }
-
 export async function dashboardCreateService(
   data: Omit<Service, "id">,
 ): Promise<Service> {
