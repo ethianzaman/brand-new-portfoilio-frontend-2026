@@ -10,6 +10,7 @@ import { ProjectsChart } from "./home/ProjectsChart";
 import { SkillsDonut } from "./home/SkillsDonut";
 import { RecentProjects } from "./home/RecentProjects";
 import { ContentHealth } from "./home/ContentHealth";
+import { BlogAnalytics } from "./home/BlogAnalytics";
 
 export default async function DashBoardHome() {
   const [projects, skillCategories, services, about, contact, blogPosts] =
@@ -79,9 +80,10 @@ export default async function DashBoardHome() {
       />
 
       {/* Analytics — side by side on large screens */}
-      <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
         <ProjectsChart counts={categoryCounts} total={projects.length} />
         <SkillsDonut categories={skillCategories} />
+        <BlogAnalytics posts={blogPosts} />
       </div>
 
       {/* Bottom row */}

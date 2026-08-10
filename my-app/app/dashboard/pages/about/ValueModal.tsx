@@ -13,7 +13,7 @@ const AVAILABLE_ICONS = [
 
 interface Props {
   value?:   Value | null
-  onSave:   (data: Omit<Value, 'id'>) => Promise<void>
+  onSave:   (data: Omit<Value, '_id'>) => Promise<void>
   onCancel: () => void
 }
 

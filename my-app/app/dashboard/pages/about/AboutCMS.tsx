@@ -127,11 +127,22 @@ function SectionHeader({
 }
 
 // ── Main CMS ──────────────────────────────────────────────────
-export function AboutCMS({ initial }: { initial: AboutData }) {
-  const [hero, setHero] = useState(initial.hero);
-  const [experiences, setExperiences] = useState(initial.experiences);
-  const [educations, setEducations] = useState(initial.educations);
-  const [values, setValues] = useState(initial.values);
+export function AboutCMS({ initial }: { initial: AboutData | null }) {
+  const [hero, setHero] = useState<AboutHero>(
+    initial?.hero ?? {
+      name: "",
+      title: "",
+      subtitle: "",
+      bio: [],
+      image: null,
+      resumeUrl: "",
+      location: "",
+      experience: "",
+    },
+  );
+  const [experiences, setExperiences] = useState(initial?.experiences ?? []);
+  const [educations, setEducations] = useState(initial?.educations ?? []);
+  const [values, setValues] = useState(initial?.values ?? []);
   const [toast, setToast] = useState<string | null>(null);
   // const [imageFile, setImageFile] = useState<File | null>(null);
 
@@ -285,7 +296,7 @@ export function AboutCMS({ initial }: { initial: AboutData }) {
     }
   };
   // ── Experience CRUD ───────────────────────────────────────
-  async function handleSaveExp(data: Omit<Experience, "id">) {
+  async function handleSaveExp(data: Omit<Experience, "_id">) {
     if (editExp) {
       const updated = await dashboardUpdateExperience(editExp._id, data);
       if (updated)
@@ -303,7 +314,7 @@ export function AboutCMS({ initial }: { initial: AboutData }) {
   }
 
   // ── Education CRUD ────────────────────────────────────────
-  async function handleSaveEdu(data: Omit<Education, "id">) {
+  async function handleSaveEdu(data: Omit<Education, "_id">) {
     if (editEdu) {
       const updated = await dashboardUpdateEducation(editEdu._id, data);
       if (updated)
@@ -321,7 +332,7 @@ export function AboutCMS({ initial }: { initial: AboutData }) {
   }
 
   // ── Values CRUD ───────────────────────────────────────────
-  async function handleSaveVal(data: Omit<Value, "id">) {
+  async function handleSaveVal(data: Omit<Value, "_id">) {
     if (editVal) {
       const updated = await dashboardUpdateValue(editVal._id, data);
       if (updated)

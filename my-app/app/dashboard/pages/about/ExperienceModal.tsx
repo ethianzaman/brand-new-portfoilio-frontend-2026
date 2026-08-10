@@ -7,7 +7,7 @@ import { cn } from '@/lib/utils'
 
 interface Props {
   experience?: Experience | null
-  onSave:      (data: Omit<Experience, 'id'>) => Promise<void>
+  onSave:      (data: Omit<Experience, '_id'>) => Promise<void>
   onCancel:    () => void
 }
 
