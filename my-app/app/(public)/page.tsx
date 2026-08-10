@@ -3,6 +3,7 @@ import ContactPage from "./contact/page";
 import HomePage from "./home/page";
 import ProjectsPage from "./projects/page";
 import AboutPage from "./about/page";
+import BlogPage from "./blog/page";
 
 export default function Home() {
   return (
@@ -11,6 +12,7 @@ export default function Home() {
       <ServicesPage />
       <ProjectsPage />
       <AboutPage />
+      <BlogPage />
       <ContactPage />
     </div>
   )
