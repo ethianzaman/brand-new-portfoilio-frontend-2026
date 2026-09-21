@@ -1,6 +1,6 @@
 import ServicesPage from "./services/page";
 import ContactPage from "./contact/page";
-import HomePage from "./home/page";
+import HomePage from "./hero/page";
 import ProjectsPage from "./projects/page";
 import AboutPage from "./about/page";
 import BlogPage from "./blog/page";

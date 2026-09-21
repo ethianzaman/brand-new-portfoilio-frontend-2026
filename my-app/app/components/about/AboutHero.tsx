@@ -7,6 +7,11 @@ import {
 import { AboutHero as AboutHeroType } from '@/lib/types/about'
 
 export function AboutHero({ data }: { data: AboutHeroType }) {
+  const hasResume = Boolean(data.resumeUrl);
+  const resumeHref = /^https?:\/\//i.test(data.resumeUrl)
+    ? `/api/download?url=${encodeURIComponent(data.resumeUrl)}`
+    : data.resumeUrl;
+
   return (
     <section className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16
                         items-center mb-20">
@@ -71,19 +76,21 @@ export function AboutHero({ data }: { data: AboutHeroType }) {
             Hire Me
           </Link>
 
-          <a
-            href={data.resumeUrl}
-            download
-            className="flex items-center gap-2 px-5 py-2.5 rounded-xl
-                       bg-white dark:bg-zinc-900
-                       border border-zinc-200 dark:border-zinc-700
-                       text-zinc-700 dark:text-zinc-300 text-sm font-medium
-                       hover:border-indigo-300 dark:hover:border-indigo-700
-                       transition-all duration-150"
-          >
-            <Download className="w-4 h-4" />
-            Download CV
-          </a>
+          {hasResume && (
+            <a
+              href={resumeHref}
+              download
+              className="flex items-center gap-2 px-5 py-2.5 rounded-xl
+                         bg-white dark:bg-zinc-900
+                         border border-zinc-200 dark:border-zinc-700
+                         text-zinc-700 dark:text-zinc-300 text-sm font-medium
+                         hover:border-indigo-300 dark:hover:border-indigo-700
+                         transition-all duration-150"
+            >
+              <Download className="w-4 h-4" />
+              Download CV
+            </a>
+          )}
 
           <Link
             href="/projects"

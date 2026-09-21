@@ -10,6 +10,10 @@ const nextConfig = {
         hostname: "i.ibb.co",
       },
       {
+        protocol: "http",
+        hostname: "localhost",
+      },
+      {
         protocol: "https",
         hostname: "drive.google.com",
       },
