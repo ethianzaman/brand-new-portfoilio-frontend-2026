@@ -1,6 +1,10 @@
 import { DashboardLayout } from "../components/dashboard/DashBoardLayout";
-
+import { DashboardProviders } from "./providers";
 
 export default function Layout({ children }: { children: React.ReactNode }) {
-  return <DashboardLayout>{children}</DashboardLayout>
+  return (
+    <DashboardProviders>
+      <DashboardLayout>{children}</DashboardLayout>
+    </DashboardProviders>
+  );
 }

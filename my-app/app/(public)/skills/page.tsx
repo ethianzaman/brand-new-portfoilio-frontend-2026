@@ -1,16 +1,15 @@
 import { Code2 } from 'lucide-react'
 import { SkillsGrid } from '@/app/components/skills/SkillsGrid'
-import { DEMO_SKILLS } from '@/lib/data/skills.demo'
+import { getSkills } from '@/lib/api/skills'
 
 export const metadata = {
-  title: 'Skills — John Dev',
+  title: 'Skills — Ethian Dev',
   description: 'Technologies, languages and tools I work with.',
 }
 
-export default function SkillsPage() {
-  // ── Later: replace with API call ──────────────────────────
-  // const skills = await fetchSkills()
-  const skills = DEMO_SKILLS
+export default async function SkillsPage() {
+  // Cached 60s under tag "skills"; last-good-on-failure; demo data on build.
+  const skills = await getSkills()
 
   return (
     <div className="min-h-screen bg-white dark:bg-zinc-950">

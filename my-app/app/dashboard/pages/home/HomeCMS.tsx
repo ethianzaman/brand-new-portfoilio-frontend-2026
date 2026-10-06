@@ -9,16 +9,13 @@ import {
   Image as ImageIcon,
   FileText,
   Loader2,
-  Check,
   Link2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { LabeledInput, LabeledTextarea } from "@/components/ui/LabeledInputs";
+import { toast } from "sonner";
 import { HomeData, HomeStat, HomeSocial } from "@/lib/types/hero";
-import {
-  dashboardUpdateHero,
-  dashboardUpdateHeroStats,
-} from "@/lib/services/hero.services";
+import { useHomeQuery, usePublishHero, usePublishStats } from "./useHomeMutations";
 import { cn } from "@/lib/utils";
 import { inputCls, labelCls } from "@/components/ui/shared";
 
@@ -89,25 +86,19 @@ export function HomeCMS({ initial }: { initial: HomeData }) {
     initial.hero.titles?.length ? initial.hero.titles : [],
   );
   const [stats, setStats] = useState<HomeStat[]>(initial.stats);
-  const [isSavingHero, setIsSavingHero] = useState(false);
-  const [isSavingStats, setIsSavingStats] = useState(false);
-  const [toast, setToast] = useState<string | null>(null);
   const imageInputRef = useRef<HTMLInputElement>(null);
   const resumeInputRef = useRef<HTMLInputElement>(null);
 
-  function showToast(msg: string) {
-    setToast(msg);
-    setTimeout(() => setToast(null), 3000);
-  }
+  // TanStack Query owns the server state: retries with exponential backoff,
+  // optimistic writes, rollback on error, and sonner toasts.
+  // `useHomeQuery` seeds the ["home"] cache with the server-rendered payload so
+  // the mutations below can snapshot / patch / roll back it.
+  useHomeQuery(initial);
+  const publishHero = usePublishHero();
+  const publishStats = usePublishStats();
 
-  // Public cache ট্যাগ রিভ্যালিডেট করে — publish হলেই সাইট আপডেট
-  async function revalidateHome() {
-    await fetch("/api/revalidate", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ tag: "home" }),
-    }).catch(() => {});
-  }
+  const isSavingHero = publishHero.isPending;
+  const isSavingStats = publishStats.isPending;
 
   // ── Hero image ───────────────────────────────────────────
   function handleImageChange(e: ChangeEvent<HTMLInputElement>) {
@@ -130,80 +121,88 @@ export function HomeCMS({ initial }: { initial: HomeData }) {
   }
 
   // ── Publish hero ─────────────────────────────────────────
-  async function handlePublishHero() {
+  function handlePublishHero() {
     if (!hero.name.trim() || !hero.title.trim()) {
-      showToast("Name and title are required");
+      toast.error("Name and title are required");
       return;
     }
-    setIsSavingHero(true);
-    try {
-      const formData = new FormData();
-      formData.append("name", hero.name.trim());
-      formData.append("title", hero.title.trim());
-      formData.append("bio", hero.bio.trim());
-      formData.append("socials", JSON.stringify(socials));
-      formData.append("titles", JSON.stringify(titles));
 
-      if (hero.imageMode === "upload" && hero.imageFile) {
-        formData.append("image", hero.imageFile);
-      } else if (hero.image.trim()) {
-        formData.append("image", hero.image.trim());
-      }
+    const formData = new FormData();
+    formData.append("name", hero.name.trim());
+    formData.append("title", hero.title.trim());
+    formData.append("bio", hero.bio.trim());
+    formData.append("socials", JSON.stringify(socials));
+    formData.append("titles", JSON.stringify(titles));
 
-      if (hero.resumeMode === "upload" && hero.resumeFile) {
-        formData.append("resume", hero.resumeFile);
-      } else if (hero.resumeUrl.trim()) {
-        formData.append("resumeUrl", hero.resumeUrl.trim());
-      }
-
-      const updatedHero = await dashboardUpdateHero(formData);
-
-      setHero((prev) => ({
-        ...prev,
-        name: updatedHero.name,
-        title: updatedHero.title,
-        bio: updatedHero.bio,
-        image: updatedHero.image ?? "",
-        resumeUrl: updatedHero.resumeUrl,
-        imageMode: "url",
-        imageFile: null,
-        resumeMode: "url",
-        resumeFile: null,
-      }));
-      if (updatedHero.socials?.length) setSocials(updatedHero.socials);
-      if (updatedHero.titles?.length) setTitles(updatedHero.titles);
-
-      await revalidateHome();
-      showToast("Hero section published");
-    } catch (error) {
-      showToast(
-        error instanceof Error ? error.message : "Failed to publish hero",
-      );
-    } finally {
-      setIsSavingHero(false);
+    if (hero.imageMode === "upload" && hero.imageFile) {
+      formData.append("image", hero.imageFile);
+    } else if (hero.image.trim()) {
+      formData.append("image", hero.image.trim());
     }
+
+    if (hero.resumeMode === "upload" && hero.resumeFile) {
+      formData.append("resume", hero.resumeFile);
+    } else if (hero.resumeUrl.trim()) {
+      formData.append("resumeUrl", hero.resumeUrl.trim());
+    }
+
+    // Snapshot for local rollback if the request fails.
+    const previousHero = hero;
+    const previousSocials = socials;
+    const previousTitles = titles;
+
+    publishHero.mutate(
+      {
+        formData,
+        optimistic: {
+          ...initial.hero,
+          name: hero.name.trim(),
+          title: hero.title.trim(),
+          bio: hero.bio.trim(),
+          image: hero.image || null,
+          resumeUrl: hero.resumeUrl.trim(),
+          socials,
+          titles,
+        },
+      },
+      {
+        onSuccess: (updatedHero) => {
+          setHero((prev) => ({
+            ...prev,
+            name: updatedHero.name,
+            title: updatedHero.title,
+            bio: updatedHero.bio,
+            image: updatedHero.image ?? "",
+            resumeUrl: updatedHero.resumeUrl,
+            imageMode: "url",
+            imageFile: null,
+            resumeMode: "url",
+            resumeFile: null,
+          }));
+          if (updatedHero.socials?.length) setSocials(updatedHero.socials);
+          if (updatedHero.titles?.length) setTitles(updatedHero.titles);
+        },
+        onError: () => {
+          setHero(previousHero);
+          setSocials(previousSocials);
+          setTitles(previousTitles);
+        },
+      },
+    );
   }
 
   // ── Publish stats ────────────────────────────────────────
-  async function handlePublishStats() {
+  function handlePublishStats() {
     const clean = stats.filter((s) => s.value.trim() && s.label.trim());
     if (clean.length === 0) {
-      showToast("Add at least one stat");
+      toast.error("Add at least one stat");
       return;
     }
-    setIsSavingStats(true);
-    try {
-      const updated = await dashboardUpdateHeroStats(clean);
-      setStats(updated);
-      await revalidateHome();
-      showToast("Statistics published");
-    } catch (error) {
-      showToast(
-        error instanceof Error ? error.message : "Failed to publish stats",
-      );
-    } finally {
-      setIsSavingStats(false);
-    }
+    const previous = stats;
+    publishStats.mutate(clean, {
+      onSuccess: (updated) => setStats(updated),
+      onError: () => setStats(previous),
+    });
   }
 
   return (
@@ -624,16 +623,6 @@ export function HomeCMS({ initial }: { initial: HomeData }) {
           )}
         </div>
       </section>
-
-      {/* ── Toast ── */}
-      {toast && (
-        <div className="fixed top-6 left-1/2 -translate-x-1/2 z-100 flex items-center gap-3 px-5 py-3 rounded-2xl bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 text-sm font-semibold shadow-2xl animate-in fade-in slide-in-from-top-4 duration-300 whitespace-nowrap border border-white/10 dark:border-zinc-200">
-          <div className="flex items-center justify-center w-5 h-5 rounded-full bg-emerald-500/20 text-emerald-500">
-            <Check className="w-3.5 h-3.5 stroke-[3px]" />
-          </div>
-          <span>{toast}</span>
-        </div>
-      )}
     </div>
   );
 }

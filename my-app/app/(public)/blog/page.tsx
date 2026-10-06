@@ -1,16 +1,17 @@
 import { FileText } from "lucide-react";
 import { BlogPostsGrid } from "../../components/blog/BlogPostsGrid";
-import { dashboardGetBlogPosts } from "@/lib/services/blog.services";
+import { getPublishedBlogPosts } from "@/lib/api/blog";
 import { EmptyState } from "@/app/components/EmptyState";
 
 export const metadata = {
-  title: "Blog — John Dev",
+  title: "Blog — Ethian Dev",
   description: "Articles on development, design and the craft of building for the web.",
 };
 
 export default async function BlogPage() {
-  const all = await dashboardGetBlogPosts();
-  const posts = all.filter((p) => p.status === "published");
+  // The `status === "published"` filter lives inside `getPublishedBlogPosts()`
+  // so drafts can never reach this page. See lib/api/blog.ts.
+  const posts = await getPublishedBlogPosts();
 
   if (posts.length === 0) {
     return (

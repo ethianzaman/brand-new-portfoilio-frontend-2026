@@ -2,8 +2,10 @@ import { User } from 'lucide-react'
 import { AboutCMS } from './AboutCMS'
 import { dashboardGetAbout } from '@/lib/services/about.services'
 
+
 export default async function DashboardAboutPage() {
   const about = await dashboardGetAbout().catch(() => null)
+
 
   return (
     <div className="flex flex-col gap-6">

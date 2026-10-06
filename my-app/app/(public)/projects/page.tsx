@@ -1,17 +1,18 @@
 import { Suspense } from "react";
 import { Briefcase } from "lucide-react";
-import { fetchProjects } from "@/lib/services/project.services";
+import { getProjects } from "@/lib/api/projects";
 import { PAGE_SIZE } from "@/lib/constants/project";
 import { ProjectsGrid } from "@/app/components/projects/ProjectsGrid";
 import { ProjectsSkeleton } from "@/app/components/projects/ProjectsSkeleton";
 
 export const metadata = {
-  title: "Projects — John Dev",
+  title: "Projects — Ethian Dev",
   description: "Showcase of frontend, fullstack, backend and mobile projects.",
 };
 
 export default async function ProjectsPage() {
-  const initialData = await fetchProjects({
+  // Cached 60s under tag "projects"; last-good-on-failure; demo data on build.
+  const initialData = await getProjects({
     category: "all",
     page: 1,
     pageSize: PAGE_SIZE,

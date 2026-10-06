@@ -1,7 +1,8 @@
+import { apiUrl } from "@/lib/api/config";
 import { Service } from "@/lib/types/services";
 // import { DEMO_SERVICES } from "@/lib/data/services.demo";
 
-const API_BASE_URL = "http://localhost:5000/api/services"; // 👈 ব্যাকএন্ড এপিআই ইউআরএল
+const API_BASE_URL = `${apiUrl()}/services`; // 👈 ব্যাকএন্ড এপিআই ইউআরএল
 
 // const store: Service[] = JSON.parse(JSON.stringify(DEMO_SERVICES));
 
