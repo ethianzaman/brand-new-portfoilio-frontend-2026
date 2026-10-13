@@ -4,7 +4,8 @@ import { dashboardGetHero } from "@/lib/services/hero.services";
 import { DEMO_HOME } from "@/lib/data/home.demo";
 
 export default async function DashboardHomePage() {
-  // ব্যাকএন্ড ডাউন থাকলে demo data দিয়ে CMS দেখানো হয়
+  // Dashboard reads always bypass the public ISR cache. If the backend is
+  // down we seed the CMS with demo data so the screen is still usable.
   const hero = await dashboardGetHero().catch(() => DEMO_HOME);
 
   return (

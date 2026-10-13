@@ -105,25 +105,6 @@ export function ProjectsTable({ initial }: { initial: Project[] }) {
     );
   };
 
-  // ── CRUD ──────────────────────────────────────────────────
-  // async function handleSave(data: Omit<Project, "id">) {
-  //   if (editProject) {
-  //     const updated = await dashboardUpdateProject(editProject.id, data);
-  //     if (updated) {
-  //       setProjects((prev) =>
-  //         prev.map((p) => (p.id === updated.id ? updated : p)),
-  //       );
-  //       showToast("Project updated successfully");
-  //     }
-  //   } else {
-  //     // const created = await dashboardCreateProject(data);
-  //     const created = await dashboardCreateProject(data);
-  //     setProjects((prev) => [created, ...prev]);
-  //     showToast("Project created successfully");
-  //   }
-  //   setShowForm(false);
-  //   setEditProject(null);
-  // }
 async function handleSave(
   data: Omit<Project, "id">,
   image?: File,

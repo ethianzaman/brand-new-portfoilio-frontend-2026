@@ -1,5 +1,5 @@
 "use client";
-import { useState, useTransition } from "react";
+import { useMemo, useState, useTransition } from "react";
 import { ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ProjectCard } from "./ProjectCard";
@@ -20,6 +20,28 @@ export function ProjectsGrid({ initialData }: Props) {
   const [hasMore, setHasMore] = useState(initialData.hasMore);
   const [page, setPage] = useState(1);
   const [isPending, startTransition] = useTransition();
+
+  /**
+   * `router.refresh()` hands down a brand-new `initialData` object every time it
+   * re-runs the server component — even when the payload is byte-identical — so
+   * object identity cannot tell us "the visitor is now looking at new data".
+   * Compare the payload itself.
+   *
+   * Only a genuine content change resets the local filter/pagination state, so a
+   * refresh triggered by an unrelated dashboard edit leaves the category the
+   * visitor picked and the pages they already expanded alone.
+   */
+  const signature = useMemo(() => JSON.stringify(initialData), [initialData]);
+  const [syncedSignature, setSyncedSignature] = useState(signature);
+
+  if (signature !== syncedSignature) {
+    setSyncedSignature(signature);
+    setCategory("all");
+    setPage(1);
+    setProjects(initialData.projects);
+    setTotal(initialData.total);
+    setHasMore(initialData.hasMore);
+  }
 
   function handleCategory(cat: Category) {
     if (cat === category) return;

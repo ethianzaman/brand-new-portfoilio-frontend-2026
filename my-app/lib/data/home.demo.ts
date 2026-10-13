@@ -8,7 +8,7 @@ import { HomeData } from "@/lib/types/hero";
 export const DEMO_HOME: HomeData = {
   hero: {
     name: "Ethian Dev",
-    title: "Full Stack Developer",
+    title: "Full Stack Engineer",
     titles: [
       "Django & Next.js Specialist",
       "Schema & DB Architect",

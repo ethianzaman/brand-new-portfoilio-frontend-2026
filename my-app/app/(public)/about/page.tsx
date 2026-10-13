@@ -3,10 +3,9 @@ import { AboutHero } from "@/app/components/about/AboutHero";
 import { AboutExperience } from "@/app/components/about/AboutExperience";
 import { AboutEducation } from "@/app/components/about/AboutEducation";
 import { AboutValues } from "@/app/components/about/AboutValues";
-import { DEMO_ABOUT } from "@/lib/data/about.demo";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
-import { dashboardGetAbout } from "@/lib/services/about.services";
+import { getAbout } from "@/lib/api/about";
 
 export const metadata = {
   title: "About — Ethian Dev",
@@ -15,15 +14,8 @@ export const metadata = {
 };
 
 export default async function AboutPage() {
-  // ── Later: replace with API call ──────────────────────────
-  let about;
-
-  try {
-    about = await dashboardGetAbout();
-  } catch (error) {
-    console.error("Failed to fetch about data:", error);
-    about = DEMO_ABOUT; // backend down থাকলে demo data fallback
-  }
+  // Cached 60s under tag "about"; last-good-on-failure; demo data on build.
+  const about = await getAbout();
 
   return (
     <div className="min-h-screen bg-white dark:bg-zinc-950">

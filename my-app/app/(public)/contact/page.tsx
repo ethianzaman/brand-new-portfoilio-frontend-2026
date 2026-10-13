@@ -2,19 +2,16 @@ import { ContactForm } from './ContactForm'
 import { ContactInfo } from './ContactInfo'
 import { ContactFAQ } from './ContactFAQ'
 import { MessageCircle } from 'lucide-react'
-import { dashboardGetContact } from '@/lib/services/contact.services'
-
-
+import { getContact } from '@/lib/api/contact'
 
 export const metadata = {
   title: 'Contact — Ethian Dev',
   description: 'Get in touch for project inquiries, collaborations or just a chat.',
 }
 
-
-
 export default async function  ContactPage() {
-  const contactData = await dashboardGetContact() 
+  // Cached 60s under tag "contact"; last-good-on-failure; demo data on build.
+  const contactData = await getContact()
   const {info, faqs} = contactData
   return (
     <div className="min-h-screen bg-white dark:bg-zinc-950">

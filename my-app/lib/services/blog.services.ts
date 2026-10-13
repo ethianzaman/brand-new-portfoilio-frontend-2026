@@ -1,7 +1,8 @@
+import { apiUrl } from "@/lib/api/config";
 import { BlogPost } from "@/lib/types/blog";
 import { DEMO_BLOG_POSTS } from "@/lib/data/blog.demo";
 
-const API_BASE_URL = "http://localhost:5000/api/blogs";
+const API_BASE_URL = `${apiUrl()}/blogs`;
 
 type ApiPost = BlogPost & { _id?: string };
 

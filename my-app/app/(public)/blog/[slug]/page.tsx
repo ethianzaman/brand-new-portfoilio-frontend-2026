@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, Clock3, CalendarDays, Tag } from "lucide-react";
-import { fetchBlogPostBySlug } from "@/lib/services/blog.services";
+import { getBlogPostBySlug } from "@/lib/api/blog";
 
 type Props = {
   params: Promise<{ slug: string }>;
@@ -9,21 +9,23 @@ type Props = {
 
 export async function generateMetadata({ params }: Props) {
   const { slug } = await params;
-  const post = await fetchBlogPostBySlug(slug);
+  const post = await getBlogPostBySlug(slug);
 
   if (!post) {
-    return { title: "Post not found — John Dev" };
+    return { title: "Post not found — Ethian Dev" };
   }
 
   return {
-    title: `${post.title} — John Dev`,
+    title: `${post.title} — Ethian Dev`,
     description: post.excerpt,
   };
 }
 
 export default async function BlogPostPage({ params }: Props) {
   const { slug } = await params;
-  const post = await fetchBlogPostBySlug(slug);
+  // Tagged `blog-<slug>` + `blog`, so the backend can invalidate this post
+  // precisely or the whole blog at once.
+  const post = await getBlogPostBySlug(slug);
 
   if (!post || post.status !== "published") {
     notFound();

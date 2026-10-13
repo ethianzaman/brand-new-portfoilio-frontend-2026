@@ -28,5 +28,5 @@ export const socialLinks = [
 
 export const navConfig = {
   name: "Ethian",
-  title: "Full Stack Developer",
+  title: "Full Stack Engineer",
 };

@@ -1,3 +1,4 @@
+import { apiUrl } from "@/lib/api/config";
 import { DEMO_PROJECTS } from "@/lib/data/projects.demo";
 import {
   Project,
@@ -16,20 +17,14 @@ import {
 //  4. Done — zero changes in components needed
 // ─────────────────────────────────────────────────────────────────
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL;
-const API_BASE_URL = "http://localhost:5000/api/projects";
-
-// ── Internal: decide demo vs real ────────────────────────────────
-function isDemo(): boolean {
-  return !API_URL;
-}
+const API_BASE_URL = `${apiUrl()}/projects`;
 
 // ── Internal: base fetch (used when API is ready) ─────────────────
 async function fetchFromApi<T>(
   path: string,
   params?: Record<string, string>,
 ): Promise<T> {
-  const url = new URL(`${API_URL}${path}`);
+  const url = new URL(`${apiUrl()}${path}`);
   if (params) {
     Object.entries(params).forEach(([k, v]) => url.searchParams.set(k, v));
   }
@@ -141,10 +136,6 @@ export async function fetchProjects(
 
 // Get single project by ID
 export async function fetchProjectById(id: string): Promise<Project | null> {
-  if (isDemo()) {
-    return DEMO_PROJECTS.find((p) => p.id === id) ?? null;
-  }
-
   // Backend: GET /projects/:id
   return fetchFromApi<Project>(`/projects/${id}`);
 }

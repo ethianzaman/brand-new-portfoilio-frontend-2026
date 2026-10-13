@@ -1,3 +1,4 @@
+import { apiUrl } from "@/lib/api/config";
 import {
   ContactApiData,
   ContactData,
@@ -6,7 +7,7 @@ import {
 } from "@/lib/types/contact";
 // import { DEMO_CONTACT } from "@/lib/data/contact.demo";
 
-const API_BASE_URL = "http://localhost:5000/api/contact";
+const API_BASE_URL = `${apiUrl()}/contact`;
 
 function normalizeContact(contact: ContactApiData): ContactData {
   return {

@@ -20,26 +20,10 @@ import {
   LinkedinIcon,
   TwitterIcon,
 } from "@/app/components/icon/brandIcons";
-import { getHeroData } from "@/lib/services/hero.services";
-import { DEMO_HOME } from "@/lib/data/home.demo";
+import { getHeroData } from "@/lib/api/home";
+import { getSkills } from "@/lib/api/skills";
 import HeroTypewriter from "@/app/components/HeroTypeWritter";
-import { dashboardGetSkills } from "@/lib/services/skill.services";
-
-// Single Skill Object Structure
-export interface BackendSkill {
-  id?: string;
-  name?: string;
-  title?: string;
-  category?: string;
-  icon?: string;
-}
-
-// Category Wrapper Structure
-export interface SkillCategory {
-  id: string;
-  label: string;
-  skills: BackendSkill[];
-}
+import type { SkillCategory } from "@/lib/types/skill";
 
 // Dynamic Icon Mapping Category Name basis-e
 const categoryIcons: Record<string, ComponentType<{ className?: string }>> = {
@@ -58,10 +42,12 @@ const socialIcons: Record<string, ComponentType<{ className?: string }>> = {
 };
 
 export default async function HomePage() {
-  const rawSkillsData = await dashboardGetSkills();
-  const skillsData = (rawSkillsData ?? []) as SkillCategory[];
-  const data = await getHeroData().catch(() => DEMO_HOME);
+  // ── TWO lines per public page from now on ─────────────────────────────
+  // 60s ISR + tag "home", 5s timeout, last-good-on-failure, demo data on build.
+  const data = await getHeroData();
   const hero = data.hero;
+
+  const skillsData: SkillCategory[] = await getSkills();
 
   // const resumeHref = /^https?:\/\//i.test(hero.resumeUrl)
   //   ? `/api/download?url=${encodeURIComponent(hero.resumeUrl)}`
@@ -263,22 +249,14 @@ export default async function HomePage() {
                 </div>
 
                 <div className="flex flex-wrap gap-2">
-                  {category.skills.map((skillItem, idx) => {
-                    // Skill object theke 'name' ba 'title' fallback value handle kora
-                    const skillName =
-                      typeof skillItem === "string"
-                        ? skillItem
-                        : skillItem.name || skillItem.title || "Skill";
-
-                    return (
-                      <span
-                        key={skillItem.id || `${category.id}-${idx}`}
-                        className="px-3 py-1 text-xs font-medium rounded-full bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400"
-                      >
-                        {skillName}
-                      </span>
-                    );
-                  })}
+                  {category.skills.map((skillItem, idx) => (
+                    <span
+                      key={`${category.id}-${skillItem.name}-${idx}`}
+                      className="px-3 py-1 text-xs font-medium rounded-full bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400"
+                    >
+                      {skillItem.name}
+                    </span>
+                  ))}
                 </div>
               </div>
             );

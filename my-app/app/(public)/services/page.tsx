@@ -1,20 +1,18 @@
 import { Briefcase, Wrench } from "lucide-react";
 import { ServicesGrid } from "../../components/services/ServicesGrid";
 import { ServicesCTA } from "../../components/services/ServicesCTA";
-// import { DEMO_SERVICES } from '@/lib/data/services.demo'
-import { dashboardGetServices } from "@/lib/services/service.services";
+import { getServices } from "@/lib/api/services";
 import { EmptyState } from "@/app/components/EmptyState";
 
 export const metadata = {
-  title: "Services — John Dev",
+  title: "Services — Ethian Dev",
   description:
     "Full-stack development services — frontend, backend, database design, API integration and more.",
 };
 
 export default async function ServicesPage() {
-  // Later: const services = await fetchServices()
-  // const services = DEMO_SERVICES
-  const services = await dashboardGetServices(); // Fetch services from the API
+  // Cached 60s under tag "services"; last-good-on-failure; demo data on build.
+  const services = await getServices();
 
   if (!services || services.length === 0) {
     return (

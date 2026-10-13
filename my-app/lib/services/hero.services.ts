@@ -1,52 +1,41 @@
-import { HomeData, HomeHero, HomeStat } from "@/lib/types/hero";
+import { apiUrl } from "@/lib/api/config";
+import type { HomeData, HomeHero, HomeStat } from "@/lib/types/hero";
 
-const API_BASE_URL = "http://localhost:5000/api"; // 👈 আপনার ব্যাকএন্ড এপিআই ইউআরএল
+/**
+ * DASHBOARD access for the home section.
+ *
+ * Client-safe on purpose: this module is imported by the CMS components, so it
+ * must NOT pull in `lib/api/core.ts` (which is `server-only`). Every request
+ * here bypasses the public ISR cache with `cache: "no-store"`.
+ *
+ * The matching public, server-rendered read lives in `lib/api/home.ts`.
+ */
+const HOME_URL = `${apiUrl()}/home`;
 
-// ── PUBLIC (cached — সাইট যেন দ্রুত থাকে) ──────────────────
-// প্রতিটি রিকোয়েস্টে ব্যাকএন্ড হিট হয় না; ৬০ সেকেন্ড পরপর
-// রিফ্রেশ হয় এবং publish করার পর revalidateTag("home") দিয়ে
-// সাথে সাথে আপডেট হয়।
-export async function getHeroData(): Promise<HomeData> {
-  const res = await fetch(`${API_BASE_URL}/home`, {
-    method: "GET",
-    headers: { "Content-Type": "application/json" },
-    next: { revalidate: 60, tags: ["home"] },
-  });
-  if (!res.ok) throw new Error("Failed to fetch home data");
-  const data = await res.json();
-  return data.home; // ব্যাকএন্ড রেসপন্স স্ট্রাকচার অনুযায়ী: res.json({ home })
-}
-
-// ── DASHBOARD (always fresh — no cache) ────────────────────
 export async function dashboardGetHero(): Promise<HomeData> {
-  const res = await fetch(`${API_BASE_URL}/home`, {
+  const res = await fetch(HOME_URL, {
     method: "GET",
     headers: { "Content-Type": "application/json" },
     cache: "no-store",
+    credentials: "include",
   });
   if (!res.ok) throw new Error("Failed to fetch home data");
   const data = await res.json();
   return data.home;
 }
 
-// ── HERO (উইথ ইমেজ ও রিজিউম আপলোড - FormData) ───────────────
-// ব্যাকএন্ডে fields: name, title, bio, socials (JSON string),
-// image (file অথবা URL string), resume (file), resumeUrl (string)
+// ── HERO (with image & resume upload — FormData) ─────────────────────────
+// Backend fields: name, title, bio, socials (JSON string), titles (JSON
+// string), image (file OR url string), resume (file), resumeUrl (string)
 export async function dashboardUpdateHero(
   formData: FormData,
 ): Promise<HomeHero> {
-  // দেখতে কী কী FormData যাচ্ছে
-  console.log("📦 FormData:");
-
-  for (const [key, value] of formData.entries()) {
-    console.log(key, value);
-  }
-
-  const res = await fetch(`${API_BASE_URL}/home/hero`, {
+  const res = await fetch(`${HOME_URL}/hero`, {
     method: "PUT",
     body: formData,
-    // FormData পাঠানোর সময় 'Content-Type' হেডার দেওয়ার প্রয়োজন নেই
-    credentials: "include", // যদি ব্যাকএন্ডে session
+    // Content-Type is intentionally omitted so the browser can set the
+    // multipart boundary itself.
+    credentials: "include",
   });
 
   if (!res.ok) {
@@ -57,20 +46,25 @@ export async function dashboardUpdateHero(
   }
 
   const data = await res.json();
-  return data.hero; // ব্যাকএন্ড থেকে আসা আপডেটেড hero অবজেক্ট
+  return data.hero;
 }
 
-// ── STATS (সবগুলো স্ট্যাট একসাথে রিপ্লেস হয়) ────────────────
+// ── STATS (all stats are replaced at once) ──────────────────────────────
 export async function dashboardUpdateHeroStats(
   stats: HomeStat[],
 ): Promise<HomeStat[]> {
-  const res = await fetch(`${API_BASE_URL}/home/stats`, {
+  const res = await fetch(`${HOME_URL}/stats`, {
     method: "PUT",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ stats }),
+    credentials: "include",
   });
- console.log("📦 Updating stats:", stats);
-  if (!res.ok) throw new Error("Failed to update stats");
+
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}));
+    throw new Error(errorData.message || "Failed to update stats");
+  }
+
   const data = await res.json();
   return data.stats;
 }
