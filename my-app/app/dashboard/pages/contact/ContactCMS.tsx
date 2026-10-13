@@ -103,6 +103,7 @@ export function ContactCMS({ initial }: { initial: ContactData }) {
   // ── Info save ─────────────────────────────────────────────
   async function handleSaveInfo(data: Partial<ContactInfo>) {
     const updated = await dashboardUpdateInfo(data);
+    console.log("Updated contact info:", updated);
     setInfo(updated);
     setShowInfoModal(false);
     showToast("Contact info updated");
@@ -124,6 +125,7 @@ export function ContactCMS({ initial }: { initial: ContactData }) {
     setShowFAQModal(false);
     setEditFAQ(null);
   }
+
 
   async function handleDeleteFAQ() {
     if (!deleteTarget) return;
@@ -170,7 +172,7 @@ export function ContactCMS({ initial }: { initial: ContactData }) {
                       rounded-2xl overflow-hidden"
       >
         <div
-          className="flex items-center justify-between px-5 py-4
+          className="flex flex-wrap items-center justify-between gap-2 px-5 py-4
                         border-b border-zinc-100 dark:border-zinc-800
                         bg-zinc-50 dark:bg-zinc-800/50"
         >
@@ -328,7 +330,7 @@ export function ContactCMS({ initial }: { initial: ContactData }) {
                       rounded-2xl overflow-hidden"
       >
         <div
-          className="flex items-center justify-between px-5 py-4
+          className="flex flex-wrap items-center justify-between gap-2 px-5 py-4
                         border-b border-zinc-100 dark:border-zinc-800
                         bg-zinc-50 dark:bg-zinc-800/50"
         >
@@ -384,104 +386,108 @@ export function ContactCMS({ initial }: { initial: ContactData }) {
           </div>
         </div>
 
-        {/* Table head */}
-        <div
-          className="grid grid-cols-12 gap-4 px-5 py-3 mt-3
-                        bg-zinc-50 dark:bg-zinc-800/50
-                        border-y border-zinc-100 dark:border-zinc-800
-                        text-xs font-bold text-zinc-500 dark:text-zinc-400
-                        uppercase tracking-wider"
-        >
-          <div className="col-span-1">#</div>
-          <div className="col-span-5">Question</div>
-          <div className="col-span-5">Answer</div>
-          <div className="col-span-1 text-right">Actions</div>
-        </div>
+        <div className="overflow-x-auto">
+          <div className="min-w-180]">
+            {/* Table head */}
+            <div
+              className="grid grid-cols-12 gap-4 px-5 py-3 mt-3
+                            bg-zinc-50 dark:bg-zinc-800/50
+                            border-y border-zinc-100 dark:border-zinc-800
+                            text-xs font-bold text-zinc-500 dark:text-zinc-400
+                            uppercase tracking-wider"
+            >
+              <div className="col-span-1">#</div>
+              <div className="col-span-5">Question</div>
+              <div className="col-span-5">Answer</div>
+              <div className="col-span-1 text-right">Actions</div>
+            </div>
 
-        {/* Table rows */}
-        {filteredFAQs.length === 0 ? (
-          <div
-            className="flex flex-col items-center justify-center gap-2
-                          py-12 text-zinc-400"
-          >
-            <HelpCircle className="w-8 h-8 opacity-20" />
-            <p className="text-sm">No FAQs found</p>
-          </div>
-        ) : (
-          <div className="divide-y divide-zinc-100 dark:divide-zinc-800">
-            {filteredFAQs.map((faq, index) => (
+            {/* Table rows */}
+            {filteredFAQs.length === 0 ? (
               <div
-                key={faq.id}
-                className="grid grid-cols-12 gap-4 px-5 py-4 items-start
-                           hover:bg-zinc-50 dark:hover:bg-zinc-800/40
-                           transition-colors"
+                className="flex flex-col items-center justify-center gap-2
+                              py-12 text-zinc-400"
               >
-                {/* Number */}
-                <div className="col-span-1">
-                  <span
-                    className="w-6 h-6 rounded-full text-xs font-bold
-                                   bg-indigo-50 dark:bg-indigo-950
-                                   text-indigo-600 dark:text-indigo-400
-                                   flex items-center justify-center"
-                  >
-                    {index + 1}
-                  </span>
-                </div>
-
-                {/* Question — ✅ faq.question */}
-                <div className="col-span-5">
-                  <p
-                    className="text-sm font-semibold
-                                 text-zinc-900 dark:text-white
-                                 leading-snug line-clamp-2"
-                  >
-                    {faq.question}
-                  </p>
-                </div>
-
-                {/* Answer — ✅ faq.answer */}
-                <div className="col-span-5">
-                  <p
-                    className="text-sm text-zinc-500 dark:text-zinc-400
-                                 leading-relaxed line-clamp-2"
-                  >
-                    {faq.answer}
-                  </p>
-                </div>
-
-                {/* Actions */}
-                <div className="col-span-1 flex items-center justify-end gap-1">
-                  <button
-                    onClick={() => {
-                      setEditFAQ(faq);
-                      setShowFAQModal(true);
-                    }}
-                    className="p-1.5 rounded-lg text-zinc-400
-                               hover:text-amber-600 dark:hover:text-amber-400
-                               hover:bg-amber-50 dark:hover:bg-amber-950
-                               transition-all"
-                  >
-                    <Pencil className="w-3.5 h-3.5" />
-                  </button>
-                  <button
-                    onClick={() =>
-                      setDeleteTarget({
-                        id: faq.id,
-                        label: faq.question,
-                      })
-                    }
-                    className="p-1.5 rounded-lg text-zinc-400
-                               hover:text-red-600 dark:hover:text-red-400
-                               hover:bg-red-50 dark:hover:bg-red-950
-                               transition-all"
-                  >
-                    <Trash2 className="w-3.5 h-3.5" />
-                  </button>
-                </div>
+                <HelpCircle className="w-8 h-8 opacity-20" />
+                <p className="text-sm">No FAQs found</p>
               </div>
-            ))}
+            ) : (
+              <div className="divide-y divide-zinc-100 dark:divide-zinc-800">
+                {filteredFAQs.map((faq, index) => (
+                  <div
+                    key={faq.id}
+                    className="grid grid-cols-12 gap-4 px-5 py-4 items-start
+                               hover:bg-zinc-50 dark:hover:bg-zinc-800/40
+                               transition-colors"
+                  >
+                    {/* Number */}
+                    <div className="col-span-1">
+                      <span
+                        className="w-6 h-6 rounded-full text-xs font-bold
+                                       bg-indigo-50 dark:bg-indigo-950
+                                       text-indigo-600 dark:text-indigo-400
+                                       flex items-center justify-center"
+                      >
+                        {index + 1}
+                      </span>
+                    </div>
+
+                    {/* Question — ✅ faq.question */}
+                    <div className="col-span-5">
+                      <p
+                        className="text-sm font-semibold
+                                     text-zinc-900 dark:text-white
+                                     leading-snug line-clamp-2"
+                      >
+                        {faq.question}
+                      </p>
+                    </div>
+
+                    {/* Answer — ✅ faq.answer */}
+                    <div className="col-span-5">
+                      <p
+                        className="text-sm text-zinc-500 dark:text-zinc-400
+                                     leading-relaxed line-clamp-2"
+                      >
+                        {faq.answer}
+                      </p>
+                    </div>
+
+                    {/* Actions */}
+                    <div className="col-span-1 flex items-center justify-end gap-1">
+                      <button
+                        onClick={() => {
+                          setEditFAQ(faq);
+                          setShowFAQModal(true);
+                        }}
+                        className="p-1.5 rounded-lg text-zinc-500 dark:text-zinc-400
+                                   hover:text-amber-600 dark:hover:text-amber-400
+                                   hover:bg-amber-50 dark:hover:bg-amber-950
+                                   transition-all"
+                      >
+                        <Pencil className="w-3.5 h-3.5" />
+                      </button>
+                      <button
+                        onClick={() =>
+                          setDeleteTarget({
+                            id: faq.id,
+                            label: faq.question,
+                          })
+                        }
+                        className="p-1.5 rounded-lg text-zinc-500 dark:text-zinc-400
+                                   hover:text-red-600 dark:hover:text-red-400
+                                   hover:bg-red-50 dark:hover:bg-red-950
+                                   transition-all"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
-        )}
+        </div>
 
         {/* Footer */}
         <div
@@ -502,7 +508,7 @@ export function ContactCMS({ initial }: { initial: ContactData }) {
                         bg-zinc-900 dark:bg-white
                         text-white dark:text-zinc-900
                         text-sm font-medium shadow-xl
-                        animate-fade-in whitespace-nowrap"
+                        animate-fade-in max-w-[calc(100vw-2rem)] text-center"
         >
           {toast}
         </div>

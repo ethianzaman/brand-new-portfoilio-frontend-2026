@@ -93,7 +93,7 @@ function SectionHeader({
 }) {
   return (
     <div
-      className="flex items-center justify-between px-5 py-4
+          className="flex flex-wrap items-center justify-between gap-2 px-5 py-4
                     border-b border-zinc-100 dark:border-zinc-800
                     bg-zinc-50 dark:bg-zinc-800/50"
     >
@@ -204,65 +204,6 @@ export function AboutCMS({ initial }: { initial: AboutData | null }) {
 
   // ── Hero ──────────────────────────────────────────────────
 
-  // const handleSaveHero = async (
-  //   values: Partial<AboutHero> & {
-  //     imageFile?: File | null;
-  //   },
-  // ) => {
-  //   try {
-  //     const formData = new FormData();
-  //     console.log("INPUT VALUES:", values);
-  //     console.log("BIO specifically:", values.bio);
-
-  //     for (const pair of formData.entries()) {
-  //       console.log("FORM:", pair[0], pair[1]);
-  //     }
-
-  //     if (values.name) formData.append("name", values.name);
-  //     if (values.title) formData.append("title", values.title);
-  //     if (values.subtitle) formData.append("subtitle", values.subtitle);
-  //     if (values.location) formData.append("location", values.location);
-  //     if (values.experience) {
-  //       formData.append("experience", values.experience);
-  //     }
-
-  //     if (values.resumeUrl) {
-  //       formData.append("resumeUrl", values.resumeUrl);
-  //     }
-
-  //     if (values.bio) {
-  //       formData.append("bio", JSON.stringify(values.bio));
-  //     }
-
-  //     // ✅ FILE upload (Cloudinary)
-  //     if (values.imageFile) {
-  //       formData.append("image", values.imageFile);
-  //     }
-
-  //     // ✅ URL upload (IMPORTANT FIX)
-  //     else if (values.image) {
-  //       formData.append("image", values.image);
-  //     }
-
-  //     for (const pair of formData.entries()) {
-  //       console.log("FORM:", pair[0], pair[1]);
-  //     }
-
-  //     const updatedHero = await dashboardUpdateHero(formData);
-
-  //     setHero(updatedHero);
-
-  //     setShowHeroModal(false);
-
-  //     showToast("Hero section updated successfully");
-  //   } catch (error: unknown) {
-  //     const errMessage =
-  //       error instanceof Error ? error.message : "Failed to update hero";
-  //     console.error("Error updating hero:", error);
-
-  //     showToast(errMessage);
-  //   }
-  // };
 
   const handleSaveHero = async (
     values: Partial<AboutHero> & { imageFile?: File | null },
@@ -410,7 +351,7 @@ export function AboutCMS({ initial }: { initial: AboutData | null }) {
                       rounded-2xl overflow-hidden"
       >
         <div
-          className="flex items-center justify-between px-5 py-4
+      className="flex flex-wrap items-center justify-between gap-2 px-5 py-4
                         border-b border-zinc-100 dark:border-zinc-800
                         bg-zinc-50 dark:bg-zinc-800/50"
         >
@@ -547,124 +488,129 @@ export function AboutCMS({ initial }: { initial: AboutData | null }) {
           </div>
         </div>
 
-        {/* Table header */}
-        <div
-          className="grid grid-cols-12 gap-4 px-5 py-3 mt-3
-                        bg-zinc-50 dark:bg-zinc-800/50
-                        border-y border-zinc-100 dark:border-zinc-800
-                        text-xs font-bold text-zinc-500 dark:text-zinc-400
-                        uppercase tracking-wider"
-        >
-          <div className="col-span-3">Role</div>
-          <div className="col-span-3">Company</div>
-          <div className="col-span-2">Period</div>
-          <div className="col-span-3">Tags</div>
-          <div className="col-span-1 text-right">Actions</div>
-        </div>
+        <div className="overflow-x-auto">
+          {/* <div className="min-w-[720px]"> */}
+          <div className="min-w-180">
+            {/* Table header */}
+            <div
+              className="grid grid-cols-12 gap-4 px-5 py-3 mt-3
+                            bg-zinc-50 dark:bg-zinc-800/50
+                            border-y border-zinc-100 dark:border-zinc-800
+                            text-xs font-bold text-zinc-500 dark:text-zinc-400
+                            uppercase tracking-wider"
+            >
+              <div className="col-span-3">Role</div>
+              <div className="col-span-3">Company</div>
+              <div className="col-span-2">Period</div>
+              <div className="col-span-3">Tags</div>
+              <div className="col-span-1 text-right">Actions</div>
+            </div>
 
-        {filteredExps.length === 0 ? (
-          <div className="flex flex-col items-center justify-center gap-2 py-12 text-zinc-400">
-            <Briefcase className="w-8 h-8 opacity-20" />
-            <p className="text-sm">No experience found</p>
-          </div>
-        ) : (
-          <div className="divide-y divide-zinc-100 dark:divide-zinc-800">
-            {filteredExps.map((exp) => (
-              <div
-                key={exp._id?.toString()}
-                className="grid grid-cols-12 gap-4 px-5 py-4 items-center
-                           hover:bg-zinc-50 dark:hover:bg-zinc-800/40
-                           transition-colors"
-              >
-                <div className="col-span-3 flex items-center gap-2">
-                  <div
-                    className={cn(
-                      "w-2 h-2 rounded-full shrink-0",
-                      exp.current
-                        ? "bg-indigo-500 animate-pulse"
-                        : "bg-zinc-300 dark:bg-zinc-600",
-                    )}
-                  />
-                  <div className="min-w-0">
-                    <p className="text-sm font-semibold text-zinc-900 dark:text-white truncate">
-                      {exp.role}
-                    </p>
-                    {exp.current && (
-                      <span className="text-xs text-indigo-500 font-medium">
-                        Current
-                      </span>
-                    )}
-                  </div>
-                </div>
-
-                <div className="col-span-3">
-                  <p className="text-sm text-zinc-700 dark:text-zinc-300 truncate">
-                    {exp.company}
-                  </p>
-                  <p className="text-xs text-zinc-400">{exp.type}</p>
-                </div>
-
-                <div className="col-span-2">
-                  <span
-                    className="text-xs text-zinc-500 dark:text-zinc-400
-                                   bg-zinc-100 dark:bg-zinc-800
-                                   px-2 py-1 rounded-lg"
-                  >
-                    {exp.period}
-                  </span>
-                </div>
-
-                <div className="col-span-3 flex flex-wrap gap-1">
-                  {exp.tags.slice(0, 2).map((tag) => (
-                    <span
-                      key={tag}
-                      className="px-2 py-0.5 rounded-md text-xs
-                                 bg-zinc-100 dark:bg-zinc-800
-                                 text-zinc-500 dark:text-zinc-400"
-                    >
-                      {tag}
-                    </span>
-                  ))}
-                  {exp.tags.length > 2 && (
-                    <span className="text-xs text-zinc-400">
-                      +{exp.tags.length - 2}
-                    </span>
-                  )}
-                </div>
-
-                <div className="col-span-1 flex items-center justify-end gap-1">
-                  <button
-                    onClick={() => {
-                      setEditExp(exp);
-                      setShowExpModal(true);
-                    }}
-                    className="p-1.5 rounded-lg text-zinc-400
-                               hover:text-amber-600 dark:hover:text-amber-400
-                               hover:bg-amber-50 dark:hover:bg-amber-950
-                               transition-all"
-                  >
-                    <Pencil className="w-3.5 h-3.5" />
-                  </button>
-                  <button
-                    onClick={() =>
-                      setDeleteTarget({
-                        type: "exp",
-                        id: exp._id?.toString(),
-                        label: exp.role,
-                      })
-                    }
-                    className="p-1.5 rounded-lg text-zinc-400
-                               hover:text-red-600 dark:hover:text-red-400
-                               hover:bg-red-50 dark:hover:bg-red-950
-                               transition-all"
-                  >
-                    <Trash2 className="w-3.5 h-3.5" />
-                  </button>
-                </div>
+            {filteredExps.length === 0 ? (
+              <div className="flex flex-col items-center justify-center gap-2 py-12 text-zinc-400">
+                <Briefcase className="w-8 h-8 opacity-20" />
+                <p className="text-sm">No experience found</p>
               </div>
-            ))}
+            ) : (
+              <div className="divide-y divide-zinc-100 dark:divide-zinc-800">
+                {filteredExps.map((exp) => (
+                  <div
+                    key={exp._id?.toString()}
+                    className="grid grid-cols-12 gap-4 px-5 py-4 items-center
+                               hover:bg-zinc-50 dark:hover:bg-zinc-800/40
+                               transition-colors"
+                  >
+                    <div className="col-span-3 flex items-center gap-2">
+                      <div
+                        className={cn(
+                          "w-2 h-2 rounded-full shrink-0",
+                          exp.current
+                            ? "bg-indigo-500 animate-pulse"
+                            : "bg-zinc-300 dark:bg-zinc-600",
+                        )}
+                      />
+                      <div className="min-w-0">
+                        <p className="text-sm font-semibold text-zinc-900 dark:text-white truncate">
+                          {exp.role}
+                        </p>
+                        {exp.current && (
+                          <span className="text-xs text-indigo-500 font-medium">
+                            Current
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="col-span-3">
+                      <p className="text-sm text-zinc-700 dark:text-zinc-300 truncate">
+                        {exp.company}
+                      </p>
+                      <p className="text-xs text-zinc-400">{exp.type}</p>
+                    </div>
+
+                    <div className="col-span-2">
+                      <span
+                        className="text-xs text-zinc-500 dark:text-zinc-400
+                                       bg-zinc-100 dark:bg-zinc-800
+                                       px-2 py-1 rounded-lg"
+                      >
+                        {exp.period}
+                      </span>
+                    </div>
+
+                    <div className="col-span-3 flex flex-wrap gap-1">
+                      {exp.tags.slice(0, 2).map((tag) => (
+                        <span
+                          key={tag}
+                          className="px-2 py-0.5 rounded-md text-xs
+                                     bg-zinc-100 dark:bg-zinc-800
+                                     text-zinc-500 dark:text-zinc-400"
+                        >
+                          {tag}
+                        </span>
+                      ))}
+                      {exp.tags.length > 2 && (
+                        <span className="text-xs text-zinc-400">
+                          +{exp.tags.length - 2}
+                        </span>
+                      )}
+                    </div>
+
+                    <div className="col-span-1 flex items-center justify-end gap-1">
+                      <button
+                        onClick={() => {
+                          setEditExp(exp);
+                          setShowExpModal(true);
+                        }}
+                        className="p-1.5 rounded-lg text-zinc-500 dark:text-zinc-400
+                                   hover:text-amber-600 dark:hover:text-amber-400
+                                   hover:bg-amber-50 dark:hover:bg-amber-950
+                                   transition-all"
+                      >
+                        <Pencil className="w-3.5 h-3.5" />
+                      </button>
+                      <button
+                        onClick={() =>
+                          setDeleteTarget({
+                            type: "exp",
+                            id: exp._id?.toString(),
+                            label: exp.role,
+                          })
+                        }
+                        className="p-1.5 rounded-lg text-zinc-500 dark:text-zinc-400
+                                   hover:text-red-600 dark:hover:text-red-400
+                                   hover:bg-red-50 dark:hover:bg-red-950
+                                   transition-all"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
-        )}
+        </div>
 
         <div
           className="px-5 py-3 border-t border-zinc-100 dark:border-zinc-800
@@ -715,97 +661,102 @@ export function AboutCMS({ initial }: { initial: AboutData | null }) {
           </div>
         </div>
 
-        <div
-          className="grid grid-cols-12 gap-4 px-5 py-3 mt-3
-                        bg-zinc-50 dark:bg-zinc-800/50
-                        border-y border-zinc-100 dark:border-zinc-800
-                        text-xs font-bold text-zinc-500 dark:text-zinc-400
-                        uppercase tracking-wider"
-        >
-          <div className="col-span-4">Degree</div>
-          <div className="col-span-4">School</div>
-          <div className="col-span-2">Period</div>
-          <div className="col-span-2 text-right">Actions</div>
-        </div>
+        <div className="overflow-x-auto">
+          {/* <div className="min-w-[720px]"> */}
+          <div className="min-w-180">
+            <div
+              className="grid grid-cols-12 gap-4 px-5 py-3 mt-3
+                            bg-zinc-50 dark:bg-zinc-800/50
+                            border-y border-zinc-100 dark:border-zinc-800
+                            text-xs font-bold text-zinc-500 dark:text-zinc-400
+                            uppercase tracking-wider"
+            >
+              <div className="col-span-4">Degree</div>
+              <div className="col-span-4">School</div>
+              <div className="col-span-2">Period</div>
+              <div className="col-span-2 text-right">Actions</div>
+            </div>
 
-        {filteredEdus.length === 0 ? (
-          <div className="flex flex-col items-center justify-center gap-2 py-12 text-zinc-400">
-            <GraduationCap className="w-8 h-8 opacity-20" />
-            <p className="text-sm">No education found</p>
-          </div>
-        ) : (
-          <div className="divide-y divide-zinc-100 dark:divide-zinc-800">
-            {filteredEdus.map((edu) => (
-              <div
-                key={edu._id?.toString()}
-                className="grid grid-cols-12 gap-4 px-5 py-4 items-center
-                           hover:bg-zinc-50 dark:hover:bg-zinc-800/40 transition-colors"
-              >
-                <div className="col-span-4 min-w-0">
-                  <p className="text-sm font-semibold text-zinc-900 dark:text-white truncate">
-                    {edu.degree}
-                  </p>
-                  {edu.grade && (
-                    <span
-                      className="text-xs text-green-600 dark:text-green-400
-                                     bg-green-50 dark:bg-green-950/40
-                                     px-2 py-0.5 rounded-full font-medium"
-                    >
-                      {edu.grade}
-                    </span>
-                  )}
-                </div>
-
-                <div className="col-span-4 min-w-0">
-                  <p
-                    className="text-sm text-indigo-600 dark:text-indigo-400
-                                 font-medium truncate"
-                  >
-                    {edu.school}
-                  </p>
-                </div>
-
-                <div className="col-span-2">
-                  <span
-                    className="text-xs text-zinc-500 dark:text-zinc-400
-                                   bg-zinc-100 dark:bg-zinc-800
-                                   px-2 py-1 rounded-lg"
-                  >
-                    {edu.period}
-                  </span>
-                </div>
-
-                <div className="col-span-2 flex items-center justify-end gap-1">
-                  <button
-                    onClick={() => {
-                      setEditEdu(edu);
-                      setShowEduModal(true);
-                    }}
-                    className="p-1.5 rounded-lg text-zinc-400
-                               hover:text-amber-600 dark:hover:text-amber-400
-                               hover:bg-amber-50 dark:hover:bg-amber-950 transition-all"
-                  >
-                    <Pencil className="w-3.5 h-3.5" />
-                  </button>
-                  <button
-                    onClick={() =>
-                      setDeleteTarget({
-                        type: "edu",
-                        id: edu._id?.toString(),
-                        label: edu.degree,
-                      })
-                    }
-                    className="p-1.5 rounded-lg text-zinc-400
-                               hover:text-red-600 dark:hover:text-red-400
-                               hover:bg-red-50 dark:hover:bg-red-950 transition-all"
-                  >
-                    <Trash2 className="w-3.5 h-3.5" />
-                  </button>
-                </div>
+            {filteredEdus.length === 0 ? (
+              <div className="flex flex-col items-center justify-center gap-2 py-12 text-zinc-400">
+                <GraduationCap className="w-8 h-8 opacity-20" />
+                <p className="text-sm">No education found</p>
               </div>
-            ))}
+            ) : (
+              <div className="divide-y divide-zinc-100 dark:divide-zinc-800">
+                {filteredEdus.map((edu) => (
+                  <div
+                    key={edu._id?.toString()}
+                    className="grid grid-cols-12 gap-4 px-5 py-4 items-center
+                               hover:bg-zinc-50 dark:hover:bg-zinc-800/40 transition-colors"
+                  >
+                    <div className="col-span-4 min-w-0">
+                      <p className="text-sm font-semibold text-zinc-900 dark:text-white truncate">
+                        {edu.degree}
+                      </p>
+                      {edu.grade && (
+                        <span
+                          className="text-xs text-green-600 dark:text-green-400
+                                         bg-green-50 dark:bg-green-950/40
+                                         px-2 py-0.5 rounded-full font-medium"
+                        >
+                          {edu.grade}
+                        </span>
+                      )}
+                    </div>
+
+                    <div className="col-span-4 min-w-0">
+                      <p
+                        className="text-sm text-indigo-600 dark:text-indigo-400
+                                     font-medium truncate"
+                      >
+                        {edu.school}
+                      </p>
+                    </div>
+
+                    <div className="col-span-2">
+                      <span
+                        className="text-xs text-zinc-500 dark:text-zinc-400
+                                       bg-zinc-100 dark:bg-zinc-800
+                                       px-2 py-1 rounded-lg"
+                      >
+                        {edu.period}
+                      </span>
+                    </div>
+
+                    <div className="col-span-2 flex items-center justify-end gap-1">
+                      <button
+                        onClick={() => {
+                          setEditEdu(edu);
+                          setShowEduModal(true);
+                        }}
+                        className="p-1.5 rounded-lg text-zinc-500 dark:text-zinc-400
+                                   hover:text-amber-600 dark:hover:text-amber-400
+                                   hover:bg-amber-50 dark:hover:bg-amber-950 transition-all"
+                      >
+                        <Pencil className="w-3.5 h-3.5" />
+                      </button>
+                      <button
+                        onClick={() =>
+                          setDeleteTarget({
+                            type: "edu",
+                            id: edu._id?.toString(),
+                            label: edu.degree,
+                          })
+                        }
+                        className="p-1.5 rounded-lg text-zinc-500 dark:text-zinc-400
+                                   hover:text-red-600 dark:hover:text-red-400
+                                   hover:bg-red-50 dark:hover:bg-red-950 transition-all"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
-        )}
+        </div>
 
         <div
           className="px-5 py-3 border-t border-zinc-100 dark:border-zinc-800
@@ -856,93 +807,98 @@ export function AboutCMS({ initial }: { initial: AboutData | null }) {
           </div>
         </div>
 
-        <div
-          className="grid grid-cols-12 gap-4 px-5 py-3 mt-3
-                        bg-zinc-50 dark:bg-zinc-800/50
-                        border-y border-zinc-100 dark:border-zinc-800
-                        text-xs font-bold text-zinc-500 dark:text-zinc-400
-                        uppercase tracking-wider"
-        >
-          <div className="col-span-2">Icon</div>
-          <div className="col-span-3">Title</div>
-          <div className="col-span-6">Description</div>
-          <div className="col-span-1 text-right">Actions</div>
-        </div>
+        <div className="overflow-x-auto">
+          {/* <div className="min-w-[720px]"> */}
+          <div className="min-w-180">
+            <div
+              className="grid grid-cols-12 gap-4 px-5 py-3 mt-3
+                            bg-zinc-50 dark:bg-zinc-800/50
+                            border-y border-zinc-100 dark:border-zinc-800
+                            text-xs font-bold text-zinc-500 dark:text-zinc-400
+                            uppercase tracking-wider"
+            >
+              <div className="col-span-2">Icon</div>
+              <div className="col-span-3">Title</div>
+              <div className="col-span-6">Description</div>
+              <div className="col-span-1 text-right">Actions</div>
+            </div>
 
-        {filteredVals.length === 0 ? (
-          <div className="flex flex-col items-center justify-center gap-2 py-12 text-zinc-400">
-            <Heart className="w-8 h-8 opacity-20" />
-            <p className="text-sm">No values found</p>
-          </div>
-        ) : (
-          <div className="divide-y divide-zinc-100 dark:divide-zinc-800">
-            {filteredVals.map((val) => (
-              <div
-                key={val._id?.toString()}
-                className="grid grid-cols-12 gap-4 px-5 py-4 items-center
-                           hover:bg-zinc-50 dark:hover:bg-zinc-800/40 transition-colors"
-              >
-                <div className="col-span-2">
-                  <div
-                    className="w-9 h-9 rounded-xl
-                                  bg-indigo-50 dark:bg-indigo-950
-                                  flex items-center justify-center"
-                  >
-                    <span
-                      className="text-xs font-mono font-bold
-                                     text-indigo-600 dark:text-indigo-400"
-                    >
-                      {val.icon.slice(0, 2)}
-                    </span>
-                  </div>
-                </div>
-
-                <div className="col-span-3">
-                  <p className="text-sm font-semibold text-zinc-900 dark:text-white">
-                    {val.title}
-                  </p>
-                </div>
-
-                <div className="col-span-6">
-                  <p
-                    className="text-sm text-zinc-500 dark:text-zinc-400
-                                 line-clamp-1"
-                  >
-                    {val.desc}
-                  </p>
-                </div>
-
-                <div className="col-span-1 flex items-center justify-end gap-1">
-                  <button
-                    onClick={() => {
-                      setEditVal(val);
-                      setShowValModal(true);
-                    }}
-                    className="p-1.5 rounded-lg text-zinc-400
-                               hover:text-amber-600 dark:hover:text-amber-400
-                               hover:bg-amber-50 dark:hover:bg-amber-950 transition-all"
-                  >
-                    <Pencil className="w-3.5 h-3.5" />
-                  </button>
-                  <button
-                    onClick={() =>
-                      setDeleteTarget({
-                        type: "val",
-                        id: val._id?.toString(),
-                        label: val.title,
-                      })
-                    }
-                    className="p-1.5 rounded-lg text-zinc-400
-                               hover:text-red-600 dark:hover:text-red-400
-                               hover:bg-red-50 dark:hover:bg-red-950 transition-all"
-                  >
-                    <Trash2 className="w-3.5 h-3.5" />
-                  </button>
-                </div>
+            {filteredVals.length === 0 ? (
+              <div className="flex flex-col items-center justify-center gap-2 py-12 text-zinc-400">
+                <Heart className="w-8 h-8 opacity-20" />
+                <p className="text-sm">No values found</p>
               </div>
-            ))}
+            ) : (
+              <div className="divide-y divide-zinc-100 dark:divide-zinc-800">
+                {filteredVals.map((val) => (
+                  <div
+                    key={val._id?.toString()}
+                    className="grid grid-cols-12 gap-4 px-5 py-4 items-center
+                               hover:bg-zinc-50 dark:hover:bg-zinc-800/40 transition-colors"
+                  >
+                    <div className="col-span-2">
+                      <div
+                        className="w-9 h-9 rounded-xl
+                                      bg-indigo-50 dark:bg-indigo-950
+                                      flex items-center justify-center"
+                      >
+                        <span
+                          className="text-xs font-mono font-bold
+                                         text-indigo-600 dark:text-indigo-400"
+                        >
+                          {val.icon.slice(0, 2)}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="col-span-3">
+                      <p className="text-sm font-semibold text-zinc-900 dark:text-white">
+                        {val.title}
+                      </p>
+                    </div>
+
+                    <div className="col-span-6">
+                      <p
+                        className="text-sm text-zinc-500 dark:text-zinc-400
+                                     line-clamp-1"
+                      >
+                        {val.desc}
+                      </p>
+                    </div>
+
+                    <div className="col-span-1 flex items-center justify-end gap-1">
+                      <button
+                        onClick={() => {
+                          setEditVal(val);
+                          setShowValModal(true);
+                        }}
+                        className="p-1.5 rounded-lg text-zinc-500 dark:text-zinc-400
+                                   hover:text-amber-600 dark:hover:text-amber-400
+                                   hover:bg-amber-50 dark:hover:bg-amber-950 transition-all"
+                      >
+                        <Pencil className="w-3.5 h-3.5" />
+                      </button>
+                      <button
+                        onClick={() =>
+                          setDeleteTarget({
+                            type: "val",
+                            id: val._id?.toString(),
+                            label: val.title,
+                          })
+                        }
+                        className="p-1.5 rounded-lg text-zinc-500 dark:text-zinc-400
+                                   hover:text-red-600 dark:hover:text-red-400
+                                   hover:bg-red-50 dark:hover:bg-red-950 transition-all"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
-        )}
+        </div>
 
         <div
           className="px-5 py-3 border-t border-zinc-100 dark:border-zinc-800
@@ -963,7 +919,7 @@ export function AboutCMS({ initial }: { initial: AboutData | null }) {
                text-white dark:text-zinc-900
                text-sm font-semibold shadow-2xl
                animate-in fade-in slide-in-from-top-4 duration-300
-               whitespace-nowrap border border-white/10 dark:border-zinc-200"
+               max-w-[calc(100vw-2rem)] text-center border border-white/10 dark:border-zinc-200"
         >
           {/* The Tick Icon */}
           <div className="flex items-center justify-center w-5 h-5 rounded-full bg-emerald-500/20 text-emerald-500">

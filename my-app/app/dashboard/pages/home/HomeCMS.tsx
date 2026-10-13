@@ -31,6 +31,35 @@ type HeroForm = {
   resumeFile: File | null;
 };
 
+// Same rule the backend enforces (home.controller.ts isValidUrl).
+const HREF_RE = /^(https?:\/\/|mailto:|tel:|#|\/)/;
+
+/**
+ * Prepare social rows for publish.
+ *
+ * - rows where nothing is typed are leftovers from "Add link" → drop silently
+ * - half-filled rows or hrefs without a protocol would be rejected (or
+ *   silently dropped) by the backend AFTER the optimistic write, which made
+ *   the link "never get added" from the user's point of view → block publish
+ *   with a precise message instead
+ *
+ * Returns the cleaned list, or an error message to show in a toast.
+ */
+function sanitizeSocials(list: HomeSocial[]): HomeSocial[] | string {
+  const filled = list.filter((s) => s.label.trim() || s.href.trim());
+  for (let i = 0; i < filled.length; i++) {
+    const label = filled[i].label.trim();
+    const href = filled[i].href.trim();
+    if (!label || !href) {
+      return `Social link #${i + 1}: fill in both the label and the URL (or delete the row)`;
+    }
+    if (!HREF_RE.test(href)) {
+      return `Social link "${label}": URL must start with https:// (e.g. https://github.com/you)`;
+    }
+  }
+  return filled.map((s) => ({ label: s.label.trim(), href: s.href.trim() }));
+}
+
 // ── Toggle (URL / UPLOAD) ───────────────────────────────────
 function ModeToggle({
   mode,
@@ -127,12 +156,19 @@ export function HomeCMS({ initial }: { initial: HomeData }) {
       return;
     }
 
+    const cleanSocials = sanitizeSocials(socials);
+    if (typeof cleanSocials === "string") {
+      toast.error(cleanSocials);
+      return;
+    }
+    const cleanTitles = titles.map((t) => t.trim()).filter(Boolean);
+
     const formData = new FormData();
     formData.append("name", hero.name.trim());
     formData.append("title", hero.title.trim());
     formData.append("bio", hero.bio.trim());
-    formData.append("socials", JSON.stringify(socials));
-    formData.append("titles", JSON.stringify(titles));
+    formData.append("socials", JSON.stringify(cleanSocials));
+    formData.append("titles", JSON.stringify(cleanTitles));
 
     if (hero.imageMode === "upload" && hero.imageFile) {
       formData.append("image", hero.imageFile);
@@ -161,8 +197,8 @@ export function HomeCMS({ initial }: { initial: HomeData }) {
           bio: hero.bio.trim(),
           image: hero.image || null,
           resumeUrl: hero.resumeUrl.trim(),
-          socials,
-          titles,
+          socials: cleanSocials,
+          titles: cleanTitles,
         },
       },
       {
@@ -179,8 +215,10 @@ export function HomeCMS({ initial }: { initial: HomeData }) {
             resumeMode: "url",
             resumeFile: null,
           }));
-          if (updatedHero.socials?.length) setSocials(updatedHero.socials);
-          if (updatedHero.titles?.length) setTitles(updatedHero.titles);
+          // Always adopt the server's arrays — including when they became
+          // EMPTY (deleting every row used to leave stale rows in the form).
+          setSocials(updatedHero.socials ?? []);
+          setTitles(updatedHero.titles ?? []);
         },
         onError: () => {
           setHero(previousHero);
@@ -211,7 +249,7 @@ export function HomeCMS({ initial }: { initial: HomeData }) {
       <div className="lg:col-span-2 space-y-8">
         {/* Hero */}
         <section className="space-y-5 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-6">
-          <div className="flex items-center justify-between gap-4">
+          <div className="flex flex-wrap items-center justify-between gap-4">
             <div>
               <h3 className="text-lg font-bold text-zinc-900 dark:text-white">
                 Hero Content
@@ -271,7 +309,7 @@ export function HomeCMS({ initial }: { initial: HomeData }) {
               />
             </div>
             <div className="flex gap-4 items-center">
-              <div className="flex-1">
+              <div className="min-w-0 flex-1">
                 {hero.imageMode === "url" ? (
                   <input
                     type="text"
@@ -393,8 +431,8 @@ export function HomeCMS({ initial }: { initial: HomeData }) {
               </p>
             )}
             {socials.map((social, i) => (
-              <div key={i} className="flex gap-2.5 items-center">
-                <Link2 className="w-4 h-4 text-zinc-400 shrink-0" />
+              <div key={i} className="flex flex-col sm:flex-row gap-2.5 sm:items-center">
+                <Link2 className="hidden sm:block w-4 h-4 text-zinc-400 shrink-0" />
                 <input
                   type="text"
                   placeholder="Label (e.g. github)"
@@ -406,7 +444,7 @@ export function HomeCMS({ initial }: { initial: HomeData }) {
                       ),
                     )
                   }
-                  className={cn(inputCls, "w-40 shrink-0")}
+                  className={cn(inputCls, "sm:w-40 sm:shrink-0")}
                 />
                 <input
                   type="text"
@@ -419,7 +457,7 @@ export function HomeCMS({ initial }: { initial: HomeData }) {
                       ),
                     )
                   }
-                  className={inputCls}
+                  className={cn(inputCls, "min-w-0 flex-1")}
                 />
                 <button
                   type="button"
@@ -428,7 +466,7 @@ export function HomeCMS({ initial }: { initial: HomeData }) {
                       prev.filter((_, idx) => idx !== i),
                     )
                   }
-                  className="p-2 text-zinc-400 hover:text-red-500 transition-colors"
+                  className="self-start sm:self-auto p-2 shrink-0 rounded-lg text-zinc-500 dark:text-zinc-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-950 transition-colors"
                 >
                   <Trash2 className="w-4 h-4" />
                 </button>
@@ -475,7 +513,7 @@ export function HomeCMS({ initial }: { initial: HomeData }) {
                   onClick={() =>
                     setTitles((prev) => prev.filter((_, idx) => idx !== i))
                   }
-                  className="p-2 text-zinc-400 hover:text-red-500 transition-colors"
+                  className="p-2 rounded-lg text-zinc-500 dark:text-zinc-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-950 transition-colors"
                 >
                   <Trash2 className="w-4 h-4" />
                 </button>
@@ -484,7 +522,7 @@ export function HomeCMS({ initial }: { initial: HomeData }) {
           </div>
         </section>
         <section className="space-y-5 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-6">
-          <div className="flex items-center justify-between gap-4">
+          <div className="flex flex-wrap items-center justify-between gap-4">
             <div>
               <h3 className="text-lg font-bold text-zinc-900 dark:text-white">
                 Statistics
@@ -531,9 +569,9 @@ export function HomeCMS({ initial }: { initial: HomeData }) {
           {stats.map((stat, i) => (
             <div
               key={stat._id ?? i}
-              className="flex gap-4 items-end bg-zinc-50 dark:bg-zinc-800/50 p-4 rounded-2xl border border-zinc-100 dark:border-zinc-800"
+              className="flex flex-col sm:flex-row gap-3 sm:gap-4 sm:items-end bg-zinc-50 dark:bg-zinc-800/50 p-4 rounded-2xl border border-zinc-100 dark:border-zinc-800"
             >
-              <div className="w-32">
+              <div className="sm:w-32">
                 <LabeledInput
                   label="Value"
                   value={stat.value}
@@ -546,7 +584,7 @@ export function HomeCMS({ initial }: { initial: HomeData }) {
                   }
                 />
               </div>
-              <div className="flex-1">
+              <div className="min-w-0 flex-1">
                 <LabeledInput
                   label="Label"
                   value={stat.label}
@@ -564,7 +602,7 @@ export function HomeCMS({ initial }: { initial: HomeData }) {
                 onClick={() =>
                   setStats((prev) => prev.filter((_, idx) => idx !== i))
                 }
-                className="mb-2 p-2 text-zinc-300 hover:text-red-500 transition-colors"
+                className="self-end sm:self-auto p-2 rounded-lg text-zinc-500 dark:text-zinc-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-950 transition-colors"
               >
                 <Trash2 className="w-5 h-5" />
               </button>

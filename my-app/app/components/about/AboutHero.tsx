@@ -20,7 +20,7 @@ export function AboutHero({ data }: { data: AboutHeroType }) {
       <div className="flex flex-col gap-6 order-2 lg:order-1">
 
         {/* Badge */}
-        <div className="flex items-center gap-2 w-fit">
+        <div className="flex flex-wrap items-center gap-2 w-fit">
           <div className="flex items-center gap-2 px-3 py-1.5 rounded-full
                           bg-indigo-50 dark:bg-indigo-950
                           border border-indigo-100 dark:border-indigo-900">

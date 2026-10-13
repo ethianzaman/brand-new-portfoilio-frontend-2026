@@ -355,7 +355,7 @@ export function SkillsTable({ initial }: { initial: SkillCategory[] }) {
                     setEditSkillCatId(category.id);
                     setShowSkillForm(true);
                   }}
-                  className="p-2 rounded-lg text-zinc-400
+                  className="p-2 rounded-lg text-zinc-500 dark:text-zinc-400
                              hover:text-indigo-600 dark:hover:text-indigo-400
                              hover:bg-indigo-50 dark:hover:bg-indigo-950
                              transition-all"
@@ -368,7 +368,7 @@ export function SkillsTable({ initial }: { initial: SkillCategory[] }) {
                     setEditCategory(category);
                     setShowCatForm(true);
                   }}
-                  className="p-2 rounded-lg text-zinc-400
+                  className="p-2 rounded-lg text-zinc-500 dark:text-zinc-400
                              hover:text-amber-600 dark:hover:text-amber-400
                              hover:bg-amber-50 dark:hover:bg-amber-950
                              transition-all"
@@ -384,7 +384,7 @@ export function SkillsTable({ initial }: { initial: SkillCategory[] }) {
                       title: category.label,
                     })
                   }
-                  className="p-2 rounded-lg text-zinc-400
+                  className="p-2 rounded-lg text-zinc-500 dark:text-zinc-400
                              hover:text-red-600 dark:hover:text-red-400
                              hover:bg-red-50 dark:hover:bg-red-950
                              transition-all"
@@ -458,7 +458,7 @@ export function SkillsTable({ initial }: { initial: SkillCategory[] }) {
                           className="absolute inset-0 rounded-xl
                                         bg-zinc-900/80 dark:bg-zinc-950/85
                                         flex items-center justify-center gap-2
-                                        opacity-0 group-hover:opacity-100
+                                        opacity-100 sm:opacity-0 sm:group-hover:opacity-100
                                         transition-opacity duration-200"
                         >
                           <button
@@ -522,7 +522,7 @@ export function SkillsTable({ initial }: { initial: SkillCategory[] }) {
                text-white dark:text-zinc-900
                text-sm font-semibold shadow-2xl
                animate-in fade-in slide-in-from-top-4 duration-300
-               whitespace-nowrap border border-white/10 dark:border-zinc-200"
+               max-w-[calc(100vw-2rem)] text-center border border-white/10 dark:border-zinc-200"
         >
           {/* The Tick Icon */}
           <div className="flex items-center justify-center w-5 h-5 rounded-full bg-emerald-500/20 text-emerald-500">

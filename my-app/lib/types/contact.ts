@@ -25,15 +25,31 @@ export interface ContactData {
 }
 
 
-// Sudhu api er jonno any error bypasss
+// // Sudhu api er jonno any error bypasss
+
+
+// export interface ContactApiFAQ {
+//   _id: string
+//   question: string
+//   answer: string
+//   order: number
+// }
+
+// export interface ContactApiData {
+//   info: ContactInfo
+//   faqs: ContactApiFAQ[]
+// }
+
+
 export interface ContactApiFAQ {
-  _id: string
-  question: string
-  answer: string
-  order: number
+  id?: string;
+  _id?: string;
+  question: string;
+  answer: string;
+  order: number;
 }
 
 export interface ContactApiData {
-  info: ContactInfo
-  faqs: ContactApiFAQ[]
+  info: ContactInfo;
+  faqs: ContactApiFAQ[];
 }

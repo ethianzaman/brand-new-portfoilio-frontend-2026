@@ -128,7 +128,7 @@ export function ContactForm() {
     return (
       <div
         className="flex flex-col items-center justify-center gap-4
-                      p-12 rounded-2xl text-center
+                      p-8 sm:p-12 rounded-2xl text-center
                       bg-green-50 dark:bg-green-950/30
                       border border-green-200 dark:border-green-800"
       >

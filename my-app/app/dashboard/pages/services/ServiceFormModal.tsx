@@ -105,8 +105,7 @@ export function ServiceFormModal({ service, onSave, onCancel }: Props) {
           </div>
           <button
             onClick={onCancel}
-            className="p-2 rounded-xl text-zinc-400 hover:text-zinc-600
-                       hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
+            className="p-2 rounded-xl text-zinc-500 hover:text-zinc-900 hover:bg-zinc-100 dark:text-zinc-400 dark:hover:text-white dark:hover:bg-zinc-800 transition-colors"
           >
             <X className="w-5 h-5" />
           </button>
@@ -266,8 +265,8 @@ export function ServiceFormModal({ service, onSave, onCancel }: Props) {
                       type="button"
                       onClick={() => removeFeature(i)}
                       disabled={features.length === 1}
-                      className="p-2 rounded-lg text-zinc-400
-                                 hover:text-red-500 hover:bg-red-50
+                      className="p-2 rounded-lg text-zinc-500 dark:text-zinc-400
+                                 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50
                                  dark:hover:bg-red-950
                                  disabled:opacity-30 disabled:cursor-not-allowed
                                  transition-colors shrink-0"

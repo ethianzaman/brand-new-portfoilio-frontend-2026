@@ -6,7 +6,7 @@ export function ServicesCTA() {
     <div className="mt-16 rounded-2xl overflow-hidden
                     bg-zinc-900 dark:bg-zinc-800">
       <div className="flex flex-col md:flex-row items-center
-                      justify-between gap-8 p-10 md:p-14">
+                      justify-between gap-8 p-8 sm:p-10 md:p-14">
 
         {/* Left */}
         <div className="flex flex-col gap-3 text-center md:text-left">

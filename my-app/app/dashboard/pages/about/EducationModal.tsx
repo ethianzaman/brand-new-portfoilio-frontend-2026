@@ -64,8 +64,7 @@ export function EducationModal({ education, onSave, onCancel }: Props) {
             </p>
           </div>
           <button onClick={onCancel}
-            className="p-2 rounded-xl text-zinc-400 hover:text-zinc-600
-                       hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors">
+            className="p-2 rounded-xl text-zinc-500 hover:text-zinc-900 hover:bg-zinc-100 dark:text-zinc-400 dark:hover:text-white dark:hover:bg-zinc-800 transition-colors">
             <X className="w-5 h-5" />
           </button>
         </div>

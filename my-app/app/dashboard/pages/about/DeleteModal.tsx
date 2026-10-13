@@ -20,8 +20,8 @@ export function DeleteModal({ title, desc, onConfirm, onCancel }: Props) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4
-                    bg-zinc-950/60 backdrop-blur-sm">
-      <div className="w-full max-w-md bg-white dark:bg-zinc-900
+                    bg-zinc-950/60 backdrop-blur-sm overflow-y-auto">
+      <div className="w-full max-w-md my-4 bg-white dark:bg-zinc-900
                       rounded-2xl border border-zinc-200 dark:border-zinc-800
                       shadow-2xl">
 
@@ -32,9 +32,7 @@ export function DeleteModal({ title, desc, onConfirm, onCancel }: Props) {
           </div>
           <button
             onClick={onCancel}
-            className="p-2 rounded-xl text-zinc-400
-                       hover:text-zinc-600 hover:bg-zinc-100
-                       dark:hover:bg-zinc-800 transition-colors"
+            className="p-2 rounded-xl text-zinc-500 hover:text-zinc-900 hover:bg-zinc-100 dark:text-zinc-400 dark:hover:text-white dark:hover:bg-zinc-800 transition-colors"
           >
             <X className="w-5 h-5" />
           </button>

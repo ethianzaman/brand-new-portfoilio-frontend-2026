@@ -1,6 +1,7 @@
 
 "use client";
-import { Inter as FontSans } from "next/font/google" 
+import { Inter as FontSans } from "next/font/google"
+import { ThemeProvider } from "next-themes"
 import { cn } from "@/lib/utils"
 import "./globals.css"
 
@@ -21,8 +22,14 @@ export default function RootLayout({ children, }: { children: React.ReactNode })
           fontSans.variable
         )}
       >
-        {/* {!isDashboard && <Navbar />} */}
-        {children}
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="system"
+          enableSystem
+        >
+          {/* {!isDashboard && <Navbar />} */}
+          {children}
+        </ThemeProvider>
       </body>
     </html>
   )

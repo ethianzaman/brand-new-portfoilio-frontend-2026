@@ -279,18 +279,18 @@ export function ContactInfo({ info }: ContactInfoProps) {
                 <Icon className="h-5 w-5" style={{ color }} />
               </div>
 
-              <div>
+              <div className="min-w-0 flex-1">
                 <p className="text-xs text-zinc-500">{label}</p>
 
                 {href ? (
                   <a
                     href={href}
-                    className="font-medium hover:text-indigo-600"
+                    className="font-medium break-all hover:text-indigo-600"
                   >
                     {value}
                   </a>
                 ) : (
-                  <p className="font-medium">{value}</p>
+                  <p className="font-medium break-all">{value}</p>
                 )}
               </div>
             </div>

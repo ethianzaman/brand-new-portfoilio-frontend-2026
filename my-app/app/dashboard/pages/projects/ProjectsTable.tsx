@@ -232,195 +232,199 @@ async function handleSave(
                       border border-zinc-200 dark:border-zinc-800
                       rounded-2xl overflow-hidden"
       >
-        {/* Table head */}
-        <div
-          className="grid grid-cols-12 gap-4 px-5 py-3
-                        bg-zinc-50 dark:bg-zinc-800/50
-                        border-b border-zinc-200 dark:border-zinc-800
-                        text-xs font-bold text-zinc-500 dark:text-zinc-400
-                        uppercase tracking-wider"
-        >
-          <div className="col-span-1">Image</div>
-          <button
-            className="col-span-4 flex items-center gap-1 text-left
-                       hover:text-zinc-700 dark:hover:text-zinc-300
-                       transition-colors"
-            onClick={() => toggleSort("title")}
-          >
-            Title {renderSortIcon("title")}
-          </button>
-          <button
-            className="col-span-2 flex items-center gap-1 text-left
-                       hover:text-zinc-700 dark:hover:text-zinc-300
-                       transition-colors"
-            onClick={() => toggleSort("category")}
-          >
-            Category {renderSortIcon("category")}
-          </button>
-          <div className="col-span-3">Tags</div>
-          <div className="col-span-2 text-right">Actions</div>
-        </div>
-
-        {/* Table body */}
-        {filtered.length === 0 ? (
-          <div
-            className="flex flex-col items-center justify-center
-                          gap-3 py-20 text-zinc-400"
-          >
-            <Search className="w-10 h-10 opacity-20" />
-            <div className="text-center">
-              <p className="text-sm font-medium text-zinc-500 dark:text-zinc-400">
-                No projects found
-              </p>
-              <p className="text-xs text-zinc-400 dark:text-zinc-500 mt-1">
-                Try adjusting your search or filter
-              </p>
-            </div>
-          </div>
-        ) : (
-          <div className="divide-y divide-zinc-100 dark:divide-zinc-800">
-            {filtered.map((project) => (
-              <div
-                key={project.id}
-                onClick={() => openDrawer(project)}
-                className="grid grid-cols-12 gap-4 px-5 py-4
-                           items-center cursor-pointer
-                           hover:bg-zinc-50 dark:hover:bg-zinc-800/40
-                           transition-colors duration-150 group"
+        <div className="overflow-x-auto">
+          <div className="min-w-[720px]">
+            {/* Table head */}
+            <div
+              className="grid grid-cols-12 gap-4 px-5 py-3
+                            bg-zinc-50 dark:bg-zinc-800/50
+                            border-b border-zinc-200 dark:border-zinc-800
+                            text-xs font-bold text-zinc-500 dark:text-zinc-400
+                            uppercase tracking-wider"
+            >
+              <div className="col-span-1">Image</div>
+              <button
+                className="col-span-4 flex items-center gap-1 text-left
+                           hover:text-zinc-700 dark:hover:text-zinc-300
+                           transition-colors"
+                onClick={() => toggleSort("title")}
               >
-                {/* Thumbnail */}
-                <div className="col-span-1">
-                  <div
-                    className="w-10 h-10 rounded-xl overflow-hidden shrink-0
-                                  border border-zinc-200 dark:border-zinc-700
-                                  bg-zinc-100 dark:bg-zinc-800
-                                  flex items-center justify-center"
-                  >
-                    {project.thumbnail ? (
-                      <Image
-                        src={project.thumbnail}
-                        alt={project.title}
-                        width={80}
-                        height={80}
-                        className="w-full h-full object-cover"
-                        onError={(e) => {
-                          e.currentTarget.style.display = "none";
-                        }}
-                      />
-                    ) : (
-                      <ImageIcon className="w-4 h-4 text-zinc-400" />
-                    )}
-                  </div>
-                </div>
+                Title {renderSortIcon("title")}
+              </button>
+              <button
+                className="col-span-2 flex items-center gap-1 text-left
+                           hover:text-zinc-700 dark:hover:text-zinc-300
+                           transition-colors"
+                onClick={() => toggleSort("category")}
+              >
+                Category {renderSortIcon("category")}
+              </button>
+              <div className="col-span-3">Tags</div>
+              <div className="col-span-2 text-right">Actions</div>
+            </div>
 
-                {/* Title */}
-                <div className="col-span-4 flex items-center gap-2 min-w-0">
-                  <div
-                    className="w-2 h-2 rounded-full shrink-0"
-                    style={{ backgroundColor: project.color }}
-                  />
-                  <div className="min-w-0">
-                    <p
-                      className="text-sm font-semibold
-                                  text-zinc-900 dark:text-white truncate
-                                  group-hover:text-indigo-600
-                                  dark:group-hover:text-indigo-400
-                                  transition-colors"
-                    >
-                      {project.title}
-                    </p>
-                    {project.featured && (
-                      <span className="flex items-center gap-1 text-xs text-amber-500">
-                        <Star className="w-3 h-3 fill-amber-500" />
-                        Featured
-                      </span>
-                    )}
-                  </div>
-                </div>
-
-                {/* Category */}
-                <div className="col-span-2">
-                  <span
-                    className={cn(
-                      "px-2.5 py-1 rounded-lg text-xs font-semibold capitalize",
-                      CATEGORY_COLORS[project.category],
-                    )}
-                  >
-                    {project.category}
-                  </span>
-                </div>
-
-                {/* Tags */}
-                <div className="col-span-3 flex flex-wrap gap-1">
-                  {project.tags.slice(0, 2).map((tag) => (
-                    <span
-                      key={tag}
-                      className="px-2 py-0.5 rounded-md text-xs
-                                 bg-zinc-100 dark:bg-zinc-800
-                                 text-zinc-500 dark:text-zinc-400"
-                    >
-                      {tag}
-                    </span>
-                  ))}
-                  {project.tags.length > 2 && (
-                    <span
-                      className="px-2 py-0.5 rounded-md text-xs
-                                     text-zinc-400 dark:text-zinc-500"
-                    >
-                      +{project.tags.length - 2}
-                    </span>
-                  )}
-                </div>
-
-                {/* Actions */}
-                <div className="col-span-2 flex items-center justify-end gap-1">
-                  <a
-                    href={project.liveUrl}
-                    target="_blank"
-                    rel="noreferrer"
-                    title="View live"
-                    onClick={(e) => e.stopPropagation()}
-                    className="p-2 rounded-lg text-zinc-400
-                               hover:text-indigo-600 dark:hover:text-indigo-400
-                               hover:bg-indigo-50 dark:hover:bg-indigo-950
-                               transition-all"
-                  >
-                    <ExternalLink className="w-4 h-4" />
-                  </a>
-
-                  <button
-                    title="Edit project"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setEditProject(project);
-                      setShowForm(true);
-                    }}
-                    className="p-2 rounded-lg text-zinc-400
-                               hover:text-amber-600 dark:hover:text-amber-400
-                               hover:bg-amber-50 dark:hover:bg-amber-950
-                               transition-all"
-                  >
-                    <Pencil className="w-4 h-4" />
-                  </button>
-
-                  <button
-                    title="Delete project"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setDeleteProject(project);
-                    }}
-                    className="p-2 rounded-lg text-zinc-400
-                               hover:text-red-600 dark:hover:text-red-400
-                               hover:bg-red-50 dark:hover:bg-red-950
-                               transition-all"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
+            {/* Table body */}
+            {filtered.length === 0 ? (
+              <div
+                className="flex flex-col items-center justify-center
+                              gap-3 py-20 text-zinc-400"
+              >
+                <Search className="w-10 h-10 opacity-20" />
+                <div className="text-center">
+                  <p className="text-sm font-medium text-zinc-500 dark:text-zinc-400">
+                    No projects found
+                  </p>
+                  <p className="text-xs text-zinc-400 dark:text-zinc-500 mt-1">
+                    Try adjusting your search or filter
+                  </p>
                 </div>
               </div>
-            ))}
+            ) : (
+              <div className="divide-y divide-zinc-100 dark:divide-zinc-800">
+                {filtered.map((project) => (
+                  <div
+                    key={project.id}
+                    onClick={() => openDrawer(project)}
+                    className="grid grid-cols-12 gap-4 px-5 py-4
+                               items-center cursor-pointer
+                               hover:bg-zinc-50 dark:hover:bg-zinc-800/40
+                               transition-colors duration-150 group"
+                  >
+                    {/* Thumbnail */}
+                    <div className="col-span-1">
+                      <div
+                        className="w-10 h-10 rounded-xl overflow-hidden shrink-0
+                                      border border-zinc-200 dark:border-zinc-700
+                                      bg-zinc-100 dark:bg-zinc-800
+                                      flex items-center justify-center"
+                      >
+                        {project.thumbnail ? (
+                          <Image
+                            src={project.thumbnail}
+                            alt={project.title}
+                            width={80}
+                            height={80}
+                            className="w-full h-full object-cover"
+                            onError={(e) => {
+                              e.currentTarget.style.display = "none";
+                            }}
+                          />
+                        ) : (
+                          <ImageIcon className="w-4 h-4 text-zinc-400" />
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Title */}
+                    <div className="col-span-4 flex items-center gap-2 min-w-0">
+                      <div
+                        className="w-2 h-2 rounded-full shrink-0"
+                        style={{ backgroundColor: project.color }}
+                      />
+                      <div className="min-w-0">
+                        <p
+                          className="text-sm font-semibold
+                                      text-zinc-900 dark:text-white truncate
+                                      group-hover:text-indigo-600
+                                      dark:group-hover:text-indigo-400
+                                      transition-colors"
+                        >
+                          {project.title}
+                        </p>
+                        {project.featured && (
+                          <span className="flex items-center gap-1 text-xs text-amber-500">
+                            <Star className="w-3 h-3 fill-amber-500" />
+                            Featured
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Category */}
+                    <div className="col-span-2">
+                      <span
+                        className={cn(
+                          "px-2.5 py-1 rounded-lg text-xs font-semibold capitalize",
+                          CATEGORY_COLORS[project.category],
+                        )}
+                      >
+                        {project.category}
+                      </span>
+                    </div>
+
+                    {/* Tags */}
+                    <div className="col-span-3 flex flex-wrap gap-1">
+                      {project.tags.slice(0, 2).map((tag) => (
+                        <span
+                          key={tag}
+                          className="px-2 py-0.5 rounded-md text-xs
+                                     bg-zinc-100 dark:bg-zinc-800
+                                     text-zinc-500 dark:text-zinc-400"
+                        >
+                          {tag}
+                        </span>
+                      ))}
+                      {project.tags.length > 2 && (
+                        <span
+                          className="px-2 py-0.5 rounded-md text-xs
+                                         text-zinc-400 dark:text-zinc-500"
+                        >
+                          +{project.tags.length - 2}
+                        </span>
+                      )}
+                    </div>
+
+                    {/* Actions */}
+                    <div className="col-span-2 flex items-center justify-end gap-1">
+                      <a
+                        href={project.liveUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        title="View live"
+                        onClick={(e) => e.stopPropagation()}
+                        className="p-2 rounded-lg text-zinc-500 dark:text-zinc-400
+                                   hover:text-indigo-600 dark:hover:text-indigo-400
+                                   hover:bg-indigo-50 dark:hover:bg-indigo-950
+                                   transition-all"
+                      >
+                        <ExternalLink className="w-4 h-4" />
+                      </a>
+
+                      <button
+                        title="Edit project"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setEditProject(project);
+                          setShowForm(true);
+                        }}
+                        className="p-2 rounded-lg text-zinc-500 dark:text-zinc-400
+                                   hover:text-amber-600 dark:hover:text-amber-400
+                                   hover:bg-amber-50 dark:hover:bg-amber-950
+                                   transition-all"
+                      >
+                        <Pencil className="w-4 h-4" />
+                      </button>
+
+                      <button
+                        title="Delete project"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setDeleteProject(project);
+                        }}
+                        className="p-2 rounded-lg text-zinc-500 dark:text-zinc-400
+                                   hover:text-red-600 dark:hover:text-red-400
+                                   hover:bg-red-50 dark:hover:bg-red-950
+                                   transition-all"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
-        )}
+        </div>
 
         {/* Table footer */}
         <div
@@ -440,7 +444,7 @@ async function handleSave(
             </span>{" "}
             projects
           </p>
-          <p className="text-xs text-zinc-400 dark:text-zinc-500">
+          <p className="text-xs text-zinc-400 dark:text-zinc-500 hidden sm:block">
             Click any row to view details
           </p>
         </div>
@@ -456,7 +460,7 @@ async function handleSave(
                text-white dark:text-zinc-900
                text-sm font-semibold shadow-2xl
                animate-in fade-in slide-in-from-top-4 duration-300
-               whitespace-nowrap border border-white/10 dark:border-zinc-200"
+               max-w-[calc(100vw-2rem)] text-center border border-white/10 dark:border-zinc-200"
         >
           {/* The Tick Icon */}
           <div className="flex items-center justify-center w-5 h-5 rounded-full bg-emerald-500/20 text-emerald-500">

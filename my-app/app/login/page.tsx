@@ -10,6 +10,7 @@ import { Toaster } from "@/components/ui/sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
+import { ThemeToggle } from "../components/ThemeToggle";
 
 type Mode = "login" | "signup";
 
@@ -121,6 +122,8 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-white px-4 dark:bg-zinc-950">
       <Toaster position="top-center" />
+
+      <ThemeToggle className="fixed top-4 right-4" />
 
       <div className="w-full max-w-md">
         {/* ── Card ── */}

@@ -52,7 +52,7 @@ export default async function AboutPage() {
         {/* CTA */}
         <div
           className="rounded-2xl bg-zinc-900 dark:bg-zinc-800
-                        p-10 md:p-14
+                        p-8 sm:p-10 md:p-14
                         flex flex-col md:flex-row
                         items-center justify-between gap-6"
         >

@@ -66,7 +66,7 @@ export function ProjectCard({ project }: { project: Project }) {
             "absolute inset-0 top-1.5 z-10 rounded-b-2xl",
             "flex items-center justify-center gap-3",
             "bg-zinc-900/80 dark:bg-zinc-950/85 backdrop-blur-sm",
-            "opacity-0 group-hover:opacity-100",
+            "hidden lg:flex opacity-0 lg:group-hover:opacity-100",
             "transition-opacity duration-300",
           )}
         >
@@ -144,8 +144,7 @@ export function ProjectCard({ project }: { project: Project }) {
         {!isPlaceholder && (
           <div
             className="flex items-center gap-4 pt-2
-                          border-t border-zinc-100 dark:border-zinc-800
-                          md:hidden"
+                          border-t border-zinc-100 dark:border-zinc-800"
           >
             <a
               href={project.liveUrl}

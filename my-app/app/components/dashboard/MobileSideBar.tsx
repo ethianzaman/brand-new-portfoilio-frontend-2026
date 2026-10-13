@@ -1,129 +1,73 @@
-'use client'
-import { useState, useEffect } from 'react'
-import Link from 'next/link'
-import { usePathname } from 'next/navigation'
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet'
-import { Button } from '@/components/ui/button'
-import { Separator } from '@/components/ui/separator'
-import { cn } from '@/lib/utils'
-import {
-  LayoutDashboard, FileText, Image,
-  Users, Settings, Globe, Menu, Zap, X,Briefcase,Code2
-} from 'lucide-react'
+"use client";
 
-// const links = [
-//   { href: '/dashboard',                  label: 'Dashboard',  icon: LayoutDashboard },
-//   { href: '/dashboard/pages/home',       label: 'Home Page',  icon: FileText },
-//   { href: '/dashboard/pages/about',      label: 'About Page', icon: Users },
-//   { href: '/dashboard/pages/projects',   label: 'Projects',   icon: Image },
-//   { href: '/dashboard/pages/contact',    label: 'Contact',    icon: Settings },
-//   { href: '/dashboard/blog',             label: 'Blog Posts', icon: FileText },
-// ]
-
-const links = [
-  { href: '/dashboard',                label: 'Dashboard',   icon: LayoutDashboard },
-  { href: '/dashboard/pages/home',      label: 'Home Page',   icon: FileText },
-  { href: '/dashboard/pages/about',     label: 'About Page',  icon: Users },
-  { href: '/dashboard/pages/projects',  label: 'Projects',    icon: Image },
-  { href: '/dashboard/pages/skills',    label: 'Skills',      icon: Code2 },     // New
-  { href: '/dashboard/pages/services',  label: 'Services',    icon: Briefcase }, // New
-  { href: '/dashboard/pages/contact',   label: 'Contact',     icon: Settings },
-  { href: '/dashboard/pages/blog',      label: 'Blog Posts',  icon: FileText },
-];
+import { useEffect, useState } from "react";
+import Link from "next/link";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { Button } from "@/components/ui/button";
+import { Menu, X, Zap } from "lucide-react";
+import { SidebarNav } from "./SidebarNav";
 
 export function MobileSidebar() {
-  const pathname = usePathname()
+  const [open, setOpen] = useState(false);
 
-  // ✅ Never open on desktop from the start — no effect needed for init
-  const [open, setOpen] = useState(false)
-
+  // ✅ Close whenever the viewport grows to desktop
   useEffect(() => {
-    const mq = window.matchMedia('(min-width: 768px)')
-
-    // ✅ Only setState inside the event callback — NOT in effect body
+    const mq = window.matchMedia("(min-width: 768px)");
     const handler = (e: MediaQueryListEvent) => {
-      if (e.matches) setOpen(false)
-    }
-
-    mq.addEventListener('change', handler)
-    return () => mq.removeEventListener('change', handler)
-
-    // ✅ No setOpen() call here in the effect body — ESLint happy
-  }, [])
+      if (e.matches) setOpen(false);
+    };
+    mq.addEventListener("change", handler);
+    return () => mq.removeEventListener("change", handler);
+  }, []);
 
   return (
     <>
       <Button
         variant="ghost"
         size="icon"
-        className="md:hidden shrink-0"
+        className="shrink-0 md:hidden dark:text-zinc-400 dark:hover:text-white dark:hover:bg-zinc-800"
         onClick={() => setOpen(true)}
         aria-label="Open menu"
       >
-        <Menu className="w-5 h-5" />
+        <Menu className="h-5 w-5" />
       </Button>
 
       <Sheet open={open} onOpenChange={setOpen}>
-        <SheetContent side="left" className="w-64 p-0 bg-zinc-900 border-zinc-800">
-
+        <SheetContent
+          side="left"
+          showCloseButton={false}
+          className="flex w-72 flex-col gap-0 overflow-hidden border-zinc-800 bg-zinc-900 p-0 text-white"
+        >
           <SheetHeader className="sr-only">
             <SheetTitle>Navigation Menu</SheetTitle>
           </SheetHeader>
 
-          <div className="h-14 flex items-center justify-between px-4 border-b border-zinc-800">
-            <div className="flex items-center gap-3">
-              <Zap className="w-5 h-5 text-indigo-400" />
-              <span className="font-bold text-white text-base">MyCMS</span>
-            </div>
+          {/* Brand row */}
+          <div className="relative flex h-14 shrink-0 items-center justify-between border-b border-zinc-800 px-4">
+            <span className="absolute inset-x-0 top-0 h-0.5 bg-linear-to-r from-indigo-500 via-purple-500 to-fuchsia-500" />
+            <Link href="/dashboard" onClick={() => setOpen(false)} className="flex items-center gap-2.5">
+              <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-linear-to-br from-indigo-500 to-purple-600 shadow-lg shadow-indigo-600/30">
+                <Zap className="h-4 w-4 fill-white text-white" />
+              </span>
+              <span>
+                <span className="block text-sm font-bold leading-none">MyCMS</span>
+                <span className="mt-1 block text-[10px] text-zinc-500">Admin Panel</span>
+              </span>
+            </Link>
             <Button
               variant="ghost"
               size="icon"
               onClick={() => setOpen(false)}
-              className="text-zinc-400 hover:text-white hover:bg-zinc-800"
+              aria-label="Close menu"
+              className="text-zinc-400 hover:bg-zinc-800 hover:text-white"
             >
-              <X className="w-4 h-4" />
+              <X className="h-4 w-4" />
             </Button>
           </div>
 
-          <nav className="flex flex-col gap-1 py-3 px-2">
-            {links.map(({ href, label, icon: Icon }) => {
-              const active = pathname === href
-              return (
-                <Link
-                  key={href}
-                  href={href}
-                  onClick={() => setOpen(false)}
-                  className={cn(
-                    'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors',
-                    active
-                      ? 'bg-indigo-600 text-white'
-                      : 'text-zinc-400 hover:bg-zinc-800 hover:text-white'
-                  )}
-                >
-                  <Icon className="w-4 h-4 shrink-0" />
-                  <span>{label}</span>
-                </Link>
-              )
-            })}
-          </nav>
-
-          <Separator className="bg-zinc-800" />
-
-          <div className="p-2">
-            <Link
-              href="/"
-              target="_blank"
-              onClick={() => setOpen(false)}
-              className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm
-                         text-zinc-500 hover:bg-zinc-800 hover:text-white transition-colors"
-            >
-              <Globe className="w-4 h-4" />
-              <span>Live Site ↗</span>
-            </Link>
-          </div>
-
+          <SidebarNav onNavigate={() => setOpen(false)} />
         </SheetContent>
       </Sheet>
     </>
-  )
+  );
 }

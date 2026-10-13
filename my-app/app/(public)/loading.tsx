@@ -14,7 +14,7 @@ export default function PublicLoading() {
   return (
     <div className="min-h-screen bg-white dark:bg-zinc-950">
       {/* Hero */}
-      <section className="max-w-6xl mx-auto px-4 pt-16 md:pt-24 pb-20">
+      <section className="max-w-6xl mx-auto px-4 pt-16 md:pt-24 pb-14 md:pb-20">
         <div className="flex flex-col-reverse md:flex-row items-center justify-between gap-12 md:gap-8">
           <div className="flex flex-col items-start gap-6 flex-1 max-w-2xl">
             <Bar className="h-7 w-36 rounded-full" />
@@ -63,7 +63,7 @@ export default function PublicLoading() {
       </section>
 
       {/* Skills */}
-      <section className="max-w-6xl mx-auto px-4 py-20">
+      <section className="max-w-6xl mx-auto px-4 py-14 md:py-20">
         <div className="mb-12 space-y-3">
           <Bar className="h-8 w-64" />
           <Bar className="h-4 w-96 max-w-full" />

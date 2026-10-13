@@ -86,9 +86,27 @@ export async function loginWithPassword(
 }
 
 // ── POST /auth/sign-up ───────────────────────────────────────────
+// export async function signUpWithPassword(
+//   credentials: SignUpCredentials,
+// ): Promise<void> {
+//   const res = await fetch(`${API_AUTH_URL}/sign-up`, {
+//     method: "POST",
+//     headers: { "Content-Type": "application/json" },
+//     body: JSON.stringify(credentials),
+//     cache: "no-store",
+//   });
+
+//   const json: AuthResponse = await res.json().catch(() => ({}));
+
+//   if (!res.ok) {
+//     throw new Error(json.message ?? `Sign-up failed (${res.status})`);
+//   }
+// }
+
+
 export async function signUpWithPassword(
   credentials: SignUpCredentials,
-): Promise<void> {
+): Promise<AuthSession> {
   const res = await fetch(`${API_AUTH_URL}/sign-up`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -101,4 +119,10 @@ export async function signUpWithPassword(
   if (!res.ok) {
     throw new Error(json.message ?? `Sign-up failed (${res.status})`);
   }
+
+  const cookieToken = extractTokenFromCookie(
+    res.headers.get("set-cookie"),
+  );
+
+  return buildSession(json, cookieToken, credentials.email);
 }
