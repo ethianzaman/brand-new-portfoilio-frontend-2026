@@ -42,8 +42,8 @@ export function ContactFAQ({ faqs }: ContactFAQProps) {
     <div className="mt-4">
 
       {/* Header */}
-      <div className="mb-8">
-        <h2 className="text-2xl font-bold text-zinc-900 dark:text-white mb-2">
+      <div className="mb-6 sm:mb-8">
+        <h2 className="text-xl sm:text-2xl font-bold text-zinc-900 dark:text-white mb-2">
           Frequently asked questions
         </h2>
         <p className="text-zinc-500 dark:text-zinc-400 text-sm">
@@ -69,8 +69,8 @@ export function ContactFAQ({ faqs }: ContactFAQProps) {
           >
             <button
               onClick={() => setOpen(open === i ? null : i)}
-              className="w-full flex items-center justify-between gap-4
-                         px-5 py-4 text-left"
+              className="w-full flex items-center justify-between gap-3 sm:gap-4
+                         px-4 sm:px-5 py-4 text-left min-h-[52px]"
             >
               <span className={cn(
                 'text-sm font-semibold leading-snug',
@@ -89,7 +89,7 @@ export function ContactFAQ({ faqs }: ContactFAQProps) {
             </button>
 
             {open === i && (
-              <div className="px-5 pb-4">
+              <div className="px-4 sm:px-5 pb-4">
                 <p className="text-sm text-zinc-600 dark:text-zinc-400 leading-relaxed">
                    {faq.answer}
                 </p>

@@ -21,7 +21,38 @@ export function CustomSelect({
   error,
 }: Props) {
   const [open, setOpen] = useState(false)
+  const [flipUp, setFlipUp] = useState(false)
   const ref             = useRef<HTMLDivElement>(null)
+
+  // Decide dropdown direction so it never renders off-screen (common on
+  // mobile, where the select sits near the bottom of a long form).
+  function measureAndToggle() {
+    if (!open && ref.current) {
+      const rect = ref.current.getBoundingClientRect()
+      const DROPDOWN_MAX_H = 224 // matches max-h-56 on the <ul>
+      const spaceBelow = window.innerHeight - rect.bottom
+      const spaceAbove = rect.top
+      setFlipUp(
+        spaceBelow < DROPDOWN_MAX_H + 8 && spaceAbove > spaceBelow,
+      )
+    }
+    setOpen(o => !o)
+  }
+
+  // Re-measure while open (handles resize / address-bar hide on mobile)
+  useEffect(() => {
+    if (!open || !ref.current) return
+    function handler() {
+      const rect = ref.current?.getBoundingClientRect()
+      if (!rect) return
+      const DROPDOWN_MAX_H = 224
+      const spaceBelow = window.innerHeight - rect.bottom
+      const spaceAbove = rect.top
+      setFlipUp(spaceBelow < DROPDOWN_MAX_H + 8 && spaceAbove > spaceBelow)
+    }
+    window.addEventListener('resize', handler, { passive: true })
+    return () => window.removeEventListener('resize', handler)
+  }, [open])
 
   // Close on outside click
   useEffect(() => {
@@ -52,10 +83,10 @@ export function CustomSelect({
       <button
         type="button"
         id={id}
-        onClick={() => setOpen(o => !o)}
+        onClick={measureAndToggle}
         className={cn(
           'w-full flex items-center justify-between gap-2',
-          'px-4 py-2.5 rounded-xl text-sm text-left',
+          'px-4 py-3 sm:py-2.5 rounded-xl text-sm text-left',
           'bg-zinc-50 dark:bg-zinc-800/50',
           'border transition-all duration-150',
           'focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent',
@@ -83,15 +114,16 @@ export function CustomSelect({
 
       {/* ── Dropdown ── */}
       <div className={cn(
-        'absolute z-50 w-full mt-1.5',
+        'absolute z-50 w-full',
+        flipUp ? 'bottom-full mb-1.5 origin-bottom' : 'top-full mt-1.5 origin-top',
         'bg-white dark:bg-zinc-900',
         'border border-zinc-200 dark:border-zinc-700',
         'rounded-xl shadow-lg shadow-zinc-200/50 dark:shadow-zinc-950/50',
         'overflow-hidden',
-        'transition-all duration-200 origin-top',
+        'transition-all duration-200',
         open
           ? 'opacity-100 scale-y-100 translate-y-0'
-          : 'opacity-0 scale-y-95 -translate-y-1 pointer-events-none'
+          : 'opacity-0 scale-y-95 pointer-events-none'
       )}>
         <ul className="py-1 max-h-56 overflow-y-auto
                        scrollbar-thin scrollbar-thumb-zinc-200
@@ -108,7 +140,7 @@ export function CustomSelect({
                   }}
                   className={cn(
                     'w-full flex items-center justify-between gap-3',
-                    'px-4 py-2.5 text-sm text-left',
+                    'px-4 py-3 sm:py-2.5 text-sm text-left min-h-[44px]',
                     'transition-colors duration-100',
                     active
                       ? 'bg-indigo-50 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300'
