@@ -82,11 +82,11 @@ export function BlogAnalytics({ posts }: Props) {
       ) : (
         <div className="flex flex-col gap-5">
           {/* Mini stats */}
-          <div className="grid grid-cols-3 gap-3">
+          <div className="grid grid-cols-3 gap-2 sm:gap-3">
             {stats.map(({ key, label, value, icon: Icon, tile }) => (
               <div
                 key={key}
-                className="flex flex-col items-center gap-2 rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50/60 dark:bg-zinc-800/40 p-3 text-center"
+                className="flex flex-col items-center gap-2 rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50/60 dark:bg-zinc-800/40 p-2.5 sm:p-3 text-center"
               >
                 <div className={`w-8 h-8 rounded-xl flex items-center justify-center ${tile}`}>
                   <Icon className="w-4 h-4" />
@@ -107,10 +107,10 @@ export function BlogAnalytics({ posts }: Props) {
           <div className="flex flex-col gap-3">
             {categories.map(([category, count], i) => (
               <div key={category} className="flex items-center gap-3">
-                <span className="w-20 shrink-0 truncate text-xs font-medium text-zinc-600 dark:text-zinc-300">
+                <span className="w-16 sm:w-20 shrink-0 truncate text-xs font-medium text-zinc-600 dark:text-zinc-300">
                   {category}
                 </span>
-                <div className="flex-1 h-2.5 rounded-full bg-zinc-100 dark:bg-zinc-800 overflow-hidden">
+                <div className="flex-1 min-w-0 h-2.5 rounded-full bg-zinc-100 dark:bg-zinc-800 overflow-hidden">
                   <div
                     className="h-full rounded-full transition-all"
                     style={{
@@ -122,7 +122,7 @@ export function BlogAnalytics({ posts }: Props) {
                 <span className="w-8 shrink-0 text-right text-sm font-semibold text-zinc-900 dark:text-white tabular-nums">
                   {count}
                 </span>
-                <span className="w-10 shrink-0 text-right text-xs text-zinc-400 dark:text-zinc-500 tabular-nums">
+                <span className="hidden sm:block w-10 shrink-0 text-right text-xs text-zinc-400 dark:text-zinc-500 tabular-nums">
                   {Math.round((count / total) * 100)}%
                 </span>
               </div>

@@ -8,6 +8,7 @@ import { socialLinks, navConfig } from "./nav-config";
 import { Zap } from "lucide-react";
 import { NavLinks } from "./navLinks";
 import { MobileMenu } from "./mobileMenu";
+import { ThemeToggle } from "../ThemeToggle";
 
 export function Navbar() {
   const [scrolled, setScrolled] = useState(false);
@@ -33,10 +34,10 @@ export function Navbar() {
         {/* ─── Logo ─── */}
         <Link href="/" className="flex items-center gap-2.5 group">
           <div
-            className="lg:w-[40] lg:h-[50] w-8 h-8 m:w-8 m:h-8 rounded-lg bg-indigo-600 flex items-center justify-center
+            className="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center
                           transition-transform duration-200 group-hover:scale-110"
           >
-            <Zap className="w-50 h-4 text-white" />
+            <Zap className="w-4 h-4 text-white" />
           </div>
           <div className="hidden sm:block">
             <p className="text-sm font-bold text-zinc-900 dark:text-white leading-none">
@@ -49,12 +50,15 @@ export function Navbar() {
         </Link>
 
         {/* ─── Desktop nav ─── */}
-        <nav className="hidden md:flex items-center gap-1">
+        <nav className="hidden xl:flex items-center gap-0.5">
           <NavLinks />
         </nav>
 
         {/* ─── Desktop right side ─── */}
-        <div className="hidden md:flex items-center gap-2">
+        <div className="hidden xl:flex items-center gap-2">
+          {/* Theme toggle */}
+          <ThemeToggle />
+
           {/* Social icons */}
           {socialLinks.map(({ href, label, icon: Icon }) => (
             <a
@@ -83,8 +87,11 @@ export function Navbar() {
           </Button>
         </div>
 
-        {/* ─── Mobile hamburger ─── */}
-        <MobileMenu />
+        {/* ─── Mobile theme toggle + hamburger ─── */}
+        <div className="flex xl:hidden items-center gap-1">
+          <ThemeToggle className="size-10 xl:size-8" />
+          <MobileMenu />
+        </div>
       </div>
     </header>
   );

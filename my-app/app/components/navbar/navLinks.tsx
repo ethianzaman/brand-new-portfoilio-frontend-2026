@@ -17,7 +17,7 @@ export function NavLinks({ onClick }: { onClick?: () => void }) {
             href={href}
             onClick={onClick}
             className={cn(
-              'group relative flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium',
+              'group relative flex items-center gap-2 px-2.5 py-2 rounded-lg text-sm font-medium',
               'transition-all duration-200',
               active
                 ? 'text-indigo-600 dark:text-indigo-400'
@@ -32,7 +32,7 @@ export function NavLinks({ onClick }: { onClick?: () => void }) {
 
             {/* ✅ Active underline indicator */}
             {active && (
-              <span className="absolute bottom-0 left-3 right-3 h-0.5 rounded-full bg-indigo-600 dark:bg-indigo-400" />
+              <span className="absolute bottom-0 left-2.5 right-2.5 h-0.5 rounded-full bg-indigo-600 dark:bg-indigo-400" />
             )}
 
             {/* ✅ Hover background */}

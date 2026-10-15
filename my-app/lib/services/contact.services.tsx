@@ -5,75 +5,61 @@ import {
   ContactInfo,
   FAQ,
 } from "@/lib/types/contact";
-// import { DEMO_CONTACT } from "@/lib/data/contact.demo";
 
 const API_BASE_URL = `${apiUrl()}/contact`;
+
+type FAQApiResponse = {
+  id?: string;
+  _id?: string;
+  question: string;
+  answer: string;
+  order: number;
+};
+
+function normalizeFAQ(faq: FAQApiResponse): FAQ {
+  const id = faq.id ?? faq._id;
+
+  if (!id) {
+    throw new Error("FAQ response is missing its ID.");
+  }
+
+  return {
+    id: String(id),
+    question: faq.question,
+    answer: faq.answer,
+    order: faq.order,
+  };
+}
 
 function normalizeContact(contact: ContactApiData): ContactData {
   return {
     info: contact.info,
-    faqs: contact.faqs.map((faq) => ({
-      id: faq._id,
-      question: faq.question,
-      answer: faq.answer,
-      order: faq.order,
-    })),
+    faqs: contact.faqs.map(normalizeFAQ),
   };
 }
 
-// const store: ContactData = JSON.parse(JSON.stringify(DEMO_CONTACT));
-
-// export async function dashboardGetContact(): Promise<ContactData> {
-//   try {
-//     const response = await fetch(`${API_BASE_URL}`, {
-//       cache: "no-store",
-//     });
-
-//     if (!response.ok) {
-//       throw new Error("Failed to fetch contact");
-//     }
-
-//     const json = await response.json();
-
-//     return normalizeContact(json.contact);
-//   } catch {
-//     return JSON.parse(JSON.stringify(DEMO_CONTACT));
-//   }
-// }
+async function getErrorMessage(
+  response: Response,
+  fallback: string,
+): Promise<string> {
+  const error = await response.json().catch(() => null);
+  return error?.message ?? fallback;
+}
 
 export async function dashboardGetContact(): Promise<ContactData> {
-  try {
-    const response = await fetch(API_BASE_URL, {
-      cache: "no-store",
-    });
+  const response = await fetch(API_BASE_URL, {
+    cache: "no-store",
+  });
 
-    if (!response.ok) {
-      throw new Error(`Contact API failed: ${response.status}`);
-    }
-
-    const json = await response.json();
-
-    return normalizeContact(json.contact);
-  } catch (error) {
-    console.error("Failed to fetch contact:", error);
-
-    return {
-      info: {
-        email: "",
-        phone: "",
-        location: "",
-        responseTime: "",
-        available: false,
-        availableText: "",
-        socials: {
-          github: "",
-          linkedin: "",
-          twitter: "",
-        },
-      },
-      faqs: [],
-    };
+  if (!response.ok) {
+    throw new Error(
+      await getErrorMessage(response, "Failed to fetch contact information."),
+    );
   }
+
+  const json = await response.json();
+
+  return normalizeContact(json.contact);
 }
 
 export async function dashboardUpdateInfo(
@@ -88,9 +74,9 @@ export async function dashboardUpdateInfo(
   });
 
   if (!response.ok) {
-    const error = await response.json().catch(() => null);
-
-    throw new Error(error?.message ?? "Unable to update contact information.");
+    throw new Error(
+      await getErrorMessage(response, "Unable to update contact information."),
+    );
   }
 
   const json = await response.json();
@@ -110,23 +96,20 @@ export async function dashboardCreateFAQ(
   });
 
   if (!response.ok) {
-    throw new Error("Failed to create FAQ");
+    throw new Error(
+      await getErrorMessage(response, "Failed to create FAQ."),
+    );
   }
 
   const json = await response.json();
 
-  return {
-    id: json.faq.id ?? json.faq._id,
-    question: json.faq.question,
-    answer: json.faq.answer,
-    order: json.faq.order,
-  };
+  return normalizeFAQ(json.faq);
 }
 
 export async function dashboardUpdateFAQ(
   id: string,
   data: Partial<Omit<FAQ, "id">>,
-): Promise<FAQ | null> {
+): Promise<FAQ> {
   const response = await fetch(`${API_BASE_URL}/faq/${id}`, {
     method: "PUT",
     headers: {
@@ -136,31 +119,26 @@ export async function dashboardUpdateFAQ(
   });
 
   if (!response.ok) {
-    throw new Error("Unable to save changes. Please try again.");
+    throw new Error(
+      await getErrorMessage(response, "Unable to update FAQ."),
+    );
   }
 
   const json = await response.json();
 
-  return {
-    id: json.faq.id ?? json.faq._id,
-    question: json.faq.question,
-    answer: json.faq.answer,
-    order: json.faq.order,
-  };
+  return normalizeFAQ(json.faq);
 }
 
 export async function dashboardDeleteFAQ(id: string): Promise<boolean> {
-  try {
-    const response = await fetch(`${API_BASE_URL}/faq/${id}`, {
-      method: "DELETE",
-    });
+  const response = await fetch(`${API_BASE_URL}/faq/${id}`, {
+    method: "DELETE",
+  });
 
-    if (!response.ok) {
-      throw new Error("Failed to delete FAQ.");
-    }
-
-    return true;
-  } catch {
-    throw new Error("Unable to connect to the server. Please try again.");
+  if (!response.ok) {
+    throw new Error(
+      await getErrorMessage(response, "Failed to delete FAQ."),
+    );
   }
+
+  return true;
 }

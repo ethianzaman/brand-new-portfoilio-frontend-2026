@@ -153,3 +153,25 @@
 .animate-spin-slow {
   animation: spin-slow 60s linear infinite;
 }
+
+/* Slim sidebar scrollbar — appears on hover */
+.sidebar-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: transparent transparent;
+}
+.sidebar-scroll:hover {
+  scrollbar-color: oklch(0.35 0 0 / 0.55) transparent;
+}
+.sidebar-scroll::-webkit-scrollbar {
+  width: 6px;
+}
+.sidebar-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+.sidebar-scroll::-webkit-scrollbar-thumb {
+  background: transparent;
+  border-radius: 999px;
+}
+.sidebar-scroll:hover::-webkit-scrollbar-thumb {
+  background: oklch(0.35 0 0 / 0.55);
+}

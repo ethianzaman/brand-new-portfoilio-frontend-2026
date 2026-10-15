@@ -243,7 +243,7 @@ export function BlogPostsGrid({ posts }: { posts: BlogPost[] }) {
               aria-label="Clear search"
               className="absolute right-3 top-1/2 -translate-y-1/2
                          w-6 h-6 rounded-md flex items-center justify-center
-                         text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300
+                         text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white
                          hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
             >
               <X className="w-4 h-4" />

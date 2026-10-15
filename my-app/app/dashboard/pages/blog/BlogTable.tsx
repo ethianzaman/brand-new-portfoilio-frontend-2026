@@ -167,7 +167,7 @@ function BlogRow({
           <button
             title="Edit post"
             onClick={() => onEdit(post)}
-            className="p-2 rounded-lg text-zinc-400
+            className="p-2 rounded-lg text-zinc-500 dark:text-zinc-400
                        hover:text-amber-600 dark:hover:text-amber-400
                        hover:bg-amber-50 dark:hover:bg-amber-950
                        transition-all"
@@ -177,7 +177,7 @@ function BlogRow({
           <button
             title="Delete post"
             onClick={() => onDelete(post)}
-            className="p-2 rounded-lg text-zinc-400
+            className="p-2 rounded-lg text-zinc-500 dark:text-zinc-400
                        hover:text-red-600 dark:hover:text-red-400
                        hover:bg-red-50 dark:hover:bg-red-950
                        transition-all"
@@ -397,7 +397,7 @@ export function BlogTable({ initial }: { initial: BlogPost[] }) {
                text-white dark:text-zinc-900
                text-sm font-semibold shadow-2xl
                animate-in fade-in slide-in-from-top-4 duration-300
-               whitespace-nowrap border border-white/10 dark:border-zinc-200"
+               max-w-[calc(100vw-2rem)] text-center border border-white/10 dark:border-zinc-200"
         >
           <div className="flex items-center justify-center w-5 h-5 rounded-full bg-emerald-500/20 text-emerald-500">
             <Check className="w-3.5 h-3.5 stroke-[3px]" />

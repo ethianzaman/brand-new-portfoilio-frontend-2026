@@ -63,7 +63,7 @@ export default async function HomePage() {
   return (
     <div className="min-h-screen bg-white dark:bg-zinc-950">
       {/* ── Hero Section ── */}
-      <section className="max-w-6xl mx-auto px-4 pt-16 md:pt-24 pb-20">
+      <section className="max-w-6xl mx-auto px-4 pt-16 md:pt-24 pb-14 md:pb-20">
         <div className="flex flex-col-reverse md:flex-row items-center justify-between gap-12 md:gap-8">
           {/* Left: Content */}
           <div className="flex flex-col items-start gap-6 flex-1 max-w-2xl">
@@ -220,7 +220,7 @@ export default async function HomePage() {
       </section>
 
       {/* ── Dynamic Skills Section ── */}
-      <section className="max-w-6xl mx-auto px-4 py-20">
+      <section className="max-w-6xl mx-auto px-4 py-14 md:py-20">
         <div className="mb-12">
           <h2 className="text-3xl font-bold text-zinc-900 dark:text-white mb-3">
             What I work with
@@ -265,8 +265,8 @@ export default async function HomePage() {
       </section>
 
       {/* ── Contact CTA Section ── */}
-      <section className="max-w-6xl mx-auto px-4 pb-20">
-        <div className="rounded-2xl p-10 md:p-14 bg-indigo-600 dark:bg-indigo-700 flex flex-col md:flex-row items-center justify-between gap-6">
+      <section className="max-w-6xl mx-auto px-4 pb-14 md:pb-20">
+        <div className="rounded-2xl p-8 sm:p-10 md:p-14 bg-indigo-600 dark:bg-indigo-700 flex flex-col md:flex-row items-center justify-between gap-6">
           <div>
             <h2 className="text-2xl md:text-3xl font-bold text-white mb-2">
               Have a project in mind?

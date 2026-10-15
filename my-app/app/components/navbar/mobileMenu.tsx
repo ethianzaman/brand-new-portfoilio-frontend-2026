@@ -18,18 +18,8 @@ export function MobileMenu() {
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
 
-useEffect(() => {
-    const mq = window.matchMedia("(min-width: 768px)");
-    const handler = (e: MediaQueryListEvent) => {
-      if (e.matches) setOpen(false);
-    };
-    mq.addEventListener("change", handler);
-    return () => mq.removeEventListener("change", handler);
-  }, []);
-
-  // Close on resize to desktop
   useEffect(() => {
-    const mq = window.matchMedia("(min-width: 768px)");
+    const mq = window.matchMedia("(min-width: 1280px)");
     const handler = (e: MediaQueryListEvent) => {
       if (e.matches) setOpen(false);
     };
@@ -42,7 +32,7 @@ useEffect(() => {
       <Button
         variant="ghost"
         size="icon"
-        className="md:hidden"
+        className="xl:hidden size-10 xl:size-8"
         onClick={() => setOpen(true)}
         aria-label="Open menu"
       >
@@ -52,6 +42,7 @@ useEffect(() => {
       <Sheet open={open} onOpenChange={setOpen}>
         <SheetContent
           side="right"
+          showCloseButton={false}
           className="w-72 p-0 bg-white dark:bg-zinc-950 border-zinc-200 dark:border-zinc-800"
         >
           <SheetHeader className="sr-only">
@@ -59,7 +50,7 @@ useEffect(() => {
           </SheetHeader>
 
           {/* Header */}
-          <div className="flex items-center justify-between px-5 h-16 border-b border-zinc-100 dark:border-zinc-800 mt-5">
+          <div className="flex items-center justify-between px-5 h-16 border-b border-zinc-100 dark:border-zinc-800">
             <div className="flex items-center gap-2">
               <div className="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center">
                 <Zap className="w-4 h-4 text-white" />
@@ -77,7 +68,7 @@ useEffect(() => {
               variant="ghost"
               size="icon"
               onClick={() => setOpen(false)}
-              className="text-zinc-400 hover:text-zinc-900 dark:hover:text-white"
+              className="size-10 text-zinc-400 hover:text-zinc-900 dark:hover:text-white"
             >
               <X className="w-4 h-4" />
             </Button>

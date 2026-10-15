@@ -52,10 +52,10 @@ export function ProjectsChart({ counts, total }: Props) {
         <div className="flex flex-col gap-5">
           {series.map(({ key, label, color, count }) => (
             <div key={key} className="flex items-center gap-3">
-              <span className="w-24 shrink-0 text-xs font-medium text-zinc-600 dark:text-zinc-300">
+              <span className="w-16 sm:w-24 shrink-0 text-xs font-medium text-zinc-600 dark:text-zinc-300">
                 {label}
               </span>
-              <div className="flex-1 h-2.5 rounded-full bg-zinc-100 dark:bg-zinc-800 overflow-hidden">
+              <div className="flex-1 min-w-0 h-2.5 rounded-full bg-zinc-100 dark:bg-zinc-800 overflow-hidden">
                 <div
                   className="h-full rounded-full transition-all"
                   style={{
@@ -64,10 +64,10 @@ export function ProjectsChart({ counts, total }: Props) {
                   }}
                 />
               </div>
-              <span className="w-14 shrink-0 text-right text-sm font-semibold text-zinc-900 dark:text-white tabular-nums">
+              <span className="w-12 shrink-0 text-right text-sm font-semibold text-zinc-900 dark:text-white tabular-nums">
                 {count}
               </span>
-              <span className="w-12 shrink-0 text-right text-xs text-zinc-400 dark:text-zinc-500 tabular-nums">
+              <span className="hidden sm:block w-12 shrink-0 text-right text-xs text-zinc-400 dark:text-zinc-500 tabular-nums">
                 {Math.round((count / total) * 100)}%
               </span>
             </div>

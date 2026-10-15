@@ -48,13 +48,13 @@ export default async function DashBoardHome() {
       {/* Welcome header */}
       <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
         <div>
-          <p className="text-sm text-zinc-500 dark:text-zinc-400">{date}</p>
           <h1 className="text-2xl font-bold text-zinc-900 dark:text-white mt-1">
             Welcome back, Admin
           </h1>
-          <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-1">
+          <p className="text-sm text-zinc-500 dark:text-zinc-400">{date}</p>
+          {/* <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-1">
             Here&apos;s what&apos;s happening with your portfolio today.
-          </p>
+          </p> */}
         </div>
         <a
           href="/"

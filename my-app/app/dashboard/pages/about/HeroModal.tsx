@@ -131,7 +131,7 @@ export function HeroModal({ hero, onSave, onCancel }: Props) {
           </div>
           <button
             onClick={onCancel}
-            className="p-2 text-zinc-400 hover:text-zinc-600 transition-colors"
+            className="p-2 rounded-xl text-zinc-500 hover:text-zinc-900 hover:bg-zinc-100 dark:text-zinc-400 dark:hover:text-white dark:hover:bg-zinc-800 transition-colors"
           >
             <X className="w-5 h-5" />
           </button>
@@ -184,7 +184,7 @@ export function HeroModal({ hero, onSave, onCancel }: Props) {
 
               {/* Alignment Row - items-center ensures perfect vertical centering */}
               <div className="flex gap-4 items-center">
-                <div className="flex-1 relative">
+                <div className="min-w-0 flex-1 relative">
                   {" "}
                   {/* added relative for the absolute text */}
                   {uploadMode === "url" ? (
@@ -199,7 +199,7 @@ export function HeroModal({ hero, onSave, onCancel }: Props) {
                         }}
                         className={inputCls}
                       />
-                      <p className="absolute -bottom-5 left-1 text-[10px] text-zinc-400 whitespace-nowrap">
+                      <p className="absolute -bottom-5 left-1 text-[10px] text-zinc-400 truncate max-w-full">
                         Example: ImgBB or Cloudinary direct link
                       </p>
                     </>
@@ -355,7 +355,7 @@ export function HeroModal({ hero, onSave, onCancel }: Props) {
                       type="button"
                       onClick={() => removeBio(i)}
                       disabled={bio.length <= 1}
-                      className="mt-2.5 p-2 rounded-lg text-zinc-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950 disabled:opacity-30"
+                      className="mt-2.5 p-2 rounded-lg text-zinc-500 dark:text-zinc-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-950 disabled:opacity-30"
                     >
                       <Trash2 className="w-3.5 h-3.5" />
                     </button>

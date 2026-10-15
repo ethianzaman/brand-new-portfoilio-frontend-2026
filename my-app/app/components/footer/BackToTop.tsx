@@ -31,7 +31,7 @@ const BackToTop = () => {
   return (
     <button
       onClick={scrollToTop}
-      className="fixed bottom-10 right-10 p-3 bg-blue-600 text-white rounded-full shadow-lg transition-opacity"
+      className="fixed bottom-5 right-4 md:bottom-10 md:right-10 p-3.5 md:p-3 bg-blue-600 text-white rounded-full shadow-lg transition-opacity"
     >
       <ArrowUp className="w-6 h-6" />
     </button>

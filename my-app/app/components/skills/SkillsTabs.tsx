@@ -44,7 +44,7 @@ export function SkillsTabs({ categories }: { categories: SkillCategory[] }) {
       {current && (
         <div
           key={active}   // ✅ key change triggers fade-in on tab switch
-          className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8
+          className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8
                      gap-3 animate-fade-in"
         >
           {current.skills.map(skill => (

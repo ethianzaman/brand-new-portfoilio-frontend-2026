@@ -28,7 +28,7 @@ export function Footer() {
       </div>
 
       {/* ── Middle Section: Links ── */}
-      <div className="max-w-7xl mx-auto px-6 py-16">
+      <div className="max-w-7xl mx-auto px-6 py-12 md:py-16">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-12">
           
           {/* Brand Column */}
@@ -89,13 +89,16 @@ export function Footer() {
             <h3 className="text-white font-semibold">Contact</h3>
             <ul className="space-y-4 text-sm">
               <li className="flex items-center gap-3">
-                <Mail className="w-4 h-4 text-indigo-500" /> {brand.email}
+                <Mail className="w-4 h-4 shrink-0 text-indigo-500" />
+                <span className="min-w-0 break-all">{brand.email}</span>
               </li>
               <li className="flex items-center gap-3">
-                <Phone className="w-4 h-4 text-indigo-500" /> {brand.phone}
+                <Phone className="w-4 h-4 shrink-0 text-indigo-500" />
+                <span className="min-w-0 break-all">{brand.phone}</span>
               </li>
               <li className="flex items-center gap-3">
-                <MapPin className="w-4 h-4 text-indigo-500" /> {brand.location}
+                <MapPin className="w-4 h-4 shrink-0 text-indigo-500" />
+                <span className="min-w-0 break-all">{brand.location}</span>
               </li>
             </ul>
             {/* Tech Stack Pills */}

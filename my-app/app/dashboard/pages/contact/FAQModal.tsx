@@ -53,10 +53,10 @@ export function FAQModal({ faq, onSave, onCancel }: Props) {
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center p-4
-                    bg-zinc-950/60 backdrop-blur-sm"
+                    bg-zinc-950/60 backdrop-blur-sm overflow-y-auto"
     >
       <div
-        className="w-full max-w-xl bg-white dark:bg-zinc-900
+        className="w-full max-w-xl my-4 bg-white dark:bg-zinc-900
                       rounded-2xl border border-zinc-200 dark:border-zinc-800
                       shadow-2xl"
       >
@@ -76,8 +76,7 @@ export function FAQModal({ faq, onSave, onCancel }: Props) {
           </div>
           <button
             onClick={onCancel}
-            className="p-2 rounded-xl text-zinc-400 hover:text-zinc-600
-                       hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
+            className="p-2 rounded-xl text-zinc-500 hover:text-zinc-900 hover:bg-zinc-100 dark:text-zinc-400 dark:hover:text-white dark:hover:bg-zinc-800 transition-colors"
           >
             <X className="w-5 h-5" />
           </button>
@@ -108,7 +107,7 @@ export function FAQModal({ faq, onSave, onCancel }: Props) {
                   e.target.style.height = `${e.target.scrollHeight}px`;
                 }}
                 placeholder="Write a clear, helpful answer..."
-                className={cn(inputCls, "resize-none overflow-hidden")}
+                className={cn(inputCls, "max-h-40 overflow-y-auto resize-none")}
                 required
               />
             </div>
