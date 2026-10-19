@@ -4,16 +4,23 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { Bell, CheckCheck } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { notificationSeed, toneClasses } from "./sidebar-config";
+import {
+  notificationSeed,
+  toneClasses,
+  type AppNotification,
+} from "./sidebar-config";
 
 type Props = {
   unreadCount: number;
   onMarkAllRead: () => void;
+  /** Live items from the contact inbox. Falls back to the sample seed. */
+  notifications?: AppNotification[];
 };
 
 export function TopBarNotifications({
   unreadCount,
   onMarkAllRead,
+  notifications = notificationSeed,
 }: Props) {
   const [open, setOpen] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
@@ -96,8 +103,16 @@ export function TopBarNotifications({
 
           {/* List */}
           <div className="max-h-80 overflow-y-auto p-2">
-            {notificationSeed.map((n, index) => {
-              const unread = index < unreadCount;
+            {notifications.length === 0 && (
+              <div className="flex flex-col items-center justify-center gap-2 px-4 py-10 text-center">
+                <Bell className="h-6 w-6 text-zinc-300 dark:text-zinc-600" />
+                <p className="text-xs text-zinc-400 dark:text-zinc-500">
+                  No notifications yet
+                </p>
+              </div>
+            )}
+            {notifications.map((n, index) => {
+              const unread = n.unread ?? index < unreadCount;
               return (
                 <Link
                   key={n.id}

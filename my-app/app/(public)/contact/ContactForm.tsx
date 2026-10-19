@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { Send, Loader2, CheckCircle2, AlertCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { CustomSelect } from "./CoustomSelect";
@@ -34,10 +34,23 @@ const BUDGETS = [
   "Not sure yet",
 ];
 
+// A per-submission key so accidental double-clicks / retries can't create a
+// duplicate inquiry on the backend (it dedupes on this value).
+function newIdempotencyKey(): string {
+  try {
+    if (typeof crypto !== "undefined" && "randomUUID" in crypto) {
+      return crypto.randomUUID();
+    }
+  } catch {
+    // Fall through to a non-crypto fallback.
+  }
+  return `${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`;
+}
+
 // ✅ Moved OUTSIDE ContactForm — fixes the error
 const inputClass = (error?: string) =>
   cn(
-    "w-full px-4 py-2.5 rounded-xl text-sm",
+    "w-full px-4 py-3 sm:py-2.5 rounded-xl text-sm",
     "bg-zinc-50 dark:bg-zinc-800/50",
     "border transition-colors duration-150",
     "text-zinc-900 dark:text-white",
@@ -93,6 +106,8 @@ export function ContactForm() {
     message: "",
   });
   const [errors, setErrors] = useState<Partial<FormData>>({});
+  const [serverError, setServerError] = useState<string | null>(null);
+  const idempotencyKey = useRef(newIdempotencyKey());
 
   function validate(): boolean {
     const e: Partial<FormData> = {};
@@ -108,17 +123,32 @@ export function ContactForm() {
     e.preventDefault();
     if (!validate()) return;
     setState("loading");
+    setServerError(null);
     try {
-      // ── Replace with real API later ────────────────────────
-      // await fetch('/api/contact', {
-      //   method: 'POST',
-      //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify(form),
-      // })
-      await new Promise((r) => setTimeout(r, 1500));
+      const res = await fetch("/api/contact", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ...form,
+          idempotencyKey: idempotencyKey.current,
+        }),
+      });
+
+      const data = await res.json().catch(() => ({}));
+
+      if (!res.ok) {
+        throw new Error(data?.message ?? "Unable to send your message.");
+      }
+
       setState("success");
       setForm({ name: "", email: "", subject: "", budget: "", message: "" });
-    } catch {
+      idempotencyKey.current = newIdempotencyKey();
+    } catch (error) {
+      setServerError(
+        error instanceof Error
+          ? error.message
+          : "Something went wrong. Please try again.",
+      );
       setState("error");
     }
   }
@@ -127,10 +157,10 @@ export function ContactForm() {
   if (state === "success") {
     return (
       <div
-        className="flex flex-col items-center justify-center gap-4
-                      p-8 sm:p-12 rounded-2xl text-center
-                      bg-green-50 dark:bg-green-950/30
-                      border border-green-200 dark:border-green-800"
+      className="flex flex-col items-center justify-center gap-4
+                    p-6 sm:p-8 md:p-12 rounded-2xl text-center
+                    bg-green-50 dark:bg-green-950/30
+                    border border-green-200 dark:border-green-800"
       >
         <div
           className="w-16 h-16 rounded-full bg-green-100 dark:bg-green-900/50
@@ -161,7 +191,7 @@ export function ContactForm() {
   return (
     <form
       onSubmit={handleSubmit}
-      className="flex flex-col gap-5 p-6 md:p-8 rounded-2xl
+      className="flex flex-col gap-4 sm:gap-5 p-5 sm:p-6 md:p-8 rounded-2xl
                  bg-white dark:bg-zinc-900
                  border border-zinc-200 dark:border-zinc-800"
     >
@@ -258,7 +288,10 @@ export function ContactForm() {
           placeholder="Tell me about your project — what you need, your timeline, any specific requirements..."
           value={form.message}
           onChange={(e) => setForm((f) => ({ ...f, message: e.target.value }))}
-          className={cn(inputClass(errors.message), "resize-none")}
+          className={cn(
+            inputClass(errors.message),
+            "resize-none min-h-[140px] sm:min-h-[160px]",
+          )}
         />
       </Field>
 
@@ -271,7 +304,8 @@ export function ContactForm() {
                         text-sm text-red-600 dark:text-red-400"
         >
           <AlertCircle className="w-4 h-4 shrink-0" />
-          Something went wrong. Please try again or email me directly.
+          {serverError ??
+            "Something went wrong. Please try again or email me directly."}
         </div>
       )}
 
@@ -280,11 +314,12 @@ export function ContactForm() {
         type="submit"
         disabled={state === "loading"}
         className="flex items-center justify-center gap-2
-                   w-full py-3 rounded-xl
+                   w-full min-h-[48px] py-3 rounded-xl
                    bg-indigo-600 hover:bg-indigo-700
                    disabled:opacity-60 disabled:cursor-not-allowed
                    text-white font-medium text-sm
-                   transition-all duration-150 hover:scale-[1.01]"
+                   transition-all duration-150 active:scale-[0.99]
+                   sm:hover:scale-[1.01]"
       >
         {state === "loading" ? (
           <>

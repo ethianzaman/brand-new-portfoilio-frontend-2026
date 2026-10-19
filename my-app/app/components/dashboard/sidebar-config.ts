@@ -6,6 +6,7 @@ import {
   FileText,
   Home,
   Image,
+  Inbox,
   LayoutDashboard,
   Mail,
   MessageSquare,
@@ -28,6 +29,12 @@ export const sidebarSections: SidebarSection[] = [
     label: "Overview",
     links: [
       { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+    ],
+  },
+  {
+    label: "Inbox",
+    links: [
+      { href: "/dashboard/pages/messages", label: "Messages", icon: Inbox },
     ],
   },
   {
@@ -54,6 +61,7 @@ export type AppNotification = {
   icon: LucideIcon;
   tone: NotificationTone;
   href: string;
+  unread?: boolean;
 };
 
 /** Literal class strings — Tailwind cannot generate dynamic `bg-${tone}-*` names */

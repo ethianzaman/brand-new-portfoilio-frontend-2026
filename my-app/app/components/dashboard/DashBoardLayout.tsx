@@ -14,12 +14,13 @@ import { Sidebar } from "./SideBar";
 import { MobileSidebar } from "./MobileSideBar";
 import { TopBarNotifications } from "./TopBarNotifications";
 import { ThemeToggle } from "../ThemeToggle";
-import { notificationSeed } from "./sidebar-config";
+import { useMessageNotifications } from "./useMessageNotifications";
 import { cn } from "@/lib/utils";
 
 export function DashboardLayout({ children }: { children: React.ReactNode }) {
   const [collapsed, setCollapsed] = useState(false);
-  const [unreadCount, setUnreadCount] = useState(notificationSeed.length);
+  const { unreadCount, notifications, markAllRead } =
+    useMessageNotifications();
   const router = useRouter();
   const pathname = usePathname();
   const onSettings = pathname === "/dashboard/pages/settings";
@@ -65,7 +66,8 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
             {/* Notifications */}
             <TopBarNotifications
               unreadCount={unreadCount}
-              onMarkAllRead={() => setUnreadCount(0)}
+              notifications={notifications}
+              onMarkAllRead={markAllRead}
             />
 
             {/* Settings */}
