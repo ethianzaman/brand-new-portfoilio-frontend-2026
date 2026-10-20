@@ -13,6 +13,7 @@ import {
 import { BlogPost } from "@/lib/types/blog";
 import { BlogFormModal } from "./BlogFormModal";
 import { BlogDeleteModal } from "./BlogDeleteModal";
+import { BlogDrawer } from "./BlogDrawer";
 import {
   dashboardCreatePost,
   dashboardUpdatePost,
@@ -63,10 +64,12 @@ function StatCard({
 // ── Blog post row ────────────────────────────────────────────────
 function BlogRow({
   post,
+  onOpen,
   onEdit,
   onDelete,
 }: {
   post: BlogPost;
+  onOpen: (p: BlogPost) => void;
   onEdit: (p: BlogPost) => void;
   onDelete: (p: BlogPost) => void;
 }) {
@@ -80,12 +83,14 @@ function BlogRow({
 
   return (
     <div
+      onClick={() => onOpen(post)}
       className={cn(
         "bg-white dark:bg-zinc-900",
         "border border-zinc-200 dark:border-zinc-800",
         "rounded-2xl overflow-hidden",
-        "transition-all duration-200",
+        "transition-all duration-200 cursor-pointer",
         "hover:border-zinc-300 dark:hover:border-zinc-700",
+        "hover:shadow-md hover:shadow-zinc-900/5",
       )}
     >
       <div className="flex items-center gap-4 px-5 py-4">
@@ -155,6 +160,7 @@ function BlogRow({
           {post.status === "published" && (
             <Link
               href={`/blog/${post.slug}`}
+              onClick={(e) => e.stopPropagation()}
               className="inline-flex items-center gap-1 text-[11px] text-indigo-600 dark:text-indigo-400 hover:underline"
             >
               <Eye className="w-6 h-5 text-zinc-400" />
@@ -166,7 +172,10 @@ function BlogRow({
         <div className="flex items-center gap-1 shrink-0">
           <button
             title="Edit post"
-            onClick={() => onEdit(post)}
+            onClick={(e) => {
+              e.stopPropagation();
+              onEdit(post);
+            }}
             className="p-2 rounded-lg text-zinc-500 dark:text-zinc-400
                        hover:text-amber-600 dark:hover:text-amber-400
                        hover:bg-amber-50 dark:hover:bg-amber-950
@@ -176,7 +185,10 @@ function BlogRow({
           </button>
           <button
             title="Delete post"
-            onClick={() => onDelete(post)}
+            onClick={(e) => {
+              e.stopPropagation();
+              onDelete(post);
+            }}
             className="p-2 rounded-lg text-zinc-500 dark:text-zinc-400
                        hover:text-red-600 dark:hover:text-red-400
                        hover:bg-red-50 dark:hover:bg-red-950
@@ -206,6 +218,7 @@ export function BlogTable({ initial }: { initial: BlogPost[] }) {
   const [showForm, setShowForm] = useState(false);
   const [editPost, setEditPost] = useState<BlogPost | null>(null);
   const [deletePost, setDeletePost] = useState<BlogPost | null>(null);
+  const [drawerPost, setDrawerPost] = useState<BlogPost | null>(null);
   const [toast, setToast] = useState<string | null>(null);
 
   function showToast(msg: string) {
@@ -240,6 +253,7 @@ export function BlogTable({ initial }: { initial: BlogPost[] }) {
           setPosts((prev) =>
             prev.map((item) => (item.id === updated.id ? updated : item)),
           );
+          setDrawerPost((prev) => (prev?.id === updated.id ? updated : prev));
           showToast("Post updated successfully");
         }
       } else {
@@ -266,12 +280,24 @@ export function BlogTable({ initial }: { initial: BlogPost[] }) {
       const ok = await dashboardDeletePost(deletePost.id);
       if (ok) {
         setPosts((prev) => prev.filter((p) => p.id !== deletePost.id));
+        setDrawerPost(null);
         showToast("Post deleted");
       }
     } catch (err) {
       console.error("handleDelete error:", err);
     }
     setDeletePost(null);
+  }
+
+  function handleDrawerEdit(post: BlogPost) {
+    setDrawerPost(null);
+    setEditPost(post);
+    setShowForm(true);
+  }
+
+  function handleDrawerDelete(post: BlogPost) {
+    setDrawerPost(null);
+    setDeletePost(post);
   }
 
   return (
@@ -349,7 +375,7 @@ export function BlogTable({ initial }: { initial: BlogPost[] }) {
           posts
         </p>
         <p className="text-xs text-zinc-400 hidden sm:block">
-          Published posts get a public /blog/{`{slug}`} link
+          Click any row to view details
         </p>
       </div>
 
@@ -378,6 +404,7 @@ export function BlogTable({ initial }: { initial: BlogPost[] }) {
             <BlogRow
               key={post.id}
               post={post}
+              onOpen={(p) => setDrawerPost(p)}
               onEdit={(p) => {
                 setEditPost(p);
                 setShowForm(true);
@@ -405,6 +432,14 @@ export function BlogTable({ initial }: { initial: BlogPost[] }) {
           <span>{toast}</span>
         </div>
       )}
+
+      {/* ── Blog detail drawer ── */}
+      <BlogDrawer
+        post={drawerPost}
+        onClose={() => setDrawerPost(null)}
+        onEdit={handleDrawerEdit}
+        onDelete={handleDrawerDelete}
+      />
 
       {/* ── Modals ── */}
       {showForm && (

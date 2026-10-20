@@ -1,8 +1,8 @@
-import { apiUrl } from "@/lib/api/config";
+import { dashboardApiUrl } from "@/lib/api/config";
 import { BlogPost } from "@/lib/types/blog";
 import { DEMO_BLOG_POSTS } from "@/lib/data/blog.demo";
 
-const API_BASE_URL = `${apiUrl()}/blogs`;
+const API_BASE_URL = `${dashboardApiUrl()}/blogs`;
 
 type ApiPost = BlogPost & { _id?: string };
 

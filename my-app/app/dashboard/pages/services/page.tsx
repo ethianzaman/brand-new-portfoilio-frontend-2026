@@ -15,7 +15,7 @@ export default async function DashboardServicesPage() {
         </div>
         <div>
           <h1 className="text-xl font-bold text-zinc-900 dark:text-white">
-            Services
+            Services Page
           </h1>
           <p className="text-sm text-zinc-500 dark:text-zinc-400">
             Manage your public services page content

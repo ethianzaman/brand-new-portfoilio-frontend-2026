@@ -1,4 +1,4 @@
-import { apiUrl } from "@/lib/api/config";
+import { dashboardApiUrl } from "@/lib/api/config";
 import {
   ContactApiData,
   ContactData,
@@ -6,7 +6,7 @@ import {
   FAQ,
 } from "@/lib/types/contact";
 
-const API_BASE_URL = `${apiUrl()}/contact`;
+const API_BASE_URL = `${dashboardApiUrl()}/contact`;
 
 type FAQApiResponse = {
   id?: string;

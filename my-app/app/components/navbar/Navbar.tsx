@@ -4,13 +4,16 @@ import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 
-import { socialLinks, navConfig } from "./nav-config";
-import { Zap } from "lucide-react";
 import { NavLinks } from "./navLinks";
 import { MobileMenu } from "./mobileMenu";
 import { ThemeToggle } from "../ThemeToggle";
+import { BrandMark } from "../brand/BrandMark";
+import { SocialIcon } from "../brand/SocialIcon";
+import type { SiteSettings } from "@/lib/types/settings";
 
-export function Navbar() {
+export function Navbar({ settings }: { settings: SiteSettings }) {
+  const { name, tagline, logo } = settings.brand;
+  const { socials } = settings;
   const [scrolled, setScrolled] = useState(false);
 
   // ✅ Add border + backdrop on scroll
@@ -34,19 +37,25 @@ export function Navbar() {
         {/* ─── Logo ─── */}
         <Link href="/" className="flex items-center gap-2.5 group">
           <div
-            className="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center
+            className="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center overflow-hidden
                           transition-transform duration-200 group-hover:scale-110"
           >
-            <Zap className="w-4 h-4 text-white" />
+            <BrandMark logo={logo} className="w-4 h-4 text-white" />
           </div>
-          <div className="hidden sm:block">
-            <p className="text-sm font-bold text-zinc-900 dark:text-white leading-none">
-              {navConfig.name}
-            </p>
-            <p className="text-xs text-zinc-500 dark:text-zinc-400">
-              {navConfig.title}
-            </p>
-          </div>
+          {(name || tagline) && (
+            <div className="hidden sm:block">
+              {name && (
+                <p className="text-sm font-bold text-zinc-900 dark:text-white leading-none">
+                  {name}
+                </p>
+              )}
+              {tagline && (
+                <p className="text-xs text-zinc-500 dark:text-zinc-400">
+                  {tagline}
+                </p>
+              )}
+            </div>
+          )}
         </Link>
 
         {/* ─── Desktop nav ─── */}
@@ -60,9 +69,9 @@ export function Navbar() {
           <ThemeToggle />
 
           {/* Social icons */}
-          {socialLinks.map(({ href, label, icon: Icon }) => (
+          {socials.map(({ href, label, icon }) => (
             <a
-              key={href}
+              key={`${label}-${href}`}
               href={href}
               target="_blank"
               rel="noreferrer"
@@ -72,7 +81,7 @@ export function Navbar() {
                          hover:bg-zinc-100 dark:hover:bg-zinc-800
                          transition-all duration-150 hover:scale-110"
             >
-              <Icon className="w-4 h-4" />
+              <SocialIcon icon={icon} className="w-4 h-4" />
             </a>
           ))}
 
@@ -90,7 +99,7 @@ export function Navbar() {
         {/* ─── Mobile theme toggle + hamburger ─── */}
         <div className="flex xl:hidden items-center gap-1">
           <ThemeToggle className="size-10 xl:size-8" />
-          <MobileMenu />
+          <MobileMenu settings={settings} />
         </div>
       </div>
     </header>

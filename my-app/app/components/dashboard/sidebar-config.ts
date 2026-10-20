@@ -10,6 +10,7 @@ import {
   LayoutDashboard,
   Mail,
   MessageSquare,
+  Settings,
   Users,
 } from "lucide-react";
 
@@ -40,13 +41,23 @@ export const sidebarSections: SidebarSection[] = [
   {
     label: "Content",
     links: [
-      { href: "/dashboard/pages/home", label: "Home Page", icon: Home },
+      { href: "/dashboard/pages/home", label: "Hero", icon: Home },
       { href: "/dashboard/pages/about", label: "About", icon: Users },
       { href: "/dashboard/pages/projects", label: "Projects", icon: Image },
       { href: "/dashboard/pages/skills", label: "Skills", icon: Code2 },
       { href: "/dashboard/pages/services", label: "Services", icon: Briefcase },
-      { href: "/dashboard/pages/contact", label: "Contact", icon: Mail },
-      { href: "/dashboard/pages/blog", label: "Blog Posts", icon: FileText },
+      { href: "/dashboard/pages/blog", label: "Blogs", icon: FileText },
+      { href: "/dashboard/pages/contact", label: "Contact", icon: Mail }
+    ],
+  },
+  {
+    label: "System",
+    links: [
+      {
+        href: "/dashboard/pages/settings",
+        label: "Site Settings",
+        icon: Settings,
+      },
     ],
   },
 ];

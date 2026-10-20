@@ -17,7 +17,7 @@ export default async function DashboardBlogPage() {
         </div>
         <div>
           <h1 className="text-xl font-bold text-zinc-900 dark:text-white">
-            Blog Posts
+            Blog Page
           </h1>
           <p className="text-sm text-zinc-500 dark:text-zinc-400">
             Write, publish and manage your articles

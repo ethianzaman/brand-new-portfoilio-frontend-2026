@@ -11,10 +11,15 @@ import {
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
-import { Menu, X, Zap } from "lucide-react";
-import { navLinks, socialLinks, navConfig } from "./nav-config";
+import { Menu, X } from "lucide-react";
+import { navLinks } from "./nav-config";
+import { BrandMark } from "../brand/BrandMark";
+import { SocialIcon } from "../brand/SocialIcon";
+import type { SiteSettings } from "@/lib/types/settings";
 
-export function MobileMenu() {
+export function MobileMenu({ settings }: { settings: SiteSettings }) {
+  const { name, tagline, logo } = settings.brand;
+  const { socials } = settings;
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
 
@@ -52,17 +57,23 @@ export function MobileMenu() {
           {/* Header */}
           <div className="flex items-center justify-between px-5 h-16 border-b border-zinc-100 dark:border-zinc-800">
             <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center">
-                <Zap className="w-4 h-4 text-white" />
+              <div className="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center overflow-hidden">
+                <BrandMark logo={logo} className="w-4 h-4 text-white" />
               </div>
-              <div>
-                <p className="text-sm font-semibold text-zinc-900 dark:text-white leading-none">
-                  {navConfig.name}
-                </p>
-                <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">
-                  {navConfig.title}
-                </p>
-              </div>
+              {(name || tagline) && (
+                <div>
+                  {name && (
+                    <p className="text-sm font-semibold text-zinc-900 dark:text-white leading-none">
+                      {name}
+                    </p>
+                  )}
+                  {tagline && (
+                    <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">
+                      {tagline}
+                    </p>
+                  )}
+                </div>
+              )}
             </div>
             <Button
               variant="ghost"
@@ -114,22 +125,22 @@ export function MobileMenu() {
             <p className="text-xs text-zinc-400 dark:text-zinc-500 uppercase tracking-wider mb-3 px-1">
               Find me on
             </p>
-            <div className="flex gap-2">
-              {socialLinks.map(({ href, label, icon: Icon }) => (
+            <div className="flex flex-wrap gap-2">
+              {socials.map(({ href, label, icon }) => (
                 <a
-                  key={href}
+                  key={`${label}-${href}`}
                   href={href}
                   target="_blank"
                   rel="noreferrer"
                   aria-label={label}
-                  className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl
+                  className="flex-1 min-w-[calc(50%-0.25rem)] flex items-center justify-center gap-2 py-2.5 rounded-xl
                              text-xs font-medium text-zinc-600 dark:text-zinc-400
                              bg-zinc-50 dark:bg-zinc-900
                              hover:bg-zinc-100 dark:hover:bg-zinc-800
                              hover:text-zinc-900 dark:hover:text-white
                              transition-colors"
                 >
-                  <Icon className="w-4 h-4" />
+                  <SocialIcon icon={icon} className="w-4 h-4" />
                   <span className="hidden sm:block">{label}</span>
                 </a>
               ))}

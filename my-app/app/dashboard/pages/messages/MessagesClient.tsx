@@ -31,6 +31,7 @@ import {
   dashboardUpdateMessage,
 } from "@/lib/services/message.services";
 import type { ContactMessage, LeadSummary } from "@/lib/types/message";
+import { useInboxActivity } from "@/app/components/dashboard/inboxActivity";
 
 type Filter = "all" | "unread" | "starred";
 
@@ -82,6 +83,7 @@ function fullDate(iso: string): string {
 
 export function MessagesClient() {
   const queryClient = useQueryClient();
+  const { register, setActiveLeadId } = useInboxActivity();
 
   const [filter, setFilter] = useState<Filter>("all");
   const [search, setSearch] = useState("");
@@ -97,7 +99,23 @@ export function MessagesClient() {
   const [confirm, setConfirm] = useState<Confirm>(null);
   const [deleting, setDeleting] = useState(false);
 
-  const markedRef = useRef<Set<string>>(new Set());
+  // Tracks the newest message id we already cleared per lead, so a fresh
+  // message arriving on an open thread always triggers a new mark-read
+  // write, while repeated refetches of the same state do not. Keying on the
+  // message id (not the unread count) matters: counts repeat — after clearing
+  // a thread at count 1, the next single message is count 1 again.
+  const markedRef = useRef<Map<string, string>>(new Map());
+
+  // Mark this inbox as "actively viewed" while mounted + tab visible.
+  useEffect(() => register(), [register]);
+
+  // Publish which conversation is open on screen, so only that thread's
+  // incoming messages get auto-marked as read. On mobile the detail pane is
+  // only visible once `mobileDetail` is set; on desktop it is always shown.
+  useEffect(() => {
+    const isDetailVisible = !selectedId || mobileDetail;
+    setActiveLeadId(isDetailVisible ? selectedId : null);
+  }, [selectedId, mobileDetail, setActiveLeadId]);
 
   // Debounce the search box.
   useEffect(() => {
@@ -154,13 +172,14 @@ export function MessagesClient() {
   );
 
   const markLeadOpened = useCallback(
-    async (id: string) => {
-      if (markedRef.current.has(id)) return;
-      markedRef.current.add(id);
+    async (id: string, lastMessageId?: string) => {
+      // Skip only when this exact message was already cleared for this lead.
+      if (lastMessageId && markedRef.current.get(id) === lastMessageId) return;
+      if (lastMessageId) markedRef.current.set(id, lastMessageId);
       try {
         await dashboardMarkLeadRead(id);
       } catch {
-        markedRef.current.delete(id);
+        if (lastMessageId) markedRef.current.delete(id);
       } finally {
         invalidateInbox(id);
       }
@@ -184,12 +203,17 @@ export function MessagesClient() {
     if (lead.unreadCount > 0) void markLeadOpened(lead.id);
   }
 
-  // Covers deep links where the person isn't in the current (filtered) list.
+  // Covers deep links where the person isn't in the current (filtered) list,
+  // and messages arriving while this thread is on screen: every refetch that
+  // still shows unread state here re-marks the open thread read (the id-based
+  // dedupe above keeps genuinely new messages flowing through).
   useEffect(() => {
-    const lead = timelineQuery.data?.lead;
-    if (lead && selectedId === lead.id && lead.unreadCount > 0) {
-      void markLeadOpened(lead.id);
-    }
+    const data = timelineQuery.data;
+    if (!data || selectedId !== data.lead.id) return;
+    const last = data.messages[data.messages.length - 1];
+    const hasUnread = data.lead.unreadCount > 0 || last?.status === "unread";
+    if (!hasUnread) return;
+    void markLeadOpened(data.lead.id, last?.id);
   }, [timelineQuery.data, selectedId, markLeadOpened]);
 
   async function handleMarkAllRead() {

@@ -17,7 +17,7 @@ export default async function DashboardProjectsPage() {
         </div>
         <div>
           <h1 className="text-xl font-bold text-zinc-900 dark:text-white">
-            Projects
+            Projects Page
           </h1>
           <p className="text-sm text-zinc-500 dark:text-zinc-400">
             Manage your portfolio projects

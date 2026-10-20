@@ -1,8 +1,8 @@
-import { apiUrl } from "@/lib/api/config";
+import { dashboardApiUrl } from "@/lib/api/config";
 import { DEMO_SKILLS } from "../data/skills.demo";
 import { Skill, SkillCategory, SkillFormData } from "../types/skill";
 
-const API_BASE_URL = `${apiUrl()}/skills`;
+const API_BASE_URL = `${dashboardApiUrl()}/skills`;
 
 function normalizeSkills(data: {
   categories: Array<{

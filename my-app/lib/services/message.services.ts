@@ -1,4 +1,4 @@
-import { apiUrl, publicApiUrl } from "@/lib/api/config";
+import { dashboardApiUrl } from "@/lib/api/config";
 import type {
   ContactMessage,
   LeadListParams,
@@ -26,12 +26,12 @@ import type {
 
 /**
  * Resolve the backend base per call: the server-only `API_URL` on the server
- * (e.g. the /api/contact proxy, dashboard server renders) and the inlined
- * `NEXT_PUBLIC_API_URL` in the browser (interactive dashboard components).
+ * (e.g. the /api/contact proxy, dashboard server renders) and the
+ * same-origin `/api/backend` proxy in the browser (interactive dashboard
+ * components), which attaches the backend JWT from the session cookie.
  */
 function messagesUrl(): string {
-  const base = typeof window === "undefined" ? apiUrl() : publicApiUrl();
-  return `${base}/messages`;
+  return `${dashboardApiUrl()}/messages`;
 }
 
 //  LEAD API (Backend/src/routes/lead.routes.ts):
@@ -40,8 +40,7 @@ function messagesUrl(): string {
 //    POST   {API}/leads/:id/read  → mark every message from a person read
 //    DELETE {API}/leads/:id       → remove a person and all their messages
 function leadsUrl(): string {
-  const base = typeof window === "undefined" ? apiUrl() : publicApiUrl();
-  return `${base}/leads`;
+  return `${dashboardApiUrl()}/leads`;
 }
 
 async function getErrorMessage(

@@ -1,8 +1,8 @@
 
-import { apiUrl } from "@/lib/api/config";
+import { dashboardApiUrl } from "@/lib/api/config";
 import { AboutData, Experience, Education, Value } from "@/lib/types/about";
 
-const API_BASE_URL = apiUrl(); // 👈 আপনার ব্যাকএন্ড এপিআই ইউআরএল
+const API_BASE_URL = dashboardApiUrl(); // 👈 আপনার ব্যাকএন্ড এপিআই ইউআরএল
 
 // ── GET ALL ABOUT DATA ───────────────────────────────────────────
 export async function dashboardGetAbout(): Promise<AboutData> {

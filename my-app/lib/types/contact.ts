@@ -9,6 +9,9 @@ export interface ContactInfo {
     github:   string
     linkedin: string
     twitter:  string
+    facebook: string
+    instagram: string
+    tiktok:   string
   }
 }
 
@@ -26,19 +29,6 @@ export interface ContactData {
 
 
 // // Sudhu api er jonno any error bypasss
-
-
-// export interface ContactApiFAQ {
-//   _id: string
-//   question: string
-//   answer: string
-//   order: number
-// }
-
-// export interface ContactApiData {
-//   info: ContactInfo
-//   faqs: ContactApiFAQ[]
-// }
 
 
 export interface ContactApiFAQ {
