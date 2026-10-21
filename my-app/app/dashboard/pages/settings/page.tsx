@@ -19,6 +19,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { adminProfile } from "@/app/components/dashboard/sidebar-config";
+import { useCurrentUser } from "@/app/components/dashboard/useCurrentUser";
+import { ROLE_LABELS } from "@/lib/types/user";
 import { BrandSettings } from "./BrandSettings";
 import { SocialSettings } from "./SocialSettings";
 
@@ -88,6 +90,17 @@ export default function SettingsPage() {
     () => false,
   );
   const router = useRouter();
+  const { user } = useCurrentUser();
+
+  const email = user?.email ?? adminProfile.email;
+  const roleLabel = user ? ROLE_LABELS[user.role] : adminProfile.role;
+  const initials =
+    email
+      .split(/[._@-]/)
+      .filter(Boolean)
+      .slice(0, 2)
+      .map((part) => part[0]?.toUpperCase() ?? "")
+      .join("") || "U";
 
   const [prefs, setPrefs] = useState<Record<string, boolean>>(
     Object.fromEntries(preferences.map((p) => [p.id, p.defaultOn])),
@@ -217,14 +230,14 @@ export default function SettingsPage() {
 
           <div className="flex flex-wrap items-center gap-3 rounded-xl bg-zinc-50 p-3 ring-1 ring-inset ring-zinc-100 dark:bg-zinc-800/50 dark:ring-zinc-800">
             <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-linear-to-br from-indigo-500 to-purple-600 text-sm font-bold text-white shadow-md shadow-indigo-600/30">
-              {adminProfile.initials}
+              {initials}
             </span>
             <span className="min-w-0 flex-1">
               <span className="block truncate text-sm font-bold text-zinc-900 dark:text-white">
-                {adminProfile.name}
+                {email}
               </span>
               <span className="block truncate text-xs text-zinc-500 dark:text-zinc-400">
-                {adminProfile.role} · {adminProfile.email}
+                {roleLabel}
               </span>
             </span>
             <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-emerald-50 px-2 py-1 text-[10px] font-bold uppercase tracking-wide text-emerald-600 dark:bg-emerald-950/60 dark:text-emerald-400">

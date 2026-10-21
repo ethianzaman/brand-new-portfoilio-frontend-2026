@@ -12,6 +12,9 @@ export const DEMO_CONTACT: ContactData = {
       github:   'https://github.com',
       linkedin: 'https://linkedin.com',
       twitter:  'https://twitter.com',
+      facebook: '',
+      instagram: '',
+      tiktok:   '',
     },
   },
   faqs: [

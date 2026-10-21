@@ -1,5 +1,6 @@
 "use client";
 import { useState, useMemo } from "react";
+import { useCurrentUser } from "@/app/components/dashboard/useCurrentUser";
 import {
   Mail,
   Phone,
@@ -69,6 +70,7 @@ function StatCard({
 
 // ── Main CMS ──────────────────────────────────────────────────
 export function ContactCMS({ initial }: { initial: ContactData }) {
+  const { canDelete } = useCurrentUser();
   const [info, setInfo] = useState<ContactInfo>(initial.info);
   const [faqs, setFaqs] = useState<FAQ[]>(initial.faqs);
   const [toast, setToast] = useState<string | null>(null);
@@ -467,20 +469,22 @@ export function ContactCMS({ initial }: { initial: ContactData }) {
                       >
                         <Pencil className="w-3.5 h-3.5" />
                       </button>
-                      <button
-                        onClick={() =>
-                          setDeleteTarget({
-                            id: faq.id,
-                            label: faq.question,
-                          })
-                        }
-                        className="p-1.5 rounded-lg text-zinc-500 dark:text-zinc-400
-                                   hover:text-red-600 dark:hover:text-red-400
-                                   hover:bg-red-50 dark:hover:bg-red-950
-                                   transition-all"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </button>
+                      {canDelete && (
+                        <button
+                          onClick={() =>
+                            setDeleteTarget({
+                              id: faq.id,
+                              label: faq.question,
+                            })
+                          }
+                          className="p-1.5 rounded-lg text-zinc-500 dark:text-zinc-400
+                                     hover:text-red-600 dark:hover:text-red-400
+                                     hover:bg-red-50 dark:hover:bg-red-950
+                                     transition-all"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      )}
                     </div>
                   </div>
                 ))}

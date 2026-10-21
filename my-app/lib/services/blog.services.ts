@@ -1,6 +1,7 @@
 import { dashboardApiUrl } from "@/lib/api/config";
 import { BlogPost } from "@/lib/types/blog";
 import { DEMO_BLOG_POSTS } from "@/lib/data/blog.demo";
+import { buildQuery } from "@/lib/services/pagination";
 
 const API_BASE_URL = `${dashboardApiUrl()}/blogs`;
 
@@ -13,10 +14,66 @@ function normalizePost(post: ApiPost): BlogPost {
   };
 }
 
-// ── GET all (dashboard: draft + published) ───────────────────────
-export async function dashboardGetBlogPosts(): Promise<BlogPost[]> {
+// ─────────────────────────────────────────────────────────────────────────
+//  DASHBOARD LIST — paginated + searchable, resolved in the database.
+//
+//  GET /blogs/all?page&pageSize&q&status&category&sort&dir
+//    → { success, blogs, total, hasMore, page, pageSize }
+//
+//  The dashboard never downloads the whole collection: it asks for one page
+//  at a time and the backend does the filtering, searching and sorting in
+//  MongoDB.
+// ─────────────────────────────────────────────────────────────────────────
+
+export type BlogStatusFilter = "all" | "draft" | "published";
+
+export interface BlogListQuery {
+  page: number;
+  pageSize: number;
+  q?: string;
+  status?: BlogStatusFilter;
+  category?: string;
+  sort?: "createdAt" | "title" | "readTime" | "status";
+  dir?: "asc" | "desc";
+}
+
+export interface BlogListResult {
+  blogs: BlogPost[];
+  total: number;
+  hasMore: boolean;
+  page: number;
+  pageSize: number;
+}
+
+export interface BlogStats {
+  total: number;
+  published: number;
+  featured: number;
+  readTime: number;
+  byCategory: Record<string, number>;
+}
+
+export async function dashboardGetBlogPosts(
+  params: BlogListQuery,
+): Promise<BlogListResult> {
+  const page = params.page;
+  const pageSize = params.pageSize;
+
   try {
-    const response = await fetch(`${API_BASE_URL}/all`, {
+    const query = buildQuery({
+      page,
+      pageSize,
+      q: params.q?.trim(),
+      status: params.status && params.status !== "all" ? params.status : undefined,
+      category:
+        params.category && params.category !== "all"
+          ? params.category
+          : undefined,
+      sort: params.sort,
+      dir: params.dir,
+    });
+
+    const response = await fetch(`${API_BASE_URL}/all?${query}`, {
       cache: "no-store",
     });
 
@@ -26,17 +83,64 @@ export async function dashboardGetBlogPosts(): Promise<BlogPost[]> {
 
     const json = await response.json();
 
-    const posts: ApiPost[] = Array.isArray(json?.blogs)
-      ? json.blogs
-      : Array.isArray(json)
-        ? json
-        : [];
+    const posts: ApiPost[] = Array.isArray(json?.blogs) ? json.blogs : [];
 
-    return posts.map(normalizePost);
+    return {
+      blogs: posts.map(normalizePost),
+      total: json?.total ?? posts.length,
+      hasMore: json?.hasMore ?? false,
+      page: json?.page ?? page,
+      pageSize: json?.pageSize ?? pageSize,
+    };
   } catch (error) {
     console.error("Failed to fetch blog posts:", error);
 
-    return JSON.parse(JSON.stringify(DEMO_BLOG_POSTS.filter((p) => p.status === "published")));
+    return {
+      blogs: [],
+      total: 0,
+      hasMore: false,
+      page,
+      pageSize,
+    };
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+//  DASHBOARD STATS — the numbers on the stat cards.
+//
+//  Kept on a separate endpoint so they are computed once and cached
+//  independently of whichever page of rows the user is looking at.
+// ─────────────────────────────────────────────────────────────────────────
+
+export async function dashboardGetBlogStats(): Promise<BlogStats> {
+  try {
+    const response = await fetch(`${API_BASE_URL}/stats`, {
+      cache: "no-store",
+    });
+
+    if (!response.ok) {
+      throw new Error(`Blog stats API failed: ${response.status}`);
+    }
+
+    const json = await response.json();
+
+    return {
+      total: json?.stats?.total ?? 0,
+      published: json?.stats?.published ?? 0,
+      featured: json?.stats?.featured ?? 0,
+      readTime: json?.stats?.readTime ?? 0,
+      byCategory: json?.stats?.byCategory ?? {},
+    };
+  } catch (error) {
+    console.error("Failed to fetch blog stats:", error);
+
+    return {
+      total: 0,
+      published: 0,
+      featured: 0,
+      readTime: 0,
+      byCategory: {},
+    };
   }
 }
 
@@ -74,7 +178,7 @@ export async function dashboardCreatePost(
   formData.append("title", data.title);
   formData.append("slug", data.slug);
   formData.append("excerpt", data.excerpt);
-  formData.append("content", data.content);
+  formData.append("content", data.content ?? "");
   formData.append("category", data.category);
   formData.append("status", data.status);
   formData.append("featured", String(data.featured ?? false));

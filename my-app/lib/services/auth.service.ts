@@ -3,21 +3,22 @@ import type {
   AuthResponse,
   AuthSession,
   LoginCredentials,
-  SignUpCredentials,
 } from "@/lib/types/auth";
 
 // ─────────────────────────────────────────────────────────────────
 //  AUTH API — talks to the backend (Express)
 //
 //  Backend endpoints (see `Backend/src/routes/auth.routes.ts`):
-//    POST {API_AUTH_URL}/login     → { success, token, user }   OR
-//                                    { message, email } + Set-Cookie: token=...
-//    POST {API_AUTH_URL}/sign-up  → { message, email }
+//    POST {API_AUTH_URL}/login   → { success, user } + Set-Cookie: token=...
+//    POST {API_AUTH_URL}/logout  → clears the backend cookie
 //
-//  NOTE: The backend (`auth.controller copy`) returns the JWT via a
-//  `Set-Cookie` header on ITS own host. That cookie is useless to a
-//  Next.js fetch (different host), so we read the raw `Set-Cookie`
-//  header here and reuse the token for our own httpOnly cookie.
+//  Public registration (sign-up) is DISABLED on the backend. Accounts are
+//  created by an Admin through the protected User Management API only.
+//
+//  NOTE: The backend returns the JWT via a `Set-Cookie` header on ITS own
+//  host. That cookie is useless to a Next.js fetch (different host), so we
+//  read the raw `Set-Cookie` header here and reuse the token for our own
+//  httpOnly cookie.
 // ─────────────────────────────────────────────────────────────────
 
 // ── Internal: pull `token=<value>` out of a Set-Cookie header ──
@@ -57,7 +58,7 @@ function buildSession(
     json.user ??
     json.data?.user ??
     (typeof json.email === "string"
-      ? { id: "", email: json.email }
+      ? { id: "", email: json.email, role: json.role }
       : { id: "", email: fallbackEmail });
 
   return { token, user };
@@ -81,48 +82,6 @@ export async function loginWithPassword(
   }
 
   const cookieToken = extractTokenFromCookie(res.headers.get("set-cookie"));
-
-  return buildSession(json, cookieToken, credentials.email);
-}
-
-// ── POST /auth/sign-up ───────────────────────────────────────────
-// export async function signUpWithPassword(
-//   credentials: SignUpCredentials,
-// ): Promise<void> {
-//   const res = await fetch(`${API_AUTH_URL}/sign-up`, {
-//     method: "POST",
-//     headers: { "Content-Type": "application/json" },
-//     body: JSON.stringify(credentials),
-//     cache: "no-store",
-//   });
-
-//   const json: AuthResponse = await res.json().catch(() => ({}));
-
-//   if (!res.ok) {
-//     throw new Error(json.message ?? `Sign-up failed (${res.status})`);
-//   }
-// }
-
-
-export async function signUpWithPassword(
-  credentials: SignUpCredentials,
-): Promise<AuthSession> {
-  const res = await fetch(`${API_AUTH_URL}/sign-up`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(credentials),
-    cache: "no-store",
-  });
-
-  const json: AuthResponse = await res.json().catch(() => ({}));
-
-  if (!res.ok) {
-    throw new Error(json.message ?? `Sign-up failed (${res.status})`);
-  }
-
-  const cookieToken = extractTokenFromCookie(
-    res.headers.get("set-cookie"),
-  );
 
   return buildSession(json, cookieToken, credentials.email);
 }

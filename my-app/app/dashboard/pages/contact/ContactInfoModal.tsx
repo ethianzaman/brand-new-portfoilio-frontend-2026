@@ -49,6 +49,9 @@ export function ContactInfoModal({ info, onSave, onCancel }: Props) {
         github:   github.trim(),
         linkedin: linkedin.trim(),
         twitter:  twitter.trim(),
+        facebook: info.socials.facebook,
+        instagram: info.socials.instagram,
+        tiktok:   info.socials.tiktok,
       },
     })
     setLoading(false)

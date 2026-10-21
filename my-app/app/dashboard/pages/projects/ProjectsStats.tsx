@@ -1,5 +1,5 @@
-import { Project } from '@/lib/types/project'
 import { Layers, Globe, Server, Smartphone, Monitor, Star } from 'lucide-react'
+import type { ProjectStats } from '@/lib/services/project.services'
 
 const STAT_CONFIG = [
   { key: 'all',       label: 'Total Projects', icon: Layers,    color: 'indigo' },
@@ -19,11 +19,16 @@ const COLOR_MAP: Record<string, string> = {
   green:  'bg-green-50  dark:bg-green-950  text-green-600  dark:text-green-400',
 }
 
-export function ProjectsStats({ projects }: { projects: Project[] }) {
+/**
+ * The counters come from the server (one aggregation over the whole
+ * collection), not from the rows currently on screen — otherwise the cards
+ * would show the numbers for a single page.
+ */
+export function ProjectsStats({ stats }: { stats: ProjectStats }) {
   function count(key: string) {
-    if (key === 'all')      return projects.length
-    if (key === 'featured') return projects.filter(p => p.featured).length
-    return projects.filter(p => p.category === key).length
+    if (key === 'all')      return stats.total
+    if (key === 'featured') return stats.featured
+    return stats.byCategory[key] ?? 0
   }
 
   return (

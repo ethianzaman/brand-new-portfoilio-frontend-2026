@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useCallback, useEffect, useMemo, useRef } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Mail } from "lucide-react";
@@ -16,6 +16,13 @@ import type { AppNotification } from "./sidebar-config";
 import { useInboxActivity } from "./inboxActivity";
 
 export const MESSAGES_QUERY_KEY = ["messages"] as const;
+
+/**
+ * How many of the newest messages the bell dropdown shows. The unread count
+ * the server reports is global (all messages), so the window is kept wide
+ * enough that recent unread threads are actually visible in the panel.
+ */
+const NOTIFICATION_LIMIT = 20;
 
 function relativeTime(iso: string): string {
   const then = new Date(iso).getTime();
@@ -40,7 +47,11 @@ function toNotification(message: ContactMessage): AppNotification {
     time: relativeTime(message.createdAt),
     icon: Mail,
     tone: message.status === "unread" ? "indigo" : "emerald",
-    href: `/dashboard/pages/messages?open=${message.leadId ?? message.id}`,
+    // The messages page deep-links on a lead id — a message without one has
+    // no thread to open, so it falls back to the inbox itself.
+    href: message.leadId
+      ? `/dashboard/pages/messages?open=${message.leadId}`
+      : "/dashboard/pages/messages",
     unread: message.status === "unread",
   };
 }
@@ -56,9 +67,9 @@ export function useMessageNotifications() {
   const queryClient = useQueryClient();
   const { activeLeadId } = useInboxActivity();
 
-  const { data } = useQuery({
+  const { data, isPending, isError } = useQuery({
     queryKey: [...MESSAGES_QUERY_KEY, "notifications"],
-    queryFn: () => dashboardGetMessages({ limit: 8 }),
+    queryFn: () => dashboardGetMessages({ limit: NOTIFICATION_LIMIT }),
     staleTime: 15_000,
     refetchInterval: 30_000,
     refetchOnWindowFocus: true,
@@ -137,17 +148,23 @@ export function useMessageNotifications() {
     };
   }, [queryClient]);
 
-  const notifications: AppNotification[] = (data?.messages ?? []).map(
-    toNotification,
+  const notifications: AppNotification[] = useMemo(
+    () => (data?.messages ?? []).map(toNotification),
+    [data?.messages],
   );
 
-  const markAllRead = async () => {
+  const markAllRead = useCallback(async () => {
     try {
       await dashboardMarkAllRead();
+      toast.success("All messages marked as read");
+      return true;
+    } catch {
+      toast.error("Could not mark messages as read.");
+      return false;
     } finally {
       queryClient.invalidateQueries({ queryKey: MESSAGES_QUERY_KEY });
     }
-  };
+  }, [queryClient]);
 
   return {
     // The server count is authoritative: a message on the open thread is
@@ -155,7 +172,8 @@ export function useMessageNotifications() {
     // from other threads keep incrementing the bell.
     unreadCount: data?.unread ?? 0,
     notifications,
-    loading: !data,
+    loading: isPending,
+    error: isError,
     markAllRead,
   };
 }

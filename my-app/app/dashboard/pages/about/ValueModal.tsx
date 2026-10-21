@@ -1,5 +1,5 @@
 'use client'
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { X, Save, Loader2 } from 'lucide-react'
 import { Value } from '@/lib/types/about'
 import { inputCls, labelCls } from "@/components/ui/shared"
@@ -20,19 +20,9 @@ interface Props {
 export function ValueModal({ value, onSave, onCancel }: Props) {
   const isEdit = !!value
   const [loading, setLoading] = useState(false)
-  const [title,   setTitle]   = useState('')
-  const [desc,    setDesc]    = useState('')
-  const [icon,    setIcon]    = useState('Code2')
-
-  useEffect(() => {
-    if (value) {
-      setTitle(value.title)
-      setDesc(value.desc)
-      setIcon(value.icon)
-    } else {
-      setTitle(''); setDesc(''); setIcon('Code2')
-    }
-  }, [value])
+  const [title,   setTitle]   = useState(value?.title ?? '')
+  const [desc,    setDesc]    = useState(value?.desc ?? '')
+  const [icon,    setIcon]    = useState(value?.icon ?? 'Code2')
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()

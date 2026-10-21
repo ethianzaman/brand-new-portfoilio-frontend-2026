@@ -39,7 +39,7 @@ export default async function BlogPostPage({ params }: Props) {
       })
     : null;
 
-  const paragraphs = post.content
+  const paragraphs = (post.content ?? "")
     .split(/\n\s*\n/)
     .map((p) => p.trim())
     .filter(Boolean);

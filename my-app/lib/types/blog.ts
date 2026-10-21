@@ -14,7 +14,15 @@ export interface BlogPost {
   title: string;
   slug: string;
   excerpt: string;
-  content: string;
+  /**
+   * The article body.
+   *
+   * Optional because LIST endpoints strip it — the public listing only needs
+   * the excerpt, and shipping every article body with the index is the single
+   * largest payload on the blog page. The detail endpoint (`/blogs/slug/:slug`)
+   * and the dashboard list both include it.
+   */
+  content?: string;
   coverImage?: string | null;
   category: string;
   tags: string[];

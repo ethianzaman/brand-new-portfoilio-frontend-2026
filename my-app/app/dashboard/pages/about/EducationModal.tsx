@@ -1,5 +1,5 @@
 'use client'
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { X, Save, Loader2 } from 'lucide-react'
 import { Education } from '@/lib/types/about'
 import { inputCls, labelCls } from "@/components/ui/shared"
@@ -14,23 +14,11 @@ interface Props {
 export function EducationModal({ education, onSave, onCancel }: Props) {
   const isEdit = !!education
   const [loading, setLoading] = useState(false)
-  const [degree,  setDegree]  = useState('')
-  const [school,  setSchool]  = useState('')
-  const [period,  setPeriod]  = useState('')
-  const [desc,    setDesc]    = useState('')
-  const [grade,   setGrade]   = useState('')
-
-  useEffect(() => {
-    if (education) {
-      setDegree(education.degree)
-      setSchool(education.school)
-      setPeriod(education.period)
-      setDesc(education.description)
-      setGrade(education.grade ?? '')
-    } else {
-      setDegree(''); setSchool(''); setPeriod(''); setDesc(''); setGrade('')
-    }
-  }, [education])
+  const [degree,  setDegree]  = useState(education?.degree ?? '')
+  const [school,  setSchool]  = useState(education?.school ?? '')
+  const [period,  setPeriod]  = useState(education?.period ?? '')
+  const [desc,    setDesc]    = useState(education?.description ?? '')
+  const [grade,   setGrade]   = useState(education?.grade ?? '')
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()

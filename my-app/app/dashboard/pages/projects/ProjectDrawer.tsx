@@ -1,5 +1,6 @@
 "use client";
 import { useEffect } from "react";
+import { useCurrentUser } from "@/app/components/dashboard/useCurrentUser";
 import {
   X,
   ExternalLink,
@@ -67,6 +68,7 @@ function DetailRow({
 }
 
 export function ProjectDrawer({ project, onClose, onEdit, onDelete }: Props) {
+  const { canDelete } = useCurrentUser();
   const isOpen = !!project;
 
   // ✅ Close on Escape key
@@ -300,18 +302,20 @@ export function ProjectDrawer({ project, onClose, onEdit, onDelete }: Props) {
                             bg-zinc-50 dark:bg-zinc-800/50
                             flex gap-3"
             >
-              <button
-                onClick={() => onDelete(project)}
-                className="flex items-center justify-center gap-2
-                           flex-1 py-2.5 rounded-xl text-sm font-medium
-                           border border-red-200 dark:border-red-900
-                           text-red-600 dark:text-red-400
-                           hover:bg-red-50 dark:hover:bg-red-950
-                           transition-colors"
-              >
-                <X className="w-4 h-4" />
-                Delete
-              </button>
+              {canDelete && (
+                <button
+                  onClick={() => onDelete(project)}
+                  className="flex items-center justify-center gap-2
+                             flex-1 py-2.5 rounded-xl text-sm font-medium
+                             border border-red-200 dark:border-red-900
+                             text-red-600 dark:text-red-400
+                             hover:bg-red-50 dark:hover:bg-red-950
+                             transition-colors"
+                >
+                  <X className="w-4 h-4" />
+                  Delete
+                </button>
+              )}
               <a
                 href={project.liveUrl}
                 target="_blank"

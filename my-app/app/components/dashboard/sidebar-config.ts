@@ -2,15 +2,14 @@ import type { LucideIcon } from "lucide-react";
 import {
   Briefcase,
   Code2,
-  Database,
   FileText,
   Home,
   Image,
   Inbox,
   LayoutDashboard,
   Mail,
-  MessageSquare,
   Settings,
+  UserCog,
   Users,
 } from "lucide-react";
 
@@ -18,6 +17,8 @@ export type SidebarLink = {
   href: string;
   label: string;
   icon: LucideIcon;
+  /** Only rendered for admins (see SidebarNav). */
+  adminOnly?: boolean;
 };
 
 export type SidebarSection = {
@@ -58,6 +59,12 @@ export const sidebarSections: SidebarSection[] = [
         label: "Site Settings",
         icon: Settings,
       },
+      {
+        href: "/dashboard/pages/users",
+        label: "Users",
+        icon: UserCog,
+        adminOnly: true,
+      },
     ],
   },
 ];
@@ -81,45 +88,6 @@ export const toneClasses: Record<NotificationTone, string> = {
   amber: "bg-amber-500/15 text-amber-400",
   emerald: "bg-emerald-500/15 text-emerald-400",
 };
-
-export const notificationSeed: AppNotification[] = [
-  {
-    id: "n1",
-    title: "New project inquiry",
-    desc: "Someone reached out through your contact form",
-    time: "2m ago",
-    icon: Mail,
-    tone: "indigo",
-    href: "/dashboard/pages/contact",
-  },
-  {
-    id: "n2",
-    title: "Blog draft awaiting review",
-    desc: "Your latest post is ready to be published",
-    time: "1h ago",
-    icon: FileText,
-    tone: "amber",
-    href: "/dashboard/pages/blog",
-  },
-  {
-    id: "n3",
-    title: "New visitor message",
-    desc: "A fresh message landed in your inbox",
-    time: "4h ago",
-    icon: MessageSquare,
-    tone: "emerald",
-    href: "/dashboard/pages/contact",
-  },
-  {
-    id: "n4",
-    title: "Backup completed",
-    desc: "Portfolio data was backed up successfully",
-    time: "Yesterday",
-    icon: Database,
-    tone: "indigo",
-    href: "/dashboard",
-  },
-];
 
 export const adminProfile = {
   name: "Ethian",

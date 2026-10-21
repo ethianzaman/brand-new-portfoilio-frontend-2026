@@ -15,12 +15,15 @@ import { MobileSidebar } from "./MobileSideBar";
 import { TopBarNotifications } from "./TopBarNotifications";
 import { ThemeToggle } from "../ThemeToggle";
 import { useMessageNotifications } from "./useMessageNotifications";
+import { useCurrentUser } from "./useCurrentUser";
+import { ROLE_LABELS } from "@/lib/types/user";
 import { cn } from "@/lib/utils";
 
 export function DashboardLayout({ children }: { children: React.ReactNode }) {
   const [collapsed, setCollapsed] = useState(false);
-  const { unreadCount, notifications, markAllRead } =
+  const { unreadCount, notifications, loading, error, markAllRead } =
     useMessageNotifications();
+  const { user } = useCurrentUser();
   const router = useRouter();
   const pathname = usePathname();
   const onSettings = pathname === "/dashboard/pages/settings";
@@ -67,6 +70,8 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
             <TopBarNotifications
               unreadCount={unreadCount}
               notifications={notifications}
+              loading={loading}
+              error={error}
               onMarkAllRead={markAllRead}
             />
 
@@ -86,7 +91,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
 
             <ThemeToggle />
             <span className="text-sm text-zinc-500 dark:text-zinc-400 hidden sm:block">
-              Admin
+              {user ? ROLE_LABELS[user.role] : "…"}
             </span>
             <Button
               variant="outline"

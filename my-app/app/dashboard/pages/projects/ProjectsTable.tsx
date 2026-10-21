@@ -1,5 +1,11 @@
 "use client";
-import { useState, useMemo } from "react";
+import { useMemo, useState } from "react";
+import {
+  keepPreviousData,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
+import { useCurrentUser } from "@/app/components/dashboard/useCurrentUser";
 import {
   Plus,
   Search,
@@ -12,6 +18,9 @@ import {
   ChevronUp,
   ChevronDown,
   Check,
+  AlertCircle,
+  RotateCcw,
+  X,
 } from "lucide-react";
 import { Project, Category } from "@/lib/types/project";
 import { ProjectFormModal } from "./ProjectFormModal";
@@ -22,9 +31,18 @@ import {
   dashboardCreateProject,
   dashboardUpdateProject,
   dashboardDeleteProject,
+  dashboardGetProjectsAll,
+  dashboardGetProjectStats,
+  type ProjectStats,
 } from "@/lib/services/project.services";
 import { cn } from "@/lib/utils";
 import Image from "next/image";
+import { Pagination } from "@/app/components/dashboard/Pagination";
+import {
+  DASHBOARD_PAGE_SIZE,
+  DASHBOARD_PAGE_SIZES,
+} from "@/lib/constants/pagination";
+import { useDebouncedValue } from "@/lib/hooks/useDebouncedValue";
 
 const CATEGORIES: { value: Category | "all"; label: string }[] = [
   { value: "all", label: "All" },
@@ -48,17 +66,28 @@ const CATEGORY_COLORS: Record<string, string> = {
     "bg-green-50   dark:bg-green-950   text-green-700   dark:text-green-400",
 };
 
-export function ProjectsTable({ initial }: { initial: Project[] }) {
-  const [projects, setProjects] = useState<Project[]>(initial);
+type SortField = "title" | "category";
+
+const EMPTY_STATS: ProjectStats = { total: 0, featured: 0, byCategory: {} };
+
+export function ProjectsTable() {
+  const { canDelete } = useCurrentUser();
+  const queryClient = useQueryClient();
+
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState<Category | "all">("all");
-  const [sortField, setSortField] = useState<"title" | "category">("title");
+  const [sortField, setSortField] = useState<SortField>("title");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(DASHBOARD_PAGE_SIZE);
   const [showForm, setShowForm] = useState(false);
   const [editProject, setEditProject] = useState<Project | null>(null);
   const [deleteProject, setDeleteProject] = useState<Project | null>(null);
   const [drawerProject, setDrawerProject] = useState<Project | null>(null);
   const [toast, setToast] = useState<string | null>(null);
+
+  // The search box stays instant; the (server-side) query waits for a pause.
+  const debouncedSearch = useDebouncedValue(search);
 
   // ── Toast ─────────────────────────────────────────────────
   function showToast(msg: string) {
@@ -66,28 +95,60 @@ export function ProjectsTable({ initial }: { initial: Project[] }) {
     setTimeout(() => setToast(null), 3000);
   }
 
-  // ── Filter + sort ──────────────────────────────────────────
-  const filtered = useMemo(() => {
-    return projects
-      .filter((p) => {
-        const matchCat = category === "all" || p.category === category;
-        const matchSearch =
-          search.trim() === "" ||
-          p.title.toLowerCase().includes(search.toLowerCase()) ||
-          p.tags.some((t) => t.toLowerCase().includes(search.toLowerCase()));
-        return matchCat && matchSearch;
-      })
-      .sort((a, b) => {
-        const valA = (a[sortField] ?? "").toString().toLowerCase();
-        const valB = (b[sortField] ?? "").toString().toLowerCase();
-        return sortDir === "asc"
-          ? valA.localeCompare(valB)
-          : valB.localeCompare(valA);
-      });
-  }, [projects, search, category, sortField, sortDir]);
+  // ── Data ──────────────────────────────────────────────────
+  // Filtering AND sorting happen in the database: sorting only the rows of
+  // the current page would order each page on its own.
+  //
+  // The first page + the stats are prefetched on the server and hydrated
+  // into the cache by <HydrationBoundary>, so this query resolves instantly
+  // on the first render. Later pages/searches hit the API.
+  const listParams = useMemo(
+    () => ({
+      page,
+      pageSize,
+      q: debouncedSearch,
+      category,
+      sort: sortField,
+      dir: sortDir,
+    }),
+    [page, pageSize, debouncedSearch, category, sortField, sortDir],
+  );
+
+  const listQuery = useQuery({
+    queryKey: ["projects", "list", listParams],
+    queryFn: () => dashboardGetProjectsAll(listParams),
+    placeholderData: keepPreviousData,
+  });
+
+  const statsQuery = useQuery({
+    queryKey: ["projects", "stats"],
+    queryFn: dashboardGetProjectStats,
+  });
+
+  const projects = listQuery.data?.projects ?? [];
+  const total = listQuery.data?.total ?? 0;
+  const stats = statsQuery.data ?? EMPTY_STATS;
+
+  // ── Handlers ──────────────────────────────────────────────
+  function handleSearchChange(value: string) {
+    setSearch(value);
+    setPage(1);
+  }
+
+  function handleCategoryChange(value: Category | "all") {
+    setCategory(value);
+    setPage(1);
+  }
+
+  function handlePageSizeChange(value: number) {
+    setPageSize(value);
+    setPage(1);
+  }
 
   // ── Sort toggle ───────────────────────────────────────────
-  function toggleSort(field: "title" | "category") {
+  function toggleSort(field: SortField) {
+    setPage(1);
+
     if (sortField === field) setSortDir((d) => (d === "asc" ? "desc" : "asc"));
     else {
       setSortField(field);
@@ -95,7 +156,7 @@ export function ProjectsTable({ initial }: { initial: Project[] }) {
     }
   }
 
-  const renderSortIcon = (field: "title" | "category") => {
+  const renderSortIcon = (field: SortField) => {
     if (sortField !== field)
       return <ChevronUp className="w-3 h-3 opacity-20" />;
     return sortDir === "asc" ? (
@@ -105,42 +166,32 @@ export function ProjectsTable({ initial }: { initial: Project[] }) {
     );
   };
 
-async function handleSave(
-  data: Omit<Project, "id">,
-  image?: File,
-) {
+  async function handleSave(data: Omit<Project, "id">, image?: File) {
+    console.log(editProject?.id);
+    if (editProject) {
+      const updated = await dashboardUpdateProject(editProject.id, data, image);
 
-  console.log(editProject?.id);
-  if (editProject) {
-    const updated = await dashboardUpdateProject(
-      editProject.id,
-      data,
-      image,
-    );
+      if (updated) {
+        showToast("Project updated successfully");
+        queryClient.invalidateQueries({ queryKey: ["projects"] });
+      }
+    } else {
+      await dashboardCreateProject(data, image);
 
-    if (updated) {
-      setProjects((prev) =>
-        prev.map((p) => (p.id === updated.id ? updated : p)),
-      );
-      showToast("Project updated successfully");
+      showToast("Project created successfully");
+      queryClient.invalidateQueries({ queryKey: ["projects"] });
     }
-  } else {
-    const created = await dashboardCreateProject(data, image);
 
-    setProjects((prev) => [created, ...prev]);
-    showToast("Project created successfully");
+    setShowForm(false);
+    setEditProject(null);
   }
-
-  setShowForm(false);
-  setEditProject(null);
-}
 
   async function handleDelete() {
     if (!deleteProject) return;
     const ok = await dashboardDeleteProject(deleteProject.id);
     if (ok) {
-      setProjects((prev) => prev.filter((p) => p.id !== deleteProject.id));
       showToast("Project deleted");
+      queryClient.invalidateQueries({ queryKey: ["projects"] });
     }
     setDeleteProject(null);
   }
@@ -166,7 +217,7 @@ async function handleSave(
   return (
     <>
       {/* ── Stats ── */}
-      <ProjectsStats projects={projects} />
+      <ProjectsStats stats={stats} />
 
       {/* ── Toolbar ── */}
       <div className="flex flex-col sm:flex-row gap-3 mt-6">
@@ -180,7 +231,7 @@ async function handleSave(
             type="text"
             placeholder="Search projects or tags..."
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            onChange={(e) => handleSearchChange(e.target.value)}
             className="w-full pl-10 pr-4 py-2.5 rounded-xl text-sm
                        bg-white dark:bg-zinc-900
                        border border-zinc-200 dark:border-zinc-700
@@ -189,6 +240,19 @@ async function handleSave(
                        focus:outline-none focus:ring-2 focus:ring-indigo-500
                        transition-colors"
           />
+          {search && (
+            <button
+              type="button"
+              onClick={() => handleSearchChange("")}
+              aria-label="Clear search"
+              className="absolute right-3 top-1/2 -translate-y-1/2
+                         p-1 rounded-md text-zinc-400 hover:text-zinc-700
+                         hover:bg-zinc-100 dark:hover:bg-zinc-800
+                         dark:hover:text-zinc-200 transition-colors"
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
+          )}
         </div>
 
         {/* Category pills */}
@@ -197,7 +261,7 @@ async function handleSave(
           {CATEGORIES.map((c) => (
             <button
               key={c.value}
-              onClick={() => setCategory(c.value)}
+              onClick={() => handleCategoryChange(c.value)}
               className={cn(
                 "px-3 py-2 rounded-xl text-xs font-medium transition-all",
                 category === c.value
@@ -233,7 +297,7 @@ async function handleSave(
                       rounded-2xl overflow-hidden"
       >
         <div className="overflow-x-auto">
-          <div className="min-w-[720px]">
+          <div className="min-w-180">
             {/* Table head */}
             <div
               className="grid grid-cols-12 gap-4 px-5 py-3
@@ -264,7 +328,42 @@ async function handleSave(
             </div>
 
             {/* Table body */}
-            {filtered.length === 0 ? (
+            {listQuery.isPending ? (
+              <div className="flex flex-col gap-px" aria-busy="true">
+                {Array.from({ length: pageSize }).map((_, index) => (
+                  <div
+                    key={index}
+                    className="h-16.5 bg-zinc-100 dark:bg-zinc-800/60
+                               animate-pulse"
+                  />
+                ))}
+              </div>
+            ) : listQuery.isError ? (
+              <div
+                className="flex flex-col items-center justify-center
+                              gap-3 py-20 text-zinc-400"
+              >
+                <AlertCircle className="w-10 h-10 opacity-30 text-red-500" />
+                <div className="text-center">
+                  <p className="text-sm font-medium text-zinc-600 dark:text-zinc-300">
+                    Could not load projects
+                  </p>
+                  <p className="text-xs text-zinc-400 dark:text-zinc-500 mt-1">
+                    The server did not respond. Please try again.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => listQuery.refetch()}
+                  className="flex items-center gap-2 px-3 py-1.5 rounded-lg
+                             text-xs font-semibold bg-indigo-600 text-white
+                             hover:bg-indigo-700 transition-colors"
+                >
+                  <RotateCcw className="w-3.5 h-3.5" />
+                  Retry
+                </button>
+              </div>
+            ) : projects.length === 0 && !listQuery.isFetching ? (
               <div
                 className="flex flex-col items-center justify-center
                               gap-3 py-20 text-zinc-400"
@@ -280,8 +379,13 @@ async function handleSave(
                 </div>
               </div>
             ) : (
-              <div className="divide-y divide-zinc-100 dark:divide-zinc-800">
-                {filtered.map((project) => (
+              <div
+                className={cn(
+                  "divide-y divide-zinc-100 dark:divide-zinc-800 transition-opacity",
+                  listQuery.isFetching && "opacity-60",
+                )}
+              >
+                {projects.map((project) => (
                   <div
                     key={project.id}
                     onClick={() => openDrawer(project)}
@@ -405,19 +509,21 @@ async function handleSave(
                         <Pencil className="w-4 h-4" />
                       </button>
 
-                      <button
-                        title="Delete project"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setDeleteProject(project);
-                        }}
-                        className="p-2 rounded-lg text-zinc-500 dark:text-zinc-400
-                                   hover:text-red-600 dark:hover:text-red-400
-                                   hover:bg-red-50 dark:hover:bg-red-950
-                                   transition-all"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
+                      {canDelete && (
+                        <button
+                          title="Delete project"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setDeleteProject(project);
+                          }}
+                          className="p-2 rounded-lg text-zinc-500 dark:text-zinc-400
+                                     hover:text-red-600 dark:hover:text-red-400
+                                     hover:bg-red-50 dark:hover:bg-red-950
+                                     transition-all"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      )}
                     </div>
                   </div>
                 ))}
@@ -425,30 +531,19 @@ async function handleSave(
             )}
           </div>
         </div>
-
-        {/* Table footer */}
-        <div
-          className="px-5 py-3
-                        border-t border-zinc-100 dark:border-zinc-800
-                        flex items-center justify-between
-                        bg-zinc-50 dark:bg-zinc-800/50"
-        >
-          <p className="text-xs text-zinc-500 dark:text-zinc-400">
-            Showing{" "}
-            <span className="font-semibold text-zinc-700 dark:text-zinc-300">
-              {filtered.length}
-            </span>{" "}
-            of{" "}
-            <span className="font-semibold text-zinc-700 dark:text-zinc-300">
-              {projects.length}
-            </span>{" "}
-            projects
-          </p>
-          <p className="text-xs text-zinc-400 dark:text-zinc-500 hidden sm:block">
-            Click any row to view details
-          </p>
-        </div>
       </div>
+
+      {/* ── Pagination ── */}
+      <Pagination
+        page={page}
+        pageSize={pageSize}
+        total={total}
+        itemLabel="projects"
+        pageSizeOptions={DASHBOARD_PAGE_SIZES}
+        onPageChange={setPage}
+        onPageSizeChange={handlePageSizeChange}
+        busy={listQuery.isFetching}
+      />
 
       {/* ── Toast notification ── */}
 

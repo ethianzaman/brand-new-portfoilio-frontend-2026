@@ -12,6 +12,8 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { adminProfile, sidebarSections } from "./sidebar-config";
+import { ROLE_LABELS } from "@/lib/types/user";
+import { useCurrentUser } from "./useCurrentUser";
 
 type NavSharedProps = {
   collapsed?: boolean;
@@ -42,13 +44,20 @@ export function SidebarNav({
   className,
 }: NavSharedProps) {
   const pathname = usePathname();
+  const { isAdmin } = useCurrentUser();
 
   return (
     <TooltipProvider delayDuration={0}>
       <div className={cn("flex min-h-0 flex-1 flex-col", className)}>
         {/* ── Navigation ── */}
         <nav className="sidebar-scroll flex-1 space-y-6 overflow-y-auto px-3 py-4">
-          {sidebarSections.map((section) => (
+          {sidebarSections.map((section) => {
+            const links = section.links.filter(
+              (link) => !link.adminOnly || isAdmin,
+            );
+            if (links.length === 0) return null;
+
+            return (
             <section key={section.label}>
               {!collapsed && (
                 <p className="mb-2 px-2.5 text-[10px] font-bold uppercase tracking-[0.18em] text-zinc-600">
@@ -57,7 +66,7 @@ export function SidebarNav({
               )}
 
               <div className="space-y-1">
-                {section.links.map((link) => {
+                {links.map((link) => {
                   const active = pathname === link.href;
 
                   const node = (
@@ -106,7 +115,8 @@ export function SidebarNav({
                 })}
               </div>
             </section>
-          ))}
+            );
+          })}
         </nav>
 
         {/* ── Footer ── */}
@@ -149,10 +159,26 @@ function FooterLink({ collapsed }: { collapsed: boolean }) {
 }
 
 function ProfileCard({ collapsed }: { collapsed: boolean }) {
+  const { user, isError } = useCurrentUser();
+
+  const email = user?.email ?? adminProfile.email;
+  const roleLabel = isError
+    ? "Session expired — log in again"
+    : user
+      ? ROLE_LABELS[user.role]
+      : adminProfile.role;
+  const initials =
+    email
+      .split(/[._@-]/)
+      .filter(Boolean)
+      .slice(0, 2)
+      .map((part) => part[0]?.toUpperCase() ?? "")
+      .join("") || "U";
+
   const avatar = (
     <span className="relative shrink-0">
       <span className="grid h-9 w-9 place-items-center rounded-xl bg-linear-to-br from-indigo-500 to-purple-600 text-xs font-bold text-white shadow-md shadow-indigo-600/30">
-        {adminProfile.initials}
+        {initials}
       </span>
       <span className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full bg-emerald-500 ring-2 ring-zinc-900" />
     </span>
@@ -167,7 +193,7 @@ function ProfileCard({ collapsed }: { collapsed: boolean }) {
           </div>
         </TooltipTrigger>
         <TooltipContent side="right" className="font-medium">
-          {adminProfile.name} · {adminProfile.role}
+          {email} · {roleLabel}
         </TooltipContent>
       </Tooltip>
     );
@@ -178,10 +204,10 @@ function ProfileCard({ collapsed }: { collapsed: boolean }) {
       {avatar}
       <span className="min-w-0 flex-1">
         <span className="block truncate text-xs font-semibold text-white">
-          {adminProfile.name}
+          {email}
         </span>
         <span className="mt-0.5 block truncate text-[10px] text-zinc-500">
-          {adminProfile.role}
+          {roleLabel}
         </span>
       </span>
     </div>

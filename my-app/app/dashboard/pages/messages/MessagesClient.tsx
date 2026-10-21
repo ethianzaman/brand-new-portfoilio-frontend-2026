@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useCurrentUser } from "@/app/components/dashboard/useCurrentUser";
 import { toast } from "sonner";
 import {
   ArrowLeft,
@@ -82,6 +83,7 @@ function fullDate(iso: string): string {
 }
 
 export function MessagesClient() {
+  const { canDelete } = useCurrentUser();
   const queryClient = useQueryClient();
   const { register, setActiveLeadId } = useInboxActivity();
 
@@ -553,21 +555,23 @@ export function MessagesClient() {
                     {selectedLead.messageCount}{" "}
                     {selectedLead.messageCount === 1 ? "message" : "messages"}
                   </span>
-                  <button
-                    type="button"
-                    onClick={() =>
-                      setConfirm({
-                        kind: "lead",
-                        id: selectedLead.id,
-                        name: selectedLead.name || selectedLead.email,
-                      })
-                    }
-                    aria-label="Delete contact"
-                    title="Delete contact"
-                    className="grid h-8 w-8 place-items-center rounded-lg text-zinc-400 transition-colors hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-950 dark:hover:text-red-400"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </button>
+                  {canDelete && (
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setConfirm({
+                          kind: "lead",
+                          id: selectedLead.id,
+                          name: selectedLead.name || selectedLead.email,
+                        })
+                      }
+                      aria-label="Delete contact"
+                      title="Delete contact"
+                      className="grid h-8 w-8 place-items-center rounded-lg text-zinc-400 transition-colors hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-950 dark:hover:text-red-400"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  )}
                 </div>
               </div>
 
@@ -626,21 +630,23 @@ export function MessagesClient() {
                               )}
                             />
                           </button>
-                          <button
-                            type="button"
-                            onClick={() =>
-                              setConfirm({
-                                kind: "message",
-                                id: m.id,
-                                name: selectedLead.name || selectedLead.email,
-                              })
-                            }
-                            aria-label="Delete message"
-                            title="Delete message"
-                            className="grid h-7 w-7 place-items-center rounded-lg text-zinc-400 transition-colors hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-950 dark:hover:text-red-400"
-                          >
-                            <Trash2 className="h-3.5 w-3.5" />
-                          </button>
+                          {canDelete && (
+                            <button
+                              type="button"
+                              onClick={() =>
+                                setConfirm({
+                                  kind: "message",
+                                  id: m.id,
+                                  name: selectedLead.name || selectedLead.email,
+                                })
+                              }
+                              aria-label="Delete message"
+                              title="Delete message"
+                              className="grid h-7 w-7 place-items-center rounded-lg text-zinc-400 transition-colors hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-950 dark:hover:text-red-400"
+                            >
+                              <Trash2 className="h-3.5 w-3.5" />
+                            </button>
+                          )}
                         </div>
                       </div>
 
