@@ -7,8 +7,9 @@ import {
   LayoutDashboard,
   Wrench,
 } from "lucide-react";
-import { GithubIcon, LinkedinIcon, TwitterIcon } from "../icon/brandIcons";
 
+// Nav links are Navbar-specific and stay here. The shared brand name and the
+// social links now come from Global Site Settings (`/lib/api/settings.ts`).
 export const navLinks = [
   { href: "/", label: "Home", icon: Home },
   { href: "/about", label: "About", icon: User },
@@ -19,14 +20,3 @@ export const navLinks = [
   { href: "/contact", label: "Contact", icon: Mail },
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
 ];
-
-export const socialLinks = [
-  { href: "https://github.com", label: "GitHub", icon: GithubIcon },
-  { href: "https://linkedin.com", label: "LinkedIn", icon: LinkedinIcon },
-  { href: "https://twitter.com", label: "Twitter", icon: TwitterIcon },
-];
-
-export const navConfig = {
-  name: "Ethian",
-  title: "Full Stack Engineer",
-};

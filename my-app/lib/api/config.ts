@@ -49,6 +49,16 @@ export function authApiUrl(): string {
   return `${publicApiUrl()}/auth`;
 }
 
+/**
+ * Base URL for dashboard fetches. In the browser these go through the
+ * same-origin `/api/backend` proxy so the httpOnly session cookie stays on
+ * this origin and the proxy attaches the backend JWT; on the server they hit
+ * the backend directly.
+ */
+export function dashboardApiUrl(): string {
+  return typeof window === "undefined" ? apiUrl() : "/api/backend";
+}
+
 export function revalidateSecret(): string {
   return process.env.REVALIDATE_SECRET?.trim() ?? "";
 }

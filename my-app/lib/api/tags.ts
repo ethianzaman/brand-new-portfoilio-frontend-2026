@@ -21,6 +21,7 @@
  *   skills written        →  "skills"
  *   services written      →  "services"
  *   projects written      →  "projects"      (covers every page + category)
+ *   settings written      →  "settings"      (global brand: Navbar + Footer)
  *   blog post written     →  "blog"          (also drops the list page)
  *   one post, precisely   →  "blog-<slug>"   (e.g. "blog-my-first-post")
  *
@@ -35,6 +36,7 @@ export const TAGS = {
   skills: "skills",
   services: "services",
   projects: "projects",
+  settings: "settings",
   blog: "blogs",
 } as const;
 

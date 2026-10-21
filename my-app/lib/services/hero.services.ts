@@ -1,4 +1,4 @@
-import { apiUrl } from "@/lib/api/config";
+import { dashboardApiUrl } from "@/lib/api/config";
 import type { HomeData, HomeHero, HomeStat } from "@/lib/types/hero";
 
 /**
@@ -10,7 +10,7 @@ import type { HomeData, HomeHero, HomeStat } from "@/lib/types/hero";
  *
  * The matching public, server-rendered read lives in `lib/api/home.ts`.
  */
-const HOME_URL = `${apiUrl()}/home`;
+const HOME_URL = `${dashboardApiUrl()}/home`;
 
 export async function dashboardGetHero(): Promise<HomeData> {
   const res = await fetch(HOME_URL, {

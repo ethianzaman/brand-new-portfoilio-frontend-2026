@@ -20,7 +20,7 @@ export default async function DashboardHomePage() {
         </div>
         <div>
           <h1 className="text-xl font-bold text-zinc-900 dark:text-white">
-            Home Page
+            Hero Page 
           </h1>
           <p className="text-sm text-zinc-500 dark:text-zinc-400">
             Manage your landing page hero, image, resume &amp; statistics

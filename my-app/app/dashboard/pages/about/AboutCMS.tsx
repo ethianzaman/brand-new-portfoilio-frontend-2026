@@ -25,6 +25,9 @@ import { ExperienceModal } from "./ExperienceModal";
 import { EducationModal } from "./EducationModal";
 import { ValueModal } from "./ValueModal";
 import { DeleteModal } from "./DeleteModal";
+import { ExperienceDrawer } from "./ExperienceDrawer";
+import { EducationDrawer } from "./EducationDrawer";
+import { ValueDrawer } from "./ValueDrawer";
 import {
   dashboardUpdateHero,
   dashboardCreateExperience,
@@ -159,6 +162,11 @@ export function AboutCMS({ initial }: { initial: AboutData | null }) {
     id: string;
     label: string;
   } | null>(null);
+
+  // ── Drawer state ──────────────────────────────────────────
+  const [drawerExp, setDrawerExp] = useState<Experience | null>(null);
+  const [drawerEdu, setDrawerEdu] = useState<Education | null>(null);
+  const [drawerVal, setDrawerVal] = useState<Value | null>(null);
 
   // ── Search state ──────────────────────────────────────────
   const [expSearch, setExpSearch] = useState("");
@@ -314,6 +322,54 @@ export function AboutCMS({ initial }: { initial: AboutData | null }) {
     }
     setDeleteTarget(null);
   }
+
+  // ── Drawer edit handlers ──────────────────────────────────
+  function handleDrawerEditExp(exp: Experience) {
+    setDrawerExp(null);
+    setEditExp(exp);
+    setShowExpModal(true);
+  }
+
+  function handleDrawerEditEdu(edu: Education) {
+    setDrawerEdu(null);
+    setEditEdu(edu);
+    setShowEduModal(true);
+  }
+
+  function handleDrawerEditVal(val: Value) {
+    setDrawerVal(null);
+    setEditVal(val);
+    setShowValModal(true);
+  }
+
+  // ── Drawer delete handlers ────────────────────────────────
+  function handleDrawerDeleteExp(exp: Experience) {
+    setDrawerExp(null);
+    setDeleteTarget({
+      type: "exp",
+      id: exp._id?.toString(),
+      label: exp.role,
+    });
+  }
+
+  function handleDrawerDeleteEdu(edu: Education) {
+    setDrawerEdu(null);
+    setDeleteTarget({
+      type: "edu",
+      id: edu._id?.toString(),
+      label: edu.degree,
+    });
+  }
+
+  function handleDrawerDeleteVal(val: Value) {
+    setDrawerVal(null);
+    setDeleteTarget({
+      type: "val",
+      id: val._id?.toString(),
+      label: val.title,
+    });
+  }
+
   return (
     <>
       {/* ── Stats ── */}
@@ -516,7 +572,9 @@ export function AboutCMS({ initial }: { initial: AboutData | null }) {
                 {filteredExps.map((exp) => (
                   <div
                     key={exp._id?.toString()}
+                    onClick={() => setDrawerExp(exp)}
                     className="grid grid-cols-12 gap-4 px-5 py-4 items-center
+                               cursor-pointer
                                hover:bg-zinc-50 dark:hover:bg-zinc-800/40
                                transition-colors"
                   >
@@ -578,7 +636,8 @@ export function AboutCMS({ initial }: { initial: AboutData | null }) {
 
                     <div className="col-span-1 flex items-center justify-end gap-1">
                       <button
-                        onClick={() => {
+                        onClick={(e) => {
+                          e.stopPropagation();
                           setEditExp(exp);
                           setShowExpModal(true);
                         }}
@@ -590,13 +649,14 @@ export function AboutCMS({ initial }: { initial: AboutData | null }) {
                         <Pencil className="w-3.5 h-3.5" />
                       </button>
                       <button
-                        onClick={() =>
+                        onClick={(e) => {
+                          e.stopPropagation();
                           setDeleteTarget({
                             type: "exp",
                             id: exp._id?.toString(),
                             label: exp.role,
-                          })
-                        }
+                          });
+                        }}
                         className="p-1.5 rounded-lg text-zinc-500 dark:text-zinc-400
                                    hover:text-red-600 dark:hover:text-red-400
                                    hover:bg-red-50 dark:hover:bg-red-950
@@ -687,7 +747,9 @@ export function AboutCMS({ initial }: { initial: AboutData | null }) {
                 {filteredEdus.map((edu) => (
                   <div
                     key={edu._id?.toString()}
+                    onClick={() => setDrawerEdu(edu)}
                     className="grid grid-cols-12 gap-4 px-5 py-4 items-center
+                               cursor-pointer
                                hover:bg-zinc-50 dark:hover:bg-zinc-800/40 transition-colors"
                   >
                     <div className="col-span-4 min-w-0">
@@ -726,7 +788,8 @@ export function AboutCMS({ initial }: { initial: AboutData | null }) {
 
                     <div className="col-span-2 flex items-center justify-end gap-1">
                       <button
-                        onClick={() => {
+                        onClick={(e) => {
+                          e.stopPropagation();
                           setEditEdu(edu);
                           setShowEduModal(true);
                         }}
@@ -737,13 +800,14 @@ export function AboutCMS({ initial }: { initial: AboutData | null }) {
                         <Pencil className="w-3.5 h-3.5" />
                       </button>
                       <button
-                        onClick={() =>
+                        onClick={(e) => {
+                          e.stopPropagation();
                           setDeleteTarget({
                             type: "edu",
                             id: edu._id?.toString(),
                             label: edu.degree,
-                          })
-                        }
+                          });
+                        }}
                         className="p-1.5 rounded-lg text-zinc-500 dark:text-zinc-400
                                    hover:text-red-600 dark:hover:text-red-400
                                    hover:bg-red-50 dark:hover:bg-red-950 transition-all"
@@ -833,7 +897,9 @@ export function AboutCMS({ initial }: { initial: AboutData | null }) {
                 {filteredVals.map((val) => (
                   <div
                     key={val._id?.toString()}
+                    onClick={() => setDrawerVal(val)}
                     className="grid grid-cols-12 gap-4 px-5 py-4 items-center
+                               cursor-pointer
                                hover:bg-zinc-50 dark:hover:bg-zinc-800/40 transition-colors"
                   >
                     <div className="col-span-2">
@@ -868,7 +934,8 @@ export function AboutCMS({ initial }: { initial: AboutData | null }) {
 
                     <div className="col-span-1 flex items-center justify-end gap-1">
                       <button
-                        onClick={() => {
+                        onClick={(e) => {
+                          e.stopPropagation();
                           setEditVal(val);
                           setShowValModal(true);
                         }}
@@ -879,13 +946,14 @@ export function AboutCMS({ initial }: { initial: AboutData | null }) {
                         <Pencil className="w-3.5 h-3.5" />
                       </button>
                       <button
-                        onClick={() =>
+                        onClick={(e) => {
+                          e.stopPropagation();
                           setDeleteTarget({
                             type: "val",
                             id: val._id?.toString(),
                             label: val.title,
-                          })
-                        }
+                          });
+                        }}
                         className="p-1.5 rounded-lg text-zinc-500 dark:text-zinc-400
                                    hover:text-red-600 dark:hover:text-red-400
                                    hover:bg-red-50 dark:hover:bg-red-950 transition-all"
@@ -929,6 +997,28 @@ export function AboutCMS({ initial }: { initial: AboutData | null }) {
           <span>{toast}</span>
         </div>
       )}
+
+      {/* ── Detail drawers ── */}
+      <ExperienceDrawer
+        experience={drawerExp}
+        onClose={() => setDrawerExp(null)}
+        onEdit={handleDrawerEditExp}
+        onDelete={handleDrawerDeleteExp}
+      />
+
+      <EducationDrawer
+        education={drawerEdu}
+        onClose={() => setDrawerEdu(null)}
+        onEdit={handleDrawerEditEdu}
+        onDelete={handleDrawerDeleteEdu}
+      />
+
+      <ValueDrawer
+        value={drawerVal}
+        onClose={() => setDrawerVal(null)}
+        onEdit={handleDrawerEditVal}
+        onDelete={handleDrawerDeleteVal}
+      />
 
       {/* ── Modals ── */}
       {showHeroModal && (

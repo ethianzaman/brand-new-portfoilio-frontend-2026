@@ -28,6 +28,7 @@ import {
 import { Service } from "@/lib/types/services";
 import { ServiceFormModal } from "./ServiceFormModal";
 import { ServiceDeleteModal } from "./ServiceDeleteModal";
+import { ServiceDrawer } from "./ServiceDrawer";
 import {
   dashboardCreateService,
   dashboardUpdateService,
@@ -103,14 +104,15 @@ function StatCard({
 // ── Service row card ──────────────────────────────────────────
 function ServiceRow({
   service,
+  onOpen,
   onEdit,
   onDelete,
 }: {
   service: Service;
+  onOpen: (s: Service) => void;
   onEdit: (s: Service) => void;
   onDelete: (s: Service) => void;
 }) {
-  const [expanded, setExpanded] = useState(false);
   const Icon = ICON_MAP[service.icon] ?? Code2;
 
   return (
@@ -124,7 +126,12 @@ function ServiceRow({
       )}
     >
       {/* ── Row header ── */}
-      <div className="flex items-center gap-4 px-5 py-4">
+      <div
+        onClick={() => onOpen(service)}
+        className="flex items-center gap-4 px-5 py-4 cursor-pointer
+                   hover:bg-zinc-50 dark:hover:bg-zinc-800/40
+                   transition-colors duration-150 group"
+      >
         {/* Icon */}
         <div
           className="w-10 h-10 rounded-xl shrink-0
@@ -187,22 +194,11 @@ function ServiceRow({
         {/* Actions */}
         <div className="flex items-center gap-1 shrink-0">
           <button
-            title={expanded ? "Collapse" : "Expand details"}
-            onClick={() => setExpanded((e) => !e)}
-            className="p-2 rounded-lg text-zinc-500 dark:text-zinc-400
-                       hover:text-indigo-600 dark:hover:text-indigo-400
-                       hover:bg-indigo-50 dark:hover:bg-indigo-950
-                       transition-all"
-          >
-            {expanded ? (
-              <ChevronUp className="w-4 h-4" />
-            ) : (
-              <ChevronDown className="w-4 h-4" />
-            )}
-          </button>
-          <button
             title="Edit service"
-            onClick={() => onEdit(service)}
+            onClick={(e) => {
+              e.stopPropagation();
+              onEdit(service);
+            }}
             className="p-2 rounded-lg text-zinc-500 dark:text-zinc-400
                        hover:text-amber-600 dark:hover:text-amber-400
                        hover:bg-amber-50 dark:hover:bg-amber-950
@@ -212,7 +208,10 @@ function ServiceRow({
           </button>
           <button
             title="Delete service"
-            onClick={() => onDelete(service)}
+            onClick={(e) => {
+              e.stopPropagation();
+              onDelete(service);
+            }}
             className="p-2 rounded-lg text-zinc-500 dark:text-zinc-400
                        hover:text-red-600 dark:hover:text-red-400
                        hover:bg-red-50 dark:hover:bg-red-950
@@ -222,117 +221,6 @@ function ServiceRow({
           </button>
         </div>
       </div>
-
-      {/* ── Expanded detail panel ── */}
-      {expanded && (
-        <div className="px-5 pb-5 border-t border-zinc-100 dark:border-zinc-800 pt-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-            {/* Description */}
-            <div>
-              <p
-                className="text-xs font-semibold uppercase tracking-wider
-                             text-zinc-400 dark:text-zinc-500 mb-2"
-              >
-                Description
-              </p>
-              <p className="text-sm text-zinc-600 dark:text-zinc-400 leading-relaxed">
-                {service.description}
-              </p>
-            </div>
-
-            {/* Features */}
-            <div>
-              <p
-                className="text-xs font-semibold uppercase tracking-wider
-                             text-zinc-400 dark:text-zinc-500 mb-2"
-              >
-                Features ({service.features.length})
-              </p>
-              <ul className="flex flex-col gap-1.5">
-                {service.features.map((f, i) => (
-                  <li
-                    key={i}
-                    className="flex items-start gap-2 text-sm
-                                         text-zinc-600 dark:text-zinc-400"
-                  >
-                    <span
-                      className="w-4 h-4 rounded-full shrink-0 mt-0.5
-                                     flex items-center justify-center"
-                      style={{ backgroundColor: `${service.color}20` }}
-                    >
-                      <span
-                        className="w-1.5 h-1.5 rounded-full"
-                        style={{ backgroundColor: service.color }}
-                      />
-                    </span>
-                    {f.text}
-                  </li>
-                ))}
-              </ul>
-            </div>
-
-            {/* All tags */}
-            <div>
-              <p
-                className="text-xs font-semibold uppercase tracking-wider
-                             text-zinc-400 dark:text-zinc-500 mb-2"
-              >
-                All Tags
-              </p>
-              <div className="flex flex-wrap gap-1.5">
-                {service.tags.map((tag) => (
-                  <span
-                    key={tag}
-                    className="px-2.5 py-1 rounded-lg text-xs font-medium
-                               bg-zinc-100 dark:bg-zinc-800
-                               text-zinc-600 dark:text-zinc-400"
-                  >
-                    {tag}
-                  </span>
-                ))}
-              </div>
-            </div>
-
-            {/* Meta */}
-            <div>
-              <p
-                className="text-xs font-semibold uppercase tracking-wider
-                             text-zinc-400 dark:text-zinc-500 mb-2"
-              >
-                Settings
-              </p>
-              <div className="flex flex-col gap-2">
-                <div className="flex items-center gap-2">
-                  <div
-                    className="w-4 h-4 rounded-full border border-zinc-300
-                                  dark:border-zinc-600"
-                    style={{ backgroundColor: service.color }}
-                  />
-                  <span className="text-xs font-mono text-zinc-500">
-                    {service.color}
-                  </span>
-                </div>
-                <div className="flex items-center gap-2 text-xs text-zinc-500">
-                  <span className="font-mono">Icon:</span>
-                  <span>{service.icon}</span>
-                </div>
-                <div className="flex items-center gap-2 text-xs">
-                  <span
-                    className={cn(
-                      "px-2 py-0.5 rounded-full font-medium",
-                      service.popular
-                        ? "bg-indigo-50 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400"
-                        : "bg-zinc-100 dark:bg-zinc-800 text-zinc-500",
-                    )}
-                  >
-                    {service.popular ? "★ Popular" : "Not popular"}
-                  </span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
@@ -344,6 +232,7 @@ export function ServicesTable({ initial }: { initial: Service[] }) {
   const [showForm, setShowForm] = useState(false);
   const [editService, setEditService] = useState<Service | null>(null);
   const [deleteService, setDeleteService] = useState<Service | null>(null);
+  const [drawerService, setDrawerService] = useState<Service | null>(null);
   const [toast, setToast] = useState<string | null>(null);
 
   // ── Toast ─────────────────────────────────────────────────
@@ -416,6 +305,24 @@ export function ServicesTable({ initial }: { initial: Service[] }) {
       showToast("Deleted");
     }
     setDeleteService(null);
+  }
+
+  // ── Open drawer ───────────────────────────────────────────
+  function openDrawer(service: Service) {
+    setDrawerService(service);
+  }
+
+  // ── Open edit from drawer ─────────────────────────────────
+  function handleDrawerEdit(service: Service) {
+    setDrawerService(null);
+    setEditService(service);
+    setShowForm(true);
+  }
+
+  // ── Open delete from drawer ───────────────────────────────
+  function handleDrawerDelete(service: Service) {
+    setDrawerService(null);
+    setDeleteService(service);
   }
 
   return (
@@ -499,7 +406,7 @@ export function ServicesTable({ initial }: { initial: Service[] }) {
           services
         </p>
         <p className="text-xs text-zinc-400 hidden sm:block">
-          Click ↓ on any row to expand details
+          Click any row to view details
         </p>
       </div>
 
@@ -528,6 +435,7 @@ export function ServicesTable({ initial }: { initial: Service[] }) {
             <ServiceRow
               key={service.id}
               service={service}
+              onOpen={openDrawer}
               onEdit={(s) => {
                 setEditService(s);
                 setShowForm(true);
@@ -557,6 +465,14 @@ export function ServicesTable({ initial }: { initial: Service[] }) {
           <span>{toast}</span>
         </div>
       )}
+
+      {/* ── Service detail drawer ── */}
+      <ServiceDrawer
+        service={drawerService}
+        onClose={() => setDrawerService(null)}
+        onEdit={handleDrawerEdit}
+        onDelete={handleDrawerDelete}
+      />
 
       {/* ── Form modal ── */}
       {showForm && (

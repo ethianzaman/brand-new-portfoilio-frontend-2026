@@ -1,4 +1,4 @@
-import { apiUrl } from "@/lib/api/config";
+import { dashboardApiUrl } from "@/lib/api/config";
 import { DEMO_PROJECTS } from "@/lib/data/projects.demo";
 import {
   Project,
@@ -17,18 +17,15 @@ import {
 //  4. Done — zero changes in components needed
 // ─────────────────────────────────────────────────────────────────
 
-const API_BASE_URL = `${apiUrl()}/projects`;
+const API_BASE_URL = `${dashboardApiUrl()}/projects`;
 
 // ── Internal: base fetch (used when API is ready) ─────────────────
 async function fetchFromApi<T>(
   path: string,
   params?: Record<string, string>,
 ): Promise<T> {
-  const url = new URL(`${apiUrl()}${path}`);
-  if (params) {
-    Object.entries(params).forEach(([k, v]) => url.searchParams.set(k, v));
-  }
-  const res = await fetch(url.toString(), {
+  const query = params ? `?${new URLSearchParams(params).toString()}` : "";
+  const res = await fetch(`${dashboardApiUrl()}${path}${query}`, {
     headers: { "Content-Type": "application/json" },
     next: { revalidate: 60 }, // ISR — change to cache:'no-store' for live data
   });
