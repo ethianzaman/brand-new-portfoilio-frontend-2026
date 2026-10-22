@@ -1,5 +1,6 @@
 import type { NextRequest } from "next/server";
 
+import { isSameOriginRequest } from "@/lib/auth/origin";
 import { apiUrl } from "@/lib/api/config";
 import { getSession } from "@/lib/session";
 
@@ -14,6 +15,9 @@ import { getSession } from "@/lib/session";
 //
 // Set-Cookie from the backend is intentionally NOT forwarded: the session
 // cookie is owned by the /api/auth/* handlers only.
+//
+// State-changing requests must originate from this app (defence in depth
+// against CSRF, on top of the httpOnly + SameSite=Lax session cookie).
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -29,6 +33,14 @@ async function forward(
 
   if (!path?.length) {
     return Response.json({ message: "Not found" }, { status: 404 });
+  }
+
+  // Reject cross-origin state changes before anything is forwarded.
+  if (!isSameOriginRequest(request)) {
+    return Response.json(
+      { message: "Cross-origin request rejected." },
+      { status: 403 },
+    );
   }
 
   const target = new URL(

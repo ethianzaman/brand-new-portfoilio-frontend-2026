@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { revalidateTag } from "next/cache";
 import { revalidateSecret } from "@/lib/api/config";
 import { clearLastGood } from "@/lib/api/core";
+import { verifyCurrentUser } from "@/lib/services/current-user.service";
 
 export const dynamic = "force-dynamic";
 
@@ -13,17 +14,22 @@ export const dynamic = "force-dynamic";
  * the 60s ISR window.
  *
  * Auth: `x-revalidate-secret` header must equal `REVALIDATE_SECRET`.
- * A logged-in session is also accepted, so the dashboard can trigger it.
+ * A signed-in dashboard user is also accepted — but that session is
+ * VERIFIED against the backend, not merely sniffed from a cookie. The
+ * presence of the session cookie is no proof of authentication, so it is
+ * never enough on its own to authorise anything.
  */
 export async function POST(request: NextRequest) {
   const secret = revalidateSecret();
   const provided = request.headers.get("x-revalidate-secret") ?? "";
 
   const authorizedBySecret = secret.length > 0 && provided === secret;
-  const authorizedByCookie = request.cookies.has("auth_token");
 
-  if (!authorizedBySecret && !authorizedByCookie) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (!authorizedBySecret) {
+    const session = await verifyCurrentUser();
+    if (session.status !== "authenticated") {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
   }
 
   const body = await request.json().catch(() => ({}));

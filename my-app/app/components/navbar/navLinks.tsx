@@ -4,12 +4,24 @@ import { usePathname } from 'next/navigation'
 import { cn } from '@/lib/utils'
 import { navLinks } from './nav-config'
 
-export function NavLinks({ onClick }: { onClick?: () => void }) {
+export function NavLinks({
+  onClick,
+  isAuthenticated,
+}: {
+  onClick?: () => void
+  isAuthenticated: boolean
+}) {
   const pathname = usePathname()
+
+  // Links that need a session (the dashboard) only appear once the session
+  // has been verified against the backend.
+  const visibleLinks = navLinks.filter(
+    (link) => !link.requiresAuth || isAuthenticated,
+  )
 
   return (
     <>
-      {navLinks.map(({ href, label, icon: Icon }) => {
+      {visibleLinks.map(({ href, label, icon: Icon }) => {
         const active = pathname === href
         return (
           <Link

@@ -159,11 +159,11 @@ function FooterLink({ collapsed }: { collapsed: boolean }) {
 }
 
 function ProfileCard({ collapsed }: { collapsed: boolean }) {
-  const { user, isError } = useCurrentUser();
+  const { user, isError, errorMessage } = useCurrentUser();
 
   const email = user?.email ?? adminProfile.email;
   const roleLabel = isError
-    ? "Session expired — log in again"
+    ? (errorMessage ?? "Session expired — log in again")
     : user
       ? ROLE_LABELS[user.role]
       : adminProfile.role;

@@ -17,11 +17,23 @@ import { BrandMark } from "../brand/BrandMark";
 import { SocialIcon } from "../brand/SocialIcon";
 import type { SiteSettings } from "@/lib/types/settings";
 
-export function MobileMenu({ settings }: { settings: SiteSettings }) {
+export function MobileMenu({
+  settings,
+  isAuthenticated,
+}: {
+  settings: SiteSettings;
+  isAuthenticated: boolean;
+}) {
   const { name, tagline, logo } = settings.brand;
   const { socials } = settings;
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
+
+  // Links that need a session (the dashboard) only appear once the session
+  // has been verified against the backend.
+  const visibleLinks = navLinks.filter(
+    (link) => !link.requiresAuth || isAuthenticated,
+  );
 
   useEffect(() => {
     const mq = window.matchMedia("(min-width: 1280px)");
@@ -87,7 +99,7 @@ export function MobileMenu({ settings }: { settings: SiteSettings }) {
 
           {/* Nav links */}
           <nav className="flex flex-col gap-1 p-3">
-            {navLinks.map(({ href, label, icon: Icon }) => {
+            {visibleLinks.map(({ href, label, icon: Icon }) => {
               const active = pathname === href;
               return (
                 <Link
