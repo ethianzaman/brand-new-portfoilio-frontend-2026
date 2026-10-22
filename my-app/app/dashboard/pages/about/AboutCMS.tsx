@@ -1,5 +1,6 @@
 "use client";
 import { useState, useMemo } from "react";
+import { useCurrentUser } from "@/app/components/dashboard/useCurrentUser";
 import {
   User,
   Briefcase,
@@ -131,6 +132,7 @@ function SectionHeader({
 
 // ── Main CMS ──────────────────────────────────────────────────
 export function AboutCMS({ initial }: { initial: AboutData | null }) {
+  const { canDelete } = useCurrentUser();
   const [hero, setHero] = useState<AboutHero>(
     initial?.hero ?? {
       name: "",
@@ -648,22 +650,24 @@ export function AboutCMS({ initial }: { initial: AboutData | null }) {
                       >
                         <Pencil className="w-3.5 h-3.5" />
                       </button>
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setDeleteTarget({
-                            type: "exp",
-                            id: exp._id?.toString(),
-                            label: exp.role,
-                          });
-                        }}
-                        className="p-1.5 rounded-lg text-zinc-500 dark:text-zinc-400
-                                   hover:text-red-600 dark:hover:text-red-400
-                                   hover:bg-red-50 dark:hover:bg-red-950
-                                   transition-all"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </button>
+                      {canDelete && (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setDeleteTarget({
+                              type: "exp",
+                              id: exp._id?.toString(),
+                              label: exp.role,
+                            });
+                          }}
+                          className="p-1.5 rounded-lg text-zinc-500 dark:text-zinc-400
+                                     hover:text-red-600 dark:hover:text-red-400
+                                     hover:bg-red-50 dark:hover:bg-red-950
+                                     transition-all"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      )}
                     </div>
                   </div>
                 ))}
@@ -799,21 +803,23 @@ export function AboutCMS({ initial }: { initial: AboutData | null }) {
                       >
                         <Pencil className="w-3.5 h-3.5" />
                       </button>
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setDeleteTarget({
-                            type: "edu",
-                            id: edu._id?.toString(),
-                            label: edu.degree,
-                          });
-                        }}
-                        className="p-1.5 rounded-lg text-zinc-500 dark:text-zinc-400
-                                   hover:text-red-600 dark:hover:text-red-400
-                                   hover:bg-red-50 dark:hover:bg-red-950 transition-all"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </button>
+                      {canDelete && (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setDeleteTarget({
+                              type: "edu",
+                              id: edu._id?.toString(),
+                              label: edu.degree,
+                            });
+                          }}
+                          className="p-1.5 rounded-lg text-zinc-500 dark:text-zinc-400
+                                     hover:text-red-600 dark:hover:text-red-400
+                                     hover:bg-red-50 dark:hover:bg-red-950 transition-all"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      )}
                     </div>
                   </div>
                 ))}
@@ -945,21 +951,23 @@ export function AboutCMS({ initial }: { initial: AboutData | null }) {
                       >
                         <Pencil className="w-3.5 h-3.5" />
                       </button>
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setDeleteTarget({
-                            type: "val",
-                            id: val._id?.toString(),
-                            label: val.title,
-                          });
-                        }}
-                        className="p-1.5 rounded-lg text-zinc-500 dark:text-zinc-400
-                                   hover:text-red-600 dark:hover:text-red-400
-                                   hover:bg-red-50 dark:hover:bg-red-950 transition-all"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </button>
+                      {canDelete && (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setDeleteTarget({
+                              type: "val",
+                              id: val._id?.toString(),
+                              label: val.title,
+                            });
+                          }}
+                          className="p-1.5 rounded-lg text-zinc-500 dark:text-zinc-400
+                                     hover:text-red-600 dark:hover:text-red-400
+                                     hover:bg-red-50 dark:hover:bg-red-950 transition-all"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      )}
                     </div>
                   </div>
                 ))}

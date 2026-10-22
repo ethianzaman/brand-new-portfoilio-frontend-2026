@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, ChangeEvent } from "react";
+import { useCurrentUser } from "@/app/components/dashboard/useCurrentUser";
 import {
   Save,
   Plus,
@@ -99,6 +100,7 @@ function ModeToggle({
 }
 
 export function HomeCMS({ initial }: { initial: HomeData }) {
+  const { canDelete } = useCurrentUser();
   const [hero, setHero] = useState<HeroForm>(() => ({
     name: initial.hero.name,
     title: initial.hero.title,
@@ -459,17 +461,19 @@ export function HomeCMS({ initial }: { initial: HomeData }) {
                   }
                   className={cn(inputCls, "min-w-0 flex-1")}
                 />
-                <button
-                  type="button"
-                  onClick={() =>
-                    setSocials((prev) =>
-                      prev.filter((_, idx) => idx !== i),
-                    )
-                  }
-                  className="self-start sm:self-auto p-2 shrink-0 rounded-lg text-zinc-500 dark:text-zinc-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-950 transition-colors"
-                >
-                  <Trash2 className="w-4 h-4" />
-                </button>
+                {canDelete && (
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setSocials((prev) =>
+                        prev.filter((_, idx) => idx !== i),
+                      )
+                    }
+                    className="self-start sm:self-auto p-2 shrink-0 rounded-lg text-zinc-500 dark:text-zinc-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-950 transition-colors"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                )}
               </div>
             ))}
           </div>
@@ -508,15 +512,17 @@ export function HomeCMS({ initial }: { initial: HomeData }) {
                   }
                   className={inputCls}
                 />
-                <button
-                  type="button"
-                  onClick={() =>
-                    setTitles((prev) => prev.filter((_, idx) => idx !== i))
-                  }
-                  className="p-2 rounded-lg text-zinc-500 dark:text-zinc-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-950 transition-colors"
-                >
-                  <Trash2 className="w-4 h-4" />
-                </button>
+                {canDelete && (
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setTitles((prev) => prev.filter((_, idx) => idx !== i))
+                    }
+                    className="p-2 rounded-lg text-zinc-500 dark:text-zinc-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-950 transition-colors"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                )}
               </div>
             ))}
           </div>
@@ -597,15 +603,17 @@ export function HomeCMS({ initial }: { initial: HomeData }) {
                   }
                 />
               </div>
-              <button
-                type="button"
-                onClick={() =>
-                  setStats((prev) => prev.filter((_, idx) => idx !== i))
-                }
-                className="self-end sm:self-auto p-2 rounded-lg text-zinc-500 dark:text-zinc-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-950 transition-colors"
-              >
-                <Trash2 className="w-5 h-5" />
-              </button>
+              {canDelete && (
+                <button
+                  type="button"
+                  onClick={() =>
+                    setStats((prev) => prev.filter((_, idx) => idx !== i))
+                  }
+                  className="self-end sm:self-auto p-2 rounded-lg text-zinc-500 dark:text-zinc-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-950 transition-colors"
+                >
+                  <Trash2 className="w-5 h-5" />
+                </button>
+              )}
             </div>
           ))}
         </section>

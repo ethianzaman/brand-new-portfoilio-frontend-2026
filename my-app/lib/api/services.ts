@@ -25,15 +25,22 @@ function normalizeServices(data: ServicesApiResponse): Service[] {
  *
  * Backend envelope: `{ services: Service[] }` with Mongo `_id`.
  *
+ * The endpoint is paginated (the dashboard uses it too, one page at a time).
+ * The public grid renders every service, so it asks for the maximum page size
+ * the backend allows in one request instead of paging through them.
+ *
  * `allowEmpty` matters here: "no services published yet" is a legitimate state
  * that the page renders as an `EmptyState`. Without it, `publicFetch`'s
  * empty-payload guard would treat it as an outage and serve stale demo content.
  */
 export async function getServices(): Promise<Service[]> {
-  const data = await publicFetch<ServicesApiResponse>("/services", {
-    tag: TAGS.services,
-    fallback: { services: DEMO_SERVICES },
-    allowEmpty: true,
-  });
+  const data = await publicFetch<ServicesApiResponse>(
+    "/services?page=1&pageSize=100",
+    {
+      tag: TAGS.services,
+      fallback: { services: DEMO_SERVICES },
+      allowEmpty: true,
+    },
+  );
   return normalizeServices(data);
 }

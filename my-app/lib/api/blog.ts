@@ -28,11 +28,19 @@ function isPublished(post: BlogPost): boolean {
 /**
  * PUBLIC blog list — published posts only.
  *
- * ── Deliberate gate ──────────────────────────────────────────────────────
- * This fetches `/blogs/all`, which returns drafts AND published posts (the
- * dashboard needs the full set). The `status === "published"` filter lives
- * HERE, in one place, so it cannot be widened by a future edit to the list or
- * the grid.
+ * ── Why not `/blogs/all` ───────────────────────────────────────────────────
+ * `/blogs/all` is the dashboard endpoint: it returns drafts AND published
+ * posts. The old implementation fetched it and filtered `status ===
+ * "published"` here, which worked but still shipped every draft (and every
+ * draft's body) to the public page.
+ *
+ * The public endpoint `/blogs?status=published` filters in the database, and
+ * strips the article body (`.select("-content")`) — the grid only needs the
+ * excerpt, and the detail page fetches the body on its own.
+ *
+ * The `status === "published"` check below stays as a second line of defence:
+ * it is cheap and guarantees a draft can never render, even if the backend's
+ * filter were ever widened.
  *
  * The dashboard keeps its own unfiltered read via
  * `dashboardGetBlogPosts()` in `lib/services/blog.services.ts` — that is
@@ -41,14 +49,20 @@ function isPublished(post: BlogPost): boolean {
  * Backend envelope: `{ blogs: BlogPost[] }`.
  */
 
+/** How many published posts the public grid renders (backend cap: 100). */
+const PUBLIC_BLOG_PAGE_SIZE = 100;
+
 export async function getPublishedBlogPosts(): Promise<BlogPost[]> {
-  const data = await publicFetch<BlogListResponse>("/blogs/all", {
-    tag: TAGS.blog,
-    fallback: { blogs: DEMO_BLOG_POSTS.filter(isPublished) },
-    // "No articles yet" is a real state — the blog page renders an EmptyState
-    // for it, so an empty array must not be mistaken for an outage.
-    allowEmpty: true,
-  });
+  const data = await publicFetch<BlogListResponse>(
+    `/blogs?status=published&page=1&pageSize=${PUBLIC_BLOG_PAGE_SIZE}`,
+    {
+      tag: TAGS.blog,
+      fallback: { blogs: DEMO_BLOG_POSTS.filter(isPublished) },
+      // "No articles yet" is a real state — the blog page renders an EmptyState
+      // for it, so an empty array must not be mistaken for an outage.
+      allowEmpty: true,
+    },
+  );
 
   return toPosts(data).filter(isPublished);
 }

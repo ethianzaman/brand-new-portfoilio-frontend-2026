@@ -1,5 +1,7 @@
 "use client";
-import { useState, useMemo } from "react";
+import { useMemo, useState } from "react";
+import { keepPreviousData, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useCurrentUser } from "@/app/components/dashboard/useCurrentUser";
 import {
   Plus,
   Pencil,
@@ -24,6 +26,9 @@ import {
   Cloud,
   Lock,
   Check,
+  AlertCircle,
+  RotateCcw,
+  X,
 } from "lucide-react";
 import { Service } from "@/lib/types/services";
 import { ServiceFormModal } from "./ServiceFormModal";
@@ -33,8 +38,17 @@ import {
   dashboardCreateService,
   dashboardUpdateService,
   dashboardDeleteService,
+  dashboardGetServices,
+  dashboardGetServiceStats,
+  type ServiceStats,
 } from "@/lib/services/service.services";
 import { cn } from "@/lib/utils";
+import { Pagination } from "@/app/components/dashboard/Pagination";
+import {
+  DASHBOARD_PAGE_SIZE,
+  DASHBOARD_PAGE_SIZES,
+} from "@/lib/constants/pagination";
+import { useDebouncedValue } from "@/lib/hooks/useDebouncedValue";
 
 // ── Icon map ──────────────────────────────────────────────────
 const ICON_MAP: Record<string, React.ElementType> = {
@@ -107,11 +121,13 @@ function ServiceRow({
   onOpen,
   onEdit,
   onDelete,
+  canDelete,
 }: {
   service: Service;
   onOpen: (s: Service) => void;
   onEdit: (s: Service) => void;
   onDelete: (s: Service) => void;
+  canDelete: boolean;
 }) {
   const Icon = ICON_MAP[service.icon] ?? Code2;
 
@@ -206,19 +222,21 @@ function ServiceRow({
           >
             <Pencil className="w-4 h-4" />
           </button>
-          <button
-            title="Delete service"
-            onClick={(e) => {
-              e.stopPropagation();
-              onDelete(service);
-            }}
-            className="p-2 rounded-lg text-zinc-500 dark:text-zinc-400
-                       hover:text-red-600 dark:hover:text-red-400
-                       hover:bg-red-50 dark:hover:bg-red-950
-                       transition-all"
-          >
-            <Trash2 className="w-4 h-4" />
-          </button>
+          {canDelete && (
+            <button
+              title="Delete service"
+              onClick={(e) => {
+                e.stopPropagation();
+                onDelete(service);
+              }}
+              className="p-2 rounded-lg text-zinc-500 dark:text-zinc-400
+                         hover:text-red-600 dark:hover:text-red-400
+                         hover:bg-red-50 dark:hover:bg-red-950
+                         transition-all"
+            >
+              <Trash2 className="w-4 h-4" />
+            </button>
+          )}
         </div>
       </div>
     </div>
@@ -226,14 +244,24 @@ function ServiceRow({
 }
 
 // ── Main component ────────────────────────────────────────────
-export function ServicesTable({ initial }: { initial: Service[] }) {
-  const [services, setServices] = useState<Service[]>(initial);
+const EMPTY_STATS: ServiceStats = { total: 0, popular: 0, features: 0 };
+
+export function ServicesTable() {
+  const { canDelete } = useCurrentUser();
+  const queryClient = useQueryClient();
+
   const [search, setSearch] = useState("");
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(DASHBOARD_PAGE_SIZE);
+
   const [showForm, setShowForm] = useState(false);
   const [editService, setEditService] = useState<Service | null>(null);
   const [deleteService, setDeleteService] = useState<Service | null>(null);
   const [drawerService, setDrawerService] = useState<Service | null>(null);
   const [toast, setToast] = useState<string | null>(null);
+
+  // The search box stays instant; the (server-side) query waits for a pause.
+  const debouncedSearch = useDebouncedValue(search);
 
   // ── Toast ─────────────────────────────────────────────────
   function showToast(msg: string) {
@@ -241,21 +269,40 @@ export function ServicesTable({ initial }: { initial: Service[] }) {
     setTimeout(() => setToast(null), 3000);
   }
 
-  // ── Filtered list ─────────────────────────────────────────
-  const filtered = useMemo(() => {
-    if (!search.trim()) return services;
-    const q = search.toLowerCase();
-    return services.filter(
-      (s) =>
-        s.title.toLowerCase().includes(q) ||
-        s.description.toLowerCase().includes(q) ||
-        s.tags.some((t) => t.toLowerCase().includes(q)),
-    );
-  }, [services, search]);
+  // ── Data ──────────────────────────────────────────────────
+  // The first page + the stats are prefetched on the server and hydrated
+  // into the cache by <HydrationBoundary>, so this query resolves instantly
+  // on the first render. Later pages/searches hit the API.
+  const listParams = useMemo(
+    () => ({ page, pageSize, q: debouncedSearch }),
+    [page, pageSize, debouncedSearch],
+  );
 
-  // ── Stats ─────────────────────────────────────────────────
-  const popularCount = services.filter((s) => s.popular).length;
-  const featureCount = services.reduce((acc, s) => acc + s.features.length, 0);
+  const listQuery = useQuery({
+    queryKey: ["services", "list", listParams],
+    queryFn: () => dashboardGetServices(listParams),
+    placeholderData: keepPreviousData,
+  });
+
+  const statsQuery = useQuery({
+    queryKey: ["services", "stats"],
+    queryFn: dashboardGetServiceStats,
+  });
+
+  const services = listQuery.data?.services ?? [];
+  const total = listQuery.data?.total ?? 0;
+  const stats = statsQuery.data ?? EMPTY_STATS;
+
+  // ── Handlers ──────────────────────────────────────────────
+  function handleSearchChange(value: string) {
+    setSearch(value);
+    setPage(1);
+  }
+
+  function handlePageSizeChange(value: number) {
+    setPageSize(value);
+    setPage(1);
+  }
 
   async function handleSave(data: Omit<Service, "id">) {
     try {
@@ -263,17 +310,15 @@ export function ServicesTable({ initial }: { initial: Service[] }) {
         // ── UPDATE ──
         const updated = await dashboardUpdateService(editService.id, data);
         if (updated) {
-          setServices((prev) =>
-            prev.map((item) => (item.id === updated.id ? updated : item)),
-          );
           showToast("Service updated successfully");
+          queryClient.invalidateQueries({ queryKey: ["services"] });
         }
       } else {
         // ── CREATE ──
         const created = await dashboardCreateService(data);
         if (created) {
-          setServices((prev) => [...prev, created]);
           showToast("Service created successfully");
+          queryClient.invalidateQueries({ queryKey: ["services"] });
         }
       }
     } catch (err) {
@@ -286,23 +331,13 @@ export function ServicesTable({ initial }: { initial: Service[] }) {
   }
 
   async function handleDelete() {
-    console.log("===== HANDLE DELETE =====");
-    console.log("deleteService =", deleteService);
-
-    if (!deleteService) {
-      console.log("deleteService is NULL");
-      return;
-    }
-
-    console.log("Calling API...");
+    if (!deleteService) return;
 
     const ok = await dashboardDeleteService(deleteService.id);
 
-    console.log("API Result =", ok);
-
     if (ok) {
-      setServices((prev) => prev.filter((s) => s.id !== deleteService.id));
       showToast("Deleted");
+      queryClient.invalidateQueries({ queryKey: ["services"] });
     }
     setDeleteService(null);
   }
@@ -325,30 +360,33 @@ export function ServicesTable({ initial }: { initial: Service[] }) {
     setDeleteService(service);
   }
 
+  const isEmpty = services.length === 0;
+  const isPending = listQuery.isPending;
+
   return (
     <>
       {/* ── Stats ── */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
         <StatCard
           label="Total Services"
-          value={services.length}
+          value={stats.total}
           color="#6366f1"
         />
         <StatCard
           label="Popular"
-          value={popularCount}
+          value={stats.popular}
           sub="marked as popular"
           color="#f59e0b"
         />
         <StatCard
           label="Total Features"
-          value={featureCount}
+          value={stats.features}
           sub="across all services"
           color="#10b981"
         />
         <StatCard
           label="Avg Features"
-          value={Math.round(featureCount / Math.max(services.length, 1))}
+          value={Math.round(stats.features / Math.max(stats.total, 1))}
           sub="per service"
           color="#8b5cf6"
         />
@@ -366,7 +404,7 @@ export function ServicesTable({ initial }: { initial: Service[] }) {
             type="text"
             placeholder="Search services, tags, descriptions..."
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            onChange={(e) => handleSearchChange(e.target.value)}
             className="w-full pl-10 pr-4 py-2.5 rounded-xl text-sm
                        bg-white dark:bg-zinc-900
                        border border-zinc-200 dark:border-zinc-700
@@ -374,6 +412,19 @@ export function ServicesTable({ initial }: { initial: Service[] }) {
                        focus:outline-none focus:ring-2 focus:ring-indigo-500
                        transition-colors"
           />
+          {search && (
+            <button
+              type="button"
+              onClick={() => handleSearchChange("")}
+              aria-label="Clear search"
+              className="absolute right-3 top-1/2 -translate-y-1/2
+                         p-1 rounded-md text-zinc-400 hover:text-zinc-700
+                         hover:bg-zinc-100 dark:hover:bg-zinc-800
+                         dark:hover:text-zinc-200 transition-colors"
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
+          )}
         </div>
 
         {/* Add service */}
@@ -392,26 +443,46 @@ export function ServicesTable({ initial }: { initial: Service[] }) {
         </button>
       </div>
 
-      {/* ── Count bar ── */}
-      <div className="flex items-center justify-between mb-3">
-        <p className="text-xs text-zinc-500 dark:text-zinc-400">
-          Showing{" "}
-          <span className="font-semibold text-zinc-700 dark:text-zinc-300">
-            {filtered.length}
-          </span>{" "}
-          of{" "}
-          <span className="font-semibold text-zinc-700 dark:text-zinc-300">
-            {services.length}
-          </span>{" "}
-          services
-        </p>
-        <p className="text-xs text-zinc-400 hidden sm:block">
-          Click any row to view details
-        </p>
-      </div>
-
       {/* ── Service rows ── */}
-      {filtered.length === 0 ? (
+      {isPending ? (
+        <div className="flex flex-col gap-3" aria-busy="true">
+          {Array.from({ length: pageSize }).map((_, index) => (
+            <div
+              key={index}
+              className="h-[78px] rounded-2xl bg-zinc-100 dark:bg-zinc-800/60
+                         animate-pulse"
+            />
+          ))}
+        </div>
+      ) : listQuery.isError ? (
+        <div
+          className="flex flex-col items-center justify-center
+                        gap-3 py-20 text-zinc-400
+                        bg-white dark:bg-zinc-900
+                        border border-zinc-200 dark:border-zinc-800
+                        rounded-2xl"
+        >
+          <AlertCircle className="w-10 h-10 opacity-30 text-red-500" />
+          <div className="text-center">
+            <p className="text-sm font-medium text-zinc-600 dark:text-zinc-300">
+              Could not load services
+            </p>
+            <p className="text-xs text-zinc-400 mt-1">
+              The server did not respond. Please try again.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={() => listQuery.refetch()}
+            className="flex items-center gap-2 px-3 py-1.5 rounded-lg
+                       text-xs font-semibold bg-indigo-600 text-white
+                       hover:bg-indigo-700 transition-colors"
+          >
+            <RotateCcw className="w-3.5 h-3.5" />
+            Retry
+          </button>
+        </div>
+      ) : isEmpty && !listQuery.isFetching ? (
         <div
           className="flex flex-col items-center justify-center
                         gap-3 py-20 text-zinc-400
@@ -430,21 +501,40 @@ export function ServicesTable({ initial }: { initial: Service[] }) {
           </div>
         </div>
       ) : (
-        <div className="flex flex-col gap-3">
-          {filtered.map((service) => (
-            <ServiceRow
-              key={service.id}
-              service={service}
-              onOpen={openDrawer}
-              onEdit={(s) => {
-                setEditService(s);
-                setShowForm(true);
-              }}
-              onDelete={(s) => setDeleteService(s)}
-            />
+        <div
+          className={cn(
+            "flex flex-col gap-3 transition-opacity",
+            listQuery.isFetching && "opacity-60",
+          )}
+        >
+          {services.map((service) => (
+              <ServiceRow
+                key={service.id}
+                service={service}
+                onOpen={openDrawer}
+                onEdit={(s) => {
+                  setEditService(s);
+                  setShowForm(true);
+                }}
+                onDelete={(s) => setDeleteService(s)}
+                canDelete={canDelete}
+              />
           ))}
         </div>
       )}
+
+      {/* ── Pagination ── */}
+      <Pagination
+        page={page}
+        pageSize={pageSize}
+        total={total}
+        itemLabel="services"
+        pageSizeOptions={DASHBOARD_PAGE_SIZES}
+        onPageChange={setPage}
+        onPageSizeChange={handlePageSizeChange}
+        busy={listQuery.isFetching}
+      />
+
 
       {/* ── Toast ── */}
       {toast && (

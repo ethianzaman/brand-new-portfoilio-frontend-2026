@@ -1,5 +1,7 @@
 "use client";
-import { useState, useMemo } from "react";
+import { useMemo, useState } from "react";
+import { keepPreviousData, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useCurrentUser } from "@/app/components/dashboard/useCurrentUser";
 import {
   Plus,
   Pencil,
@@ -9,6 +11,9 @@ import {
   Check,
   Eye,
   Clock3,
+  AlertCircle,
+  RotateCcw,
+  X,
 } from "lucide-react";
 import { BlogPost } from "@/lib/types/blog";
 import { BlogFormModal } from "./BlogFormModal";
@@ -18,9 +23,19 @@ import {
   dashboardCreatePost,
   dashboardUpdatePost,
   dashboardDeletePost,
+  dashboardGetBlogPosts,
+  dashboardGetBlogStats,
+  type BlogStats,
+  type BlogStatusFilter,
 } from "@/lib/services/blog.services";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
+import { Pagination } from "@/app/components/dashboard/Pagination";
+import {
+  DASHBOARD_PAGE_SIZE,
+  DASHBOARD_PAGE_SIZES,
+} from "@/lib/constants/pagination";
+import { useDebouncedValue } from "@/lib/hooks/useDebouncedValue";
 
 // ── Stat card ────────────────────────────────────────────────────
 function StatCard({
@@ -67,11 +82,13 @@ function BlogRow({
   onOpen,
   onEdit,
   onDelete,
+  canDelete,
 }: {
   post: BlogPost;
   onOpen: (p: BlogPost) => void;
   onEdit: (p: BlogPost) => void;
   onDelete: (p: BlogPost) => void;
+  canDelete: boolean;
 }) {
   const date = post.createdAt
     ? new Date(post.createdAt).toLocaleDateString("en-US", {
@@ -183,19 +200,21 @@ function BlogRow({
           >
             <Pencil className="w-4 h-4" />
           </button>
-          <button
-            title="Delete post"
-            onClick={(e) => {
-              e.stopPropagation();
-              onDelete(post);
-            }}
-            className="p-2 rounded-lg text-zinc-500 dark:text-zinc-400
-                       hover:text-red-600 dark:hover:text-red-400
-                       hover:bg-red-50 dark:hover:bg-red-950
-                       transition-all"
-          >
-            <Trash2 className="w-4 h-4" />
-          </button>
+          {canDelete && (
+            <button
+              title="Delete post"
+              onClick={(e) => {
+                e.stopPropagation();
+                onDelete(post);
+              }}
+              className="p-2 rounded-lg text-zinc-500 dark:text-zinc-400
+                         hover:text-red-600 dark:hover:text-red-400
+                         hover:bg-red-50 dark:hover:bg-red-950
+                         transition-all"
+            >
+              <Trash2 className="w-4 h-4" />
+            </button>
+          )}
         </div>
       </div>
     </div>
@@ -211,36 +230,84 @@ function initials(title: string): string {
     .toUpperCase();
 }
 
+const STATUS_FILTERS: { value: BlogStatusFilter; label: string }[] = [
+  { value: "all", label: "All" },
+  { value: "published", label: "Published" },
+  { value: "draft", label: "Draft" },
+];
+
+const EMPTY_STATS: BlogStats = {
+  total: 0,
+  published: 0,
+  featured: 0,
+  readTime: 0,
+  byCategory: {},
+};
+
 // ── Main component ───────────────────────────────────────────────
-export function BlogTable({ initial }: { initial: BlogPost[] }) {
-  const [posts, setPosts] = useState<BlogPost[]>(initial);
+export function BlogTable() {
+  const { canDelete } = useCurrentUser();
+  const queryClient = useQueryClient();
+
   const [search, setSearch] = useState("");
+  const [status, setStatus] = useState<BlogStatusFilter>("all");
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(DASHBOARD_PAGE_SIZE);
+
   const [showForm, setShowForm] = useState(false);
   const [editPost, setEditPost] = useState<BlogPost | null>(null);
   const [deletePost, setDeletePost] = useState<BlogPost | null>(null);
   const [drawerPost, setDrawerPost] = useState<BlogPost | null>(null);
   const [toast, setToast] = useState<string | null>(null);
 
+  // The search box stays instant; the (server-side) query waits for a pause.
+  const debouncedSearch = useDebouncedValue(search);
+
   function showToast(msg: string) {
     setToast(msg);
     setTimeout(() => setToast(null), 3000);
   }
 
-  const filtered = useMemo(() => {
-    if (!search.trim()) return posts;
-    const q = search.toLowerCase();
-    return posts.filter(
-      (p) =>
-        p.title.toLowerCase().includes(q) ||
-        p.excerpt.toLowerCase().includes(q) ||
-        p.category.toLowerCase().includes(q) ||
-        p.tags.some((t) => t.toLowerCase().includes(q)),
-    );
-  }, [posts, search]);
+  // ── Data ──────────────────────────────────────────────────────
+  // The first page + the stats are prefetched on the server and hydrated
+  // into the cache by <HydrationBoundary>, so this query resolves instantly
+  // on the first render. Later pages/searches hit the API.
+  const listParams = useMemo(
+    () => ({ page, pageSize, q: debouncedSearch, status }),
+    [page, pageSize, debouncedSearch, status],
+  );
 
-  const publishedCount = posts.filter((p) => p.status === "published").length;
-  const featuredCount = posts.filter((p) => p.featured).length;
-  const totalRead = posts.reduce((acc, p) => acc + (p.readTime ?? 0), 0);
+  const listQuery = useQuery({
+    queryKey: ["blogs", "list", listParams],
+    queryFn: () => dashboardGetBlogPosts(listParams),
+    // Keep the previous page on screen while the next one loads.
+    placeholderData: keepPreviousData,
+  });
+
+  const statsQuery = useQuery({
+    queryKey: ["blogs", "stats"],
+    queryFn: dashboardGetBlogStats,
+  });
+
+  const posts = listQuery.data?.blogs ?? [];
+  const total = listQuery.data?.total ?? 0;
+  const stats = statsQuery.data ?? EMPTY_STATS;
+
+  // ── Handlers ──────────────────────────────────────────────────
+  function handleSearchChange(value: string) {
+    setSearch(value);
+    setPage(1);
+  }
+
+  function handleStatusChange(value: BlogStatusFilter) {
+    setStatus(value);
+    setPage(1);
+  }
+
+  function handlePageSizeChange(value: number) {
+    setPageSize(value);
+    setPage(1);
+  }
 
   async function handleSave(
     data: Omit<BlogPost, "id" | "createdAt" | "updatedAt">,
@@ -250,17 +317,15 @@ export function BlogTable({ initial }: { initial: BlogPost[] }) {
       if (editPost) {
         const updated = await dashboardUpdatePost(editPost.id, data, image);
         if (updated) {
-          setPosts((prev) =>
-            prev.map((item) => (item.id === updated.id ? updated : item)),
-          );
           setDrawerPost((prev) => (prev?.id === updated.id ? updated : prev));
           showToast("Post updated successfully");
+          queryClient.invalidateQueries({ queryKey: ["blogs"] });
         }
       } else {
         const created = await dashboardCreatePost(data, image);
         if (created) {
-          setPosts((prev) => [created, ...prev]);
           showToast("Post published successfully");
+          queryClient.invalidateQueries({ queryKey: ["blogs"] });
         }
       }
     } catch (err) {
@@ -279,9 +344,9 @@ export function BlogTable({ initial }: { initial: BlogPost[] }) {
     try {
       const ok = await dashboardDeletePost(deletePost.id);
       if (ok) {
-        setPosts((prev) => prev.filter((p) => p.id !== deletePost.id));
         setDrawerPost(null);
         showToast("Post deleted");
+        queryClient.invalidateQueries({ queryKey: ["blogs"] });
       }
     } catch (err) {
       console.error("handleDelete error:", err);
@@ -300,26 +365,29 @@ export function BlogTable({ initial }: { initial: BlogPost[] }) {
     setDeletePost(post);
   }
 
+  const isEmpty = posts.length === 0;
+  const isPending = listQuery.isPending;
+
   return (
     <>
       {/* ── Stats ── */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
-        <StatCard label="Total Posts" value={posts.length} color="#6366f1" />
+        <StatCard label="Total Posts" value={stats.total} color="#6366f1" />
         <StatCard
           label="Published"
-          value={publishedCount}
+          value={stats.published}
           sub="visible on blog"
           color="#10b981"
         />
         <StatCard
           label="Featured"
-          value={featuredCount}
+          value={stats.featured}
           sub="hero highlights"
           color="#f59e0b"
         />
         <StatCard
           label="Read Time"
-          value={totalReadTime(totalRead, posts.length)}
+          value={totalReadTime(stats.readTime, stats.total)}
           sub="total minutes"
           color="#8b5cf6"
         />
@@ -336,7 +404,7 @@ export function BlogTable({ initial }: { initial: BlogPost[] }) {
             type="text"
             placeholder="Search posts, categories, tags..."
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            onChange={(e) => handleSearchChange(e.target.value)}
             className="w-full pl-10 pr-4 py-2.5 rounded-xl text-sm
                        bg-white dark:bg-zinc-900
                        border border-zinc-200 dark:border-zinc-700
@@ -344,6 +412,19 @@ export function BlogTable({ initial }: { initial: BlogPost[] }) {
                        focus:outline-none focus:ring-2 focus:ring-indigo-500
                        transition-colors"
           />
+          {search && (
+            <button
+              type="button"
+              onClick={() => handleSearchChange("")}
+              aria-label="Clear search"
+              className="absolute right-3 top-1/2 -translate-y-1/2
+                         p-1 rounded-md text-zinc-400 hover:text-zinc-700
+                         hover:bg-zinc-100 dark:hover:bg-zinc-800
+                         dark:hover:text-zinc-200 transition-colors"
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
+          )}
         </div>
 
         <button
@@ -361,26 +442,68 @@ export function BlogTable({ initial }: { initial: BlogPost[] }) {
         </button>
       </div>
 
-      {/* ── Count bar ── */}
-      <div className="flex items-center justify-between mb-3">
-        <p className="text-xs text-zinc-500 dark:text-zinc-400">
-          Showing{" "}
-          <span className="font-semibold text-zinc-700 dark:text-zinc-300">
-            {filtered.length}
-          </span>{" "}
-          of{" "}
-          <span className="font-semibold text-zinc-700 dark:text-zinc-300">
-            {posts.length}
-          </span>{" "}
-          posts
-        </p>
-        <p className="text-xs text-zinc-400 hidden sm:block">
+      {/* ── Status filter ── */}
+      <div className="flex items-center gap-1.5 mb-4 flex-wrap">
+        {STATUS_FILTERS.map((filter) => (
+          <button
+            key={filter.value}
+            type="button"
+            onClick={() => handleStatusChange(filter.value)}
+            className={cn(
+              "px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors",
+              status === filter.value
+                ? "bg-zinc-900 text-white dark:bg-white dark:text-zinc-900"
+                : "bg-white dark:bg-zinc-900 text-zinc-500 dark:text-zinc-400 border border-zinc-200 dark:border-zinc-800 hover:border-zinc-300",
+            )}
+          >
+            {filter.label}
+          </button>
+        ))}
+        <p className="text-xs text-zinc-400 ml-auto hidden sm:block">
           Click any row to view details
         </p>
       </div>
 
       {/* ── Rows ── */}
-      {filtered.length === 0 ? (
+      {isPending ? (
+        <div className="flex flex-col gap-3" aria-busy="true">
+          {Array.from({ length: pageSize }).map((_, index) => (
+            <div
+              key={index}
+              className="h-[78px] rounded-2xl bg-zinc-100 dark:bg-zinc-800/60
+                         animate-pulse"
+            />
+          ))}
+        </div>
+      ) : listQuery.isError ? (
+        <div
+          className="flex flex-col items-center justify-center
+                        gap-3 py-20 text-zinc-400
+                        bg-white dark:bg-zinc-900
+                        border border-zinc-200 dark:border-zinc-800
+                        rounded-2xl"
+        >
+          <AlertCircle className="w-10 h-10 opacity-30 text-red-500" />
+          <div className="text-center">
+            <p className="text-sm font-medium text-zinc-600 dark:text-zinc-300">
+              Could not load posts
+            </p>
+            <p className="text-xs text-zinc-400 mt-1">
+              The server did not respond. Please try again.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={() => listQuery.refetch()}
+            className="flex items-center gap-2 px-3 py-1.5 rounded-lg
+                       text-xs font-semibold bg-indigo-600 text-white
+                       hover:bg-indigo-700 transition-colors"
+          >
+            <RotateCcw className="w-3.5 h-3.5" />
+            Retry
+          </button>
+        </div>
+      ) : isEmpty && !listQuery.isFetching ? (
         <div
           className="flex flex-col items-center justify-center
                         gap-3 py-20 text-zinc-400
@@ -399,8 +522,13 @@ export function BlogTable({ initial }: { initial: BlogPost[] }) {
           </div>
         </div>
       ) : (
-        <div className="flex flex-col gap-3">
-          {filtered.map((post) => (
+        <div
+          className={cn(
+            "flex flex-col gap-3 transition-opacity",
+            listQuery.isFetching && "opacity-60",
+          )}
+        >
+          {posts.map((post) => (
             <BlogRow
               key={post.id}
               post={post}
@@ -410,10 +538,23 @@ export function BlogTable({ initial }: { initial: BlogPost[] }) {
                 setShowForm(true);
               }}
               onDelete={(p) => setDeletePost(p)}
+              canDelete={canDelete}
             />
           ))}
         </div>
       )}
+
+      {/* ── Pagination ── */}
+      <Pagination
+        page={page}
+        pageSize={pageSize}
+        total={total}
+        itemLabel="posts"
+        pageSizeOptions={DASHBOARD_PAGE_SIZES}
+        onPageChange={setPage}
+        onPageSizeChange={handlePageSizeChange}
+        busy={listQuery.isFetching}
+      />
 
       {/* ── Toast ── */}
       {toast && (

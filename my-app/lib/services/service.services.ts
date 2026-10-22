@@ -1,4 +1,5 @@
 import { dashboardApiUrl } from "@/lib/api/config";
+import { buildQuery } from "@/lib/services/pagination";
 import { Service } from "@/lib/types/services";
 // import { DEMO_SERVICES } from "@/lib/data/services.demo";
 
@@ -7,6 +8,33 @@ const API_BASE_URL = `${dashboardApiUrl()}/services`; // 👈 ব্যাকএ
 // const store: Service[] = JSON.parse(JSON.stringify(DEMO_SERVICES));
 
 type ApiService = Service & { _id?: string };
+
+// ─────────────────────────────────────────────────────────────────────────
+//  DASHBOARD LIST — paginated + searchable, resolved in the database.
+//
+//  GET /services?page&pageSize&q
+//    → { success, count, services, total, hasMore, page, pageSize }
+// ─────────────────────────────────────────────────────────────────────────
+
+export interface ServiceListQuery {
+  page: number;
+  pageSize: number;
+  q?: string;
+}
+
+export interface ServiceListResult {
+  services: Service[];
+  total: number;
+  hasMore: boolean;
+  page: number;
+  pageSize: number;
+}
+
+export interface ServiceStats {
+  total: number;
+  popular: number;
+  features: number;
+}
 
 // export async function dashboardGetServices(): Promise<Service[]> {
 //   try {
@@ -36,9 +64,20 @@ type ApiService = Service & { _id?: string };
 //   }
 // }
 
-export async function dashboardGetServices(): Promise<Service[]> {
+export async function dashboardGetServices(
+  params: ServiceListQuery,
+): Promise<ServiceListResult> {
+  const page = params.page;
+  const pageSize = params.pageSize;
+
   try {
-    const response = await fetch(API_BASE_URL, {
+    const query = buildQuery({
+      page,
+      pageSize,
+      q: params.q?.trim(),
+    });
+
+    const response = await fetch(`${API_BASE_URL}?${query}`, {
       cache: "no-store",
     });
 
@@ -52,18 +91,54 @@ export async function dashboardGetServices(): Promise<Service[]> {
       ? data.services
       : [];
 
-    if (services.length === 0) {
-      return [];
-    }
-
-    return services.map((service) => ({
-      ...service,
-      id: service._id ?? service.id,
-    }));
+    return {
+      services: services.map((service) => ({
+        ...service,
+        id: service._id ?? service.id,
+      })),
+      total: data?.total ?? services.length,
+      hasMore: data?.hasMore ?? false,
+      page: data?.page ?? page,
+      pageSize: data?.pageSize ?? pageSize,
+    };
   } catch (error) {
     console.error("Failed to fetch services:", error);
 
-    return [];
+    return {
+      services: [],
+      total: 0,
+      hasMore: false,
+      page,
+      pageSize,
+    };
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+//  DASHBOARD STATS — the numbers on the stat cards.
+// ─────────────────────────────────────────────────────────────────────────
+
+export async function dashboardGetServiceStats(): Promise<ServiceStats> {
+  try {
+    const response = await fetch(`${API_BASE_URL}/stats`, {
+      cache: "no-store",
+    });
+
+    if (!response.ok) {
+      throw new Error(`Service stats API failed: ${response.status}`);
+    }
+
+    const data = await response.json();
+
+    return {
+      total: data?.stats?.total ?? 0,
+      popular: data?.stats?.popular ?? 0,
+      features: data?.stats?.features ?? 0,
+    };
+  } catch (error) {
+    console.error("Failed to fetch service stats:", error);
+
+    return { total: 0, popular: 0, features: 0 };
   }
 }
 export async function dashboardCreateService(

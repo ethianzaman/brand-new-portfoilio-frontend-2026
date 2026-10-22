@@ -34,7 +34,7 @@ export function Sidebar({ collapsed }: Props) {
         {!collapsed && (
           <span className="min-w-0">
             <span className="block truncate text-sm font-bold leading-none">
-              MyCMS
+              EthianCMS
             </span>
             <span className="mt-1 block text-[10px] text-zinc-500">
               Admin Panel

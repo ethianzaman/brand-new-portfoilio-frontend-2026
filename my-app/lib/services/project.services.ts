@@ -1,21 +1,12 @@
 import { dashboardApiUrl } from "@/lib/api/config";
 import { DEMO_PROJECTS } from "@/lib/data/projects.demo";
+import { buildQuery } from "@/lib/services/pagination";
 import {
   Project,
   ProjectsParams,
   ProjectsResponse,
-  // Category,
+  Category,
 } from "@/lib/types/project";
-// import { PAGE_SIZE } from '@/lib/constants/project'
-
-// ─────────────────────────────────────────────────────────────────
-//  HOW TO SWITCH TO REAL API LATER:
-//
-//  1. Set NEXT_PUBLIC_API_URL in .env.local
-//  2. The functions below automatically use real API
-//  3. Delete lib/data/projects.demo.ts
-//  4. Done — zero changes in components needed
-// ─────────────────────────────────────────────────────────────────
 
 const API_BASE_URL = `${dashboardApiUrl()}/projects`;
 
@@ -33,67 +24,7 @@ async function fetchFromApi<T>(
   return res.json();
 }
 
-// ── Internal: demo pagination logic ───────────────────────────────
-// function paginateDemo(
-//   all: Project[],
-//   page: number,
-//   pageSize: number,
-// ): ProjectsResponse {
-//   const start = (page - 1) * pageSize;
-//   const sliced = all.slice(start, start + pageSize);
-//   return {
-//     projects: sliced,
-//     total: all.length,
-//     hasMore: start + pageSize < all.length,
-//   };
-// }
 
-// ── Internal: placeholder cards when category has no projects ──────
-// function makePlaceholders(category: Category): Project[] {
-//   return Array.from({ length: 3 }, (_, i) => ({
-//     id: `placeholder-${category}-${i}`,
-//     title: "Project Coming Soon",
-//     description: `A new ${category} project is currently in development. Check back soon to see what's being built!`,
-//     category,
-//     tags: ["Coming Soon"],
-//     liveUrl: "#",
-//     githubUrl: "#",
-//     color: "#94a3b8",
-//     isPlaceholder: true,
-//   }));
-// }
-
-// ─────────────────────────────────────────────────────────────────
-//  PUBLIC API — components only call these functions
-// ─────────────────────────────────────────────────────────────────
-
-// Get paginated projects (called on page load + See More)
-// export async function fetchProjects(
-//   params: ProjectsParams,
-// ): Promise<ProjectsResponse> {
-//   const { category, page, pageSize } = params;
-
-//   // ── DEMO ──────────────────────────────────────────────────────
-//   if (isDemo()) {
-//     const filtered =
-//       category === "all"
-//         ? DEMO_PROJECTS
-//         : DEMO_PROJECTS.filter((p) => p.category === category);
-
-//     const data = filtered.length > 0 ? filtered : makePlaceholders(category);
-
-//     return paginateDemo(data, page, pageSize);
-//   }
-
-//   // ── REAL API (uncomment when backend ready) ────────────────────
-//   // Backend should accept: GET /projects?category=frontend&page=1&pageSize=3
-//   // Backend should return: { projects: Project[], total: number, hasMore: boolean }
-//   return fetchFromApi<ProjectsResponse>("/projects", {
-//     ...(category !== "all" && { category }),
-//     page: String(page),
-//     pageSize: String(pageSize),
-//   });
-// }
 
 export async function fetchProjects(
   params: ProjectsParams
@@ -137,26 +68,8 @@ export async function fetchProjectById(id: string): Promise<Project | null> {
   return fetchFromApi<Project>(`/projects/${id}`);
 }
 
-///////////////////////////////////////////////////////////////////////////////
-
-// import { Project,Category } from '@/lib/types/project'
-// import { DEMO_PROJECTS } from '@/lib/data/projects.demo'
-
-// ─────────────────────────────────────────────────────────────
-// Dashboard CRUD service
-// NOW:   operates on in-memory demo data
-// LATER: replace each function body with real API call
-// Shape stays identical — zero component changes needed
-// ─────────────────────────────────────────────────────────────
-
 // In-memory store — simulates DB for demo
 const store: Project[] = [...DEMO_PROJECTS];
-
-// ── GET all ───────────────────────────────────────────────────
-// export async function dashboardGetProjects(): Promise<Project[]> {
-//   // LATER: return fetch(`${API}/projects`).then(r => r.json())
-//   return structuredClone(store)
-// }
 
 // ── GET all ───────────────────────────────────────────────────
 export async function dashboardGetProjects(): Promise<Project[]> {
@@ -173,27 +86,8 @@ export async function dashboardGetProjects(): Promise<Project[]> {
 
 // ── GET one ───────────────────────────────────────────────────
 export async function dashboardGetProject(id: string): Promise<Project | null> {
-  // LATER: return fetch(`${API}/projects/${id}`).then(r => r.json())
   return store.find((p) => p.id === id) ?? null;
 }
-
-// ── CREATE ────────────────────────────────────────────────────
-// export async function dashboardCreateProject(
-//   data: Omit<Project, "id">,
-// ): Promise<Project> {
-//   // LATER:
-//   // return fetch(`${API}/projects`, {
-//   //   method: 'POST',
-//   //   body: JSON.stringify(data),
-//   // }).then(r => r.json())
-
-//   const newProject: Project = {
-//     ...data,
-//     id: Date.now().toString(),
-//   };
-//   store = [newProject, ...store];
-//   return newProject;
-// }
 
 export async function dashboardCreateProject(
   data: Omit<Project, "id">,
@@ -231,22 +125,6 @@ export async function dashboardCreateProject(
   return json.project;
 }
 
-// ── UPDATE ────────────────────────────────────────────────────
-// export async function dashboardUpdateProject(
-//   id: string,
-//   data: Partial<Omit<Project, "id">>,
-// ): Promise<Project | null> {
-//   // LATER:
-//   // return fetch(`${API}/projects/${id}`, {
-//   //   method: 'PUT',
-//   //   body: JSON.stringify(data),
-//   // }).then(r => r.json())
-
-//   const index = store.findIndex((p) => p.id === id);
-//   if (index === -1) return null;
-//   store[index] = { ...store[index], ...data };
-//   return store[index];
-// }
 
 export async function dashboardUpdateProject(
   id: string,
@@ -295,18 +173,6 @@ export async function dashboardUpdateProject(
   return json.project;
 }
 
-// ── DELETE ────────────────────────────────────────────────────
-// export async function dashboardDeleteProject(id: string): Promise<boolean> {
-//   // LATER:
-//   // return fetch(`${API}/projects/${id}`, {
-//   //   method: 'DELETE',
-//   // }).then(r => r.ok)
-
-//   const before = store.length;
-//   store = store.filter((p) => p.id !== id);
-//   return store.length < before;
-// }
-
 export async function dashboardDeleteProject(id: string): Promise<boolean> {
   const response = await fetch(`${API_BASE_URL}/${id}`, {
     method: "DELETE",
@@ -320,30 +186,117 @@ export async function dashboardDeleteProject(id: string): Promise<boolean> {
 }
 
 
-export async function dashboardGetProjectsAll(): Promise<Project[]> {
+// ─────────────────────────────────────────────────────────────────────────
+//  DASHBOARD LIST — paginated + searchable, resolved in the database.
+//
+//  GET /projects/all?page&pageSize&q&category&sort&dir
+//    → { success, projects, total, hasMore, page, pageSize }
+//
+//  Sorting lives on the server too: sorting only the current page in the
+//  browser would order each page independently and produce a nonsense
+//  overall order.
+// ─────────────────────────────────────────────────────────────────────────
+
+export interface ProjectListQuery {
+  page: number;
+  pageSize: number;
+  q?: string;
+  category?: Category | "all";
+  sort?: "title" | "category" | "createdAt" | "featured";
+  dir?: "asc" | "desc";
+}
+
+export interface ProjectListResult {
+  projects: Project[];
+  total: number;
+  hasMore: boolean;
+  page: number;
+  pageSize: number;
+}
+
+export interface ProjectStats {
+  total: number;
+  featured: number;
+  byCategory: Record<string, number>;
+}
+
+export async function dashboardGetProjectsAll(
+  params: ProjectListQuery,
+): Promise<ProjectListResult> {
+  const page = params.page;
+  const pageSize = params.pageSize;
+
   try {
-    const res = await fetch(`${API_BASE_URL}/all`, {
+    const query = buildQuery({
+      page,
+      pageSize,
+      q: params.q?.trim(),
+      category:
+        params.category && params.category !== "all"
+          ? params.category
+          : undefined,
+      sort: params.sort,
+      dir: params.dir,
+    });
+
+    const res = await fetch(`${API_BASE_URL}/all?${query}`, {
       cache: "no-store",
     });
 
     if (!res.ok) {
-      console.error(`Fetch failed with status: ${res.status}`);
-      return [];
+      throw new Error(`Projects API failed: ${res.status}`);
     }
 
     const json = await res.json();
 
-    if (Array.isArray(json?.projects)) {
-      return json.projects;
-    }
+    const projects: Project[] = Array.isArray(json?.projects)
+      ? json.projects
+      : [];
 
-    if (Array.isArray(json)) {
-      return json;
-    }
-
-    return [];
+    return {
+      projects,
+      total: json?.total ?? projects.length,
+      hasMore: json?.hasMore ?? false,
+      page: json?.page ?? page,
+      pageSize: json?.pageSize ?? pageSize,
+    };
   } catch (error) {
     console.error("Failed to load projects from dashboard API:", error);
-    return [];
+
+    return {
+      projects: [],
+      total: 0,
+      hasMore: false,
+      page,
+      pageSize,
+    };
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+//  DASHBOARD STATS — the numbers on the stat cards.
+// ─────────────────────────────────────────────────────────────────────────
+
+export async function dashboardGetProjectStats(): Promise<ProjectStats> {
+  try {
+    const res = await fetch(`${API_BASE_URL}/stats`, {
+      cache: "no-store",
+    });
+
+    if (!res.ok) {
+      throw new Error(`Project stats API failed: ${res.status}`);
+    }
+
+    const json = await res.json();
+
+    return {
+      total: json?.stats?.total ?? 0,
+      featured: json?.stats?.featured ?? 0,
+      byCategory: json?.stats?.byCategory ?? {},
+    };
+  } catch (error) {
+    console.error("Failed to load project stats:", error);
+
+    return { total: 0, featured: 0, byCategory: {} };
   }
 }

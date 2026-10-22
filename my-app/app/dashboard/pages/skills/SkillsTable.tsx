@@ -1,5 +1,6 @@
 "use client";
 import { useState } from "react";
+import { useCurrentUser } from "@/app/components/dashboard/useCurrentUser";
 import {
   Plus,
   Pencil,
@@ -31,6 +32,7 @@ type DeleteTarget =
   | { type: "skill"; categoryId: string; name: string; title: string };
 
 export function SkillsTable({ initial }: { initial: SkillCategory[] }) {
+  const { canDelete } = useCurrentUser();
   const [categories, setCategories] = useState<SkillCategory[]>(initial);
   const [expanded, setExpanded] = useState<Set<string>>(
     new Set(initial.map((c) => c.id)), // all open by default
@@ -375,22 +377,24 @@ export function SkillsTable({ initial }: { initial: SkillCategory[] }) {
                 >
                   <Pencil className="w-4 h-4" />
                 </button>
-                <button
-                  title="Delete category"
-                  onClick={() =>
-                    setDeleteTarget({
-                      type: "category",
-                      id: category.id,
-                      title: category.label,
-                    })
-                  }
-                  className="p-2 rounded-lg text-zinc-500 dark:text-zinc-400
-                             hover:text-red-600 dark:hover:text-red-400
-                             hover:bg-red-50 dark:hover:bg-red-950
-                             transition-all"
-                >
-                  <Trash2 className="w-4 h-4" />
-                </button>
+                {canDelete && (
+                  <button
+                    title="Delete category"
+                    onClick={() =>
+                      setDeleteTarget({
+                        type: "category",
+                        id: category.id,
+                        title: category.label,
+                      })
+                    }
+                    className="p-2 rounded-lg text-zinc-500 dark:text-zinc-400
+                               hover:text-red-600 dark:hover:text-red-400
+                               hover:bg-red-50 dark:hover:bg-red-950
+                               transition-all"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                )}
               </div>
             </div>
 
@@ -474,22 +478,24 @@ export function SkillsTable({ initial }: { initial: SkillCategory[] }) {
                           >
                             <Pencil className="w-3.5 h-3.5" />
                           </button>
-                          <button
-                            title="Delete skill"
-                            onClick={() =>
-                              setDeleteTarget({
-                                type: "skill",
-                                categoryId: category.id,
-                                name: skill.name,
-                                title: skill.name,
-                              })
-                            }
-                            className="p-1.5 rounded-lg bg-white/10
-                                       hover:bg-red-500 text-white
-                                       transition-colors"
-                          >
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </button>
+                          {canDelete && (
+                            <button
+                              title="Delete skill"
+                              onClick={() =>
+                                setDeleteTarget({
+                                  type: "skill",
+                                  categoryId: category.id,
+                                  name: skill.name,
+                                  title: skill.name,
+                                })
+                              }
+                              className="p-1.5 rounded-lg bg-white/10
+                                         hover:bg-red-500 text-white
+                                         transition-colors"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          )}
                         </div>
                       </div>
                     ))}

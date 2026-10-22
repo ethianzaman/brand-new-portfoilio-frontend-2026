@@ -1,5 +1,6 @@
 "use client";
 import { useEffect } from "react";
+import { useCurrentUser } from "@/app/components/dashboard/useCurrentUser";
 import {
   X,
   Star,
@@ -81,6 +82,7 @@ function DetailRow({
 }
 
 export function ServiceDrawer({ service, onClose, onEdit, onDelete }: Props) {
+  const { canDelete } = useCurrentUser();
   const isOpen = !!service;
   const Icon = ICON_MAP[service?.icon ?? ""] ?? Code2;
 
@@ -308,18 +310,20 @@ export function ServiceDrawer({ service, onClose, onEdit, onDelete }: Props) {
                             bg-zinc-50 dark:bg-zinc-800/50
                             flex gap-3"
             >
-              <button
-                onClick={() => onDelete(service)}
-                className="flex items-center justify-center gap-2
-                           flex-1 py-2.5 rounded-xl text-sm font-medium
-                           border border-red-200 dark:border-red-900
-                           text-red-600 dark:text-red-400
-                           hover:bg-red-50 dark:hover:bg-red-950
-                           transition-colors"
-              >
-                <X className="w-4 h-4" />
-                Delete
-              </button>
+              {canDelete && (
+                <button
+                  onClick={() => onDelete(service)}
+                  className="flex items-center justify-center gap-2
+                             flex-1 py-2.5 rounded-xl text-sm font-medium
+                             border border-red-200 dark:border-red-900
+                             text-red-600 dark:text-red-400
+                             hover:bg-red-50 dark:hover:bg-red-950
+                             transition-colors"
+                >
+                  <X className="w-4 h-4" />
+                  Delete
+                </button>
+              )}
               <button
                 onClick={() => onEdit(service)}
                 className="flex items-center justify-center gap-2
