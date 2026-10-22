@@ -4,6 +4,13 @@ import { X, Loader2, Save, ImageIcon } from "lucide-react";
 import { Project, Category } from "@/lib/types/project";
 import { cn } from "@/lib/utils";
 import Image from "next/image";
+import {
+  SeoFields,
+  EMPTY_SEO_FORM,
+  toSeoFormValue,
+  fromSeoFormValue,
+  type SeoFormValue,
+} from "@/app/components/seo/SeoFields";
 
 const CATEGORIES: { value: Category; label: string }[] = [
   { value: "frontend", label: "Frontend" },
@@ -62,6 +69,9 @@ export function ProjectFormModal({ project, onSave, onCancel }: Props) {
   const isEdit = !!project;
   const [loading, setLoading] = useState(false);
   const [imageFile, setImageFile] = useState<File | null>(null);
+  const [seo, setSeo] = useState<SeoFormValue>(
+    project ? toSeoFormValue(project.seo) : EMPTY_SEO_FORM,
+  );
   const [form, setForm] = useState<FormData>({
     title: project?.title ?? "",
     description: project?.description ?? "",
@@ -92,6 +102,7 @@ export function ProjectFormModal({ project, onSave, onCancel }: Props) {
         .filter(Boolean),
       // Ensure empty strings are handled as undefined if optional
       thumbnail: form.thumbnail.trim() || undefined,
+      seo: fromSeoFormValue(seo),
     };
 
     // await onSave(payload);
@@ -308,6 +319,9 @@ export function ProjectFormModal({ project, onSave, onCancel }: Props) {
                 Paste a URL or click the icon to upload an image.
               </p>
             </div>
+
+            {/* SEO overrides */}
+            <SeoFields value={seo} onChange={setSeo} />
 
             {/* Featured toggle */}
             <div

@@ -32,6 +32,15 @@ export interface BlogPost {
   author?: string;
   createdAt?: string;
   updatedAt?: string;
+  /** Per-post SEO overrides. Absent on posts created before SEO existed. */
+  seo?: {
+    metaTitle?: string;
+    metaDescription?: string;
+    ogImage?: string;
+    canonicalUrl?: string;
+    noindex?: boolean;
+    nofollow?: boolean;
+  };
 }
 
 export function slugify(input: string): string {

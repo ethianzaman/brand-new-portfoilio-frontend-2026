@@ -3,6 +3,13 @@ import { useState } from 'react'
 import { X, Loader2, Save, Plus, Trash2, GripVertical } from 'lucide-react'
 import { Service, ServiceFeature } from '@/lib/types/services'
 import { cn } from '@/lib/utils'
+import {
+  SeoFields,
+  EMPTY_SEO_FORM,
+  toSeoFormValue,
+  fromSeoFormValue,
+  type SeoFormValue,
+} from '@/app/components/seo/SeoFields'
 
 const ICONS = [
   'Monitor', 'Server', 'Layers', 'Database',
@@ -43,6 +50,9 @@ export function ServiceFormModal({ service, onSave, onCancel }: Props) {
   const [color, setColor] = useState(service?.color ?? '#6366f1')
   const [popular, setPopular] = useState(service?.popular ?? false)
   const [tags, setTags] = useState(service?.tags.join(', ') ?? '')
+  const [seo, setSeo] = useState<SeoFormValue>(
+    service ? toSeoFormValue(service.seo) : EMPTY_SEO_FORM,
+  )
   const [features, setFeatures] = useState<ServiceFeature[]>(
     service?.features && service.features.length > 0 
       ? service.features 
@@ -79,6 +89,7 @@ export function ServiceFormModal({ service, onSave, onCancel }: Props) {
       popular,
       tags:     tags.split(',').map(t => t.trim()).filter(Boolean),
       features: features.filter(f => f.text.trim() !== ''),
+      seo:      fromSeoFormValue(seo),
     })
     setLoading(false)
   }
@@ -277,6 +288,9 @@ export function ServiceFormModal({ service, onSave, onCancel }: Props) {
                 ))}
               </div>
             </div>
+
+            {/* SEO overrides */}
+            <SeoFields value={seo} onChange={setSeo} />
 
             {/* Popular toggle */}
             <div className="flex items-center justify-between p-4 rounded-xl

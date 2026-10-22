@@ -11,4 +11,15 @@ export interface Service {
   tags: string[]
   color: string
   popular?: boolean
+  /** URL slug (backend-generated; optional for legacy records). */
+  slug?: string
+  /** Per-service SEO overrides. */
+  seo?: {
+    metaTitle?: string
+    metaDescription?: string
+    ogImage?: string
+    canonicalUrl?: string
+    noindex?: boolean
+    nofollow?: boolean
+  }
 }

@@ -3,12 +3,25 @@ import { ServicesGrid } from "../../components/services/ServicesGrid";
 import { ServicesCTA } from "../../components/services/ServicesCTA";
 import { getServices } from "@/lib/api/services";
 import { EmptyState } from "@/app/components/EmptyState";
+import { getSiteSettings } from "@/lib/api/settings";
+import { getPageSeo } from "@/lib/api/seo";
+import { buildMetadata } from "@/lib/seo/metadata";
 
-export const metadata = {
-  title: "Services — Ethian Dev",
-  description:
-    "Full-stack development services — frontend, backend, database design, API integration and more.",
-};
+export async function generateMetadata() {
+  const [settings, seo] = await Promise.all([
+    getSiteSettings(),
+    getPageSeo("services"),
+  ]);
+
+  return buildMetadata({
+    path: "/services",
+    title: "Services",
+    description:
+      "Full-stack development services — frontend, backend, database design, API integration and more.",
+    seo,
+    siteSeo: settings.seo,
+  });
+}
 
 export default async function ServicesPage() {
   // Cached 60s under tag "services"; last-good-on-failure; demo data on build.

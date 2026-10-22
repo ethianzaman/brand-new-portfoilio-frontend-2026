@@ -2,11 +2,25 @@ import { FileText } from "lucide-react";
 import { BlogPostsGrid } from "../../components/blog/BlogPostsGrid";
 import { getPublishedBlogPosts } from "@/lib/api/blog";
 import { EmptyState } from "@/app/components/EmptyState";
+import { getSiteSettings } from "@/lib/api/settings";
+import { getPageSeo } from "@/lib/api/seo";
+import { buildMetadata } from "@/lib/seo/metadata";
 
-export const metadata = {
-  title: "Blog — Ethian Dev",
-  description: "Articles on development, design and the craft of building for the web.",
-};
+export async function generateMetadata() {
+  const [settings, seo] = await Promise.all([
+    getSiteSettings(),
+    getPageSeo("blog"),
+  ]);
+
+  return buildMetadata({
+    path: "/blog",
+    title: "Blog",
+    description:
+      "Articles on development, design and the craft of building for the web.",
+    seo,
+    siteSeo: settings.seo,
+  });
+}
 
 export default async function BlogPage() {
   // The `status === "published"` filter lives inside `getPublishedBlogPosts()`
