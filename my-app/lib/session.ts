@@ -47,6 +47,8 @@ export async function getSession(): Promise<AuthSession | null> {
   const user: AuthUser | null = rawUser ? safeParseUser(rawUser) : null;
 
   if (!user) {
+    // Only safe inside a Route Handler / Server Action — Server Components
+    // may not mutate cookies. `readSession()` is the non-mutating variant.
     await destroySession();
     return null;
   }
@@ -54,9 +56,42 @@ export async function getSession(): Promise<AuthSession | null> {
   return { token, user };
 }
 
+/**
+ * Read the session WITHOUT touching cookies.
+ *
+ * `getSession()` cleans up a half-written session by deleting the cookies,
+ * which throws inside a Server Component. This variant only reads, so it is
+ * safe to call from a page, a layout or a data access layer.
+ */
+export async function readSession(): Promise<AuthSession | null> {
+  const store = await cookies();
+  const token = store.get(SESSION_COOKIE)?.value;
+
+  if (!token) return null;
+
+  const rawUser = store.get(USER_COOKIE)?.value;
+  const user: AuthUser | null = rawUser ? safeParseUser(rawUser) : null;
+
+  if (!user) return null;
+
+  return { token, user };
+}
+
 export async function getToken(): Promise<string | null> {
-  const session = await getSession();
+  const session = await readSession();
   return session?.token ?? null;
+}
+
+/**
+ * The raw session token, or null when there is no session cookie.
+ *
+ * Unlike `readSession()` this ignores the companion user cookie, so it also
+ * returns a token for a half-written or corrupt session — useful when the
+ * session has to be forwarded to the backend for cleanup.
+ */
+export async function readSessionToken(): Promise<string | null> {
+  const store = await cookies();
+  return store.get(SESSION_COOKIE)?.value ?? null;
 }
 
 function safeParseUser(raw: string): AuthUser | null {

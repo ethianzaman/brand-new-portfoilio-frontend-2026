@@ -9,12 +9,19 @@ import { MobileMenu } from "./mobileMenu";
 import { ThemeToggle } from "../ThemeToggle";
 import { BrandMark } from "../brand/BrandMark";
 import { SocialIcon } from "../brand/SocialIcon";
+import { useAuthStatus } from "./useAuthStatus";
 import type { SiteSettings } from "@/lib/types/settings";
 
 export function Navbar({ settings }: { settings: SiteSettings }) {
   const { name, tagline, logo } = settings.brand;
   const { socials } = settings;
   const [scrolled, setScrolled] = useState(false);
+
+  // The dashboard link is only rendered while a valid session exists. The
+  // public pages are statically cached, so the state is resolved in the
+  // browser against the authoritative /api/auth/me endpoint instead of
+  // being baked into the cached HTML.
+  const isAuthenticated = useAuthStatus();
 
   // ✅ Add border + backdrop on scroll
   useEffect(() => {
@@ -60,7 +67,7 @@ export function Navbar({ settings }: { settings: SiteSettings }) {
 
         {/* ─── Desktop nav ─── */}
         <nav className="hidden xl:flex items-center gap-0.5">
-          <NavLinks />
+          <NavLinks isAuthenticated={isAuthenticated} />
         </nav>
 
         {/* ─── Desktop right side ─── */}
@@ -99,7 +106,7 @@ export function Navbar({ settings }: { settings: SiteSettings }) {
         {/* ─── Mobile theme toggle + hamburger ─── */}
         <div className="flex xl:hidden items-center gap-1">
           <ThemeToggle className="size-10 xl:size-8" />
-          <MobileMenu settings={settings} />
+          <MobileMenu settings={settings} isAuthenticated={isAuthenticated} />
         </div>
       </div>
     </header>

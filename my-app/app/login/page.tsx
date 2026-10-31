@@ -1,223 +1,215 @@
-"use client";
-
+import Image from "next/image";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { useState } from "react";
-import { toast } from "sonner";
-import { Loader2, Lock, LogIn, Mail, Sparkles } from "lucide-react";
+import { BarChart3, Inbox, Layers, ShieldCheck } from "lucide-react";
 
-import { Toaster } from "@/components/ui/sonner";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { cn } from "@/lib/utils";
+import { getSiteSettings } from "@/lib/api/settings";
+import { DEFAULT_DASHBOARD_PATH, safeReturnUrl } from "@/lib/auth/return-url";
+
+import { BrandMark } from "../components/brand/BrandMark";
 import { ThemeToggle } from "../components/ThemeToggle";
+import { LoginForm } from "./LoginForm";
 
-// NOTE: Public registration has been disabled. Accounts are created by an
-// administrator through the dashboard's User Management section.
+// ─────────────────────────────────────────────────────────────────────────
+//  LOGIN PAGE — PUBLIC.
+//
+//  Anyone may open /login; it is never behind the dashboard guard. An
+//  already-authenticated visitor is sent on to the dashboard by the form
+//  itself, once the session has been verified against the backend.
+//
+//  `returnUrl` is untrusted query-string input, so it is validated HERE, on
+//  the server, before it is ever handed to the browser. Anything that is not
+//  an approved internal dashboard path falls back to the default dashboard
+//  route — that is what stops the login page from becoming an open redirect.
+//
+//  The layout is a two-panel composition:
+//
+//    • left  — a branded visual panel (artwork + feature list) that is
+//              hidden on small screens;
+//    • right — the sign-in card, which stays the single focal point.
+//
+//  On phones the visual panel collapses into a banner above the form so the
+//  page keeps the same identity without stealing vertical space.
+// ─────────────────────────────────────────────────────────────────────────
 
-type Errors = { email?: string; password?: string };
+/**
+ * Decorative artwork for the visual panel. It carries no information, so it
+ * is marked `alt=""` and sits behind the content of the panel.
+ */
+const VISUAL_IMAGE =
+  "https://images.unsplash.com/photo-1461749280684-dccba630e2f6?auto=format&fit=crop&w=1600&q=80";
 
-const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const HIGHLIGHTS = [
+  {
+    icon: Layers,
+    title: "Projects & case studies",
+    copy: "Publish, reorder and update every piece of work you ship.",
+  },
+  {
+    icon: Inbox,
+    title: "Messages inbox",
+    copy: "Read, triage and reply to new enquiries without leaving the CMS.",
+  },
+  {
+    icon: BarChart3,
+    title: "Insights & analytics",
+    copy: "Watch visits, clicks and content performance at a glance.",
+  },
+] as const;
 
-function validate(email: string, password: string): Errors {
-  const errors: Errors = {};
+const TRUST_POINTS = [
+  "Encrypted session",
+  "Role-based access",
+  "Instant revalidation",
+] as const;
 
-  if (!email.trim()) {
-    errors.email = "Email is required";
-  } else if (!EMAIL_RE.test(email.trim())) {
-    errors.email = "Enter a valid email address";
-  }
+export default async function LoginPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+}) {
+  const params = await searchParams;
+  const raw = params.returnUrl;
 
-  if (!password) {
-    errors.password = "Password is required";
-  }
+  const redirectTo =
+    safeReturnUrl(typeof raw === "string" ? raw : null) ??
+    DEFAULT_DASHBOARD_PATH;
 
-  return errors;
-}
-
-export default function LoginPage() {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [errors, setErrors] = useState<Errors>({});
-  const [touched, setTouched] = useState<{ email?: boolean; password?: boolean }>({});
-  const [pending, setPending] = useState(false);
-  const router = useRouter();
-
-  function clearError(field: keyof Errors) {
-    setErrors((prev) => {
-      if (!prev[field]) return prev;
-      const next = { ...prev };
-      delete next[field];
-      return next;
-    });
-  }
-
-  function handleBlur(field: "email" | "password") {
-    setTouched((prev) => ({ ...prev, [field]: true }));
-    setErrors(validate(email, password));
-  }
-
-  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault();
-
-    const nextErrors = validate(email, password);
-    setErrors(nextErrors);
-    setTouched({ email: true, password: true });
-
-    if (Object.keys(nextErrors).length > 0) {
-      toast.error(nextErrors.email ?? nextErrors.password ?? "Please fix the errors");
-      return;
-    }
-
-    setPending(true);
-
-    try {
-      const res = await fetch("/api/auth/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: email.trim(), password }),
-      });
-
-      const json = await res.json().catch(() => ({}));
-
-      if (!res.ok) {
-        toast.error(json.message ?? "Something went wrong");
-        return;
-      }
-
-      toast.success("Welcome back!");
-      // Go to dashboard — replace() so the browser Back button
-      // doesn't land on the login page again.
-      router.replace("/dashboard");
-    } catch {
-      toast.error("Network error — is the backend running?");
-    } finally {
-      setPending(false);
-    }
-  }
-
-  const emailInvalid = Boolean(errors.email) && touched.email;
-  const passwordInvalid = Boolean(errors.password) && touched.password;
+  // Never throws — the settings API falls back to a neutral brand.
+  const settings = await getSiteSettings();
+  const brandName = settings.brand.name || "Portfolio CMS";
+  const brandTagline = settings.brand.tagline || "Portfolio content management";
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-white px-4 dark:bg-zinc-950">
-      <Toaster position="top-center" />
+    <div className="relative min-h-screen w-full overflow-hidden bg-zinc-950">
+      {/* ══════════════ FULL-PAGE BACKGROUND ARTWORK ══════════════
+          The photo is the background of the WHOLE page, not just the left
+          column. Each panel then lays its own scrim on top of it, so the
+          artwork stays visible everywhere while the text keeps its
+          contrast. */}
+      <Image
+        src={VISUAL_IMAGE}
+        alt=""
+        fill
+        priority
+        sizes="100vw"
+        className="object-cover object-center"
+      />
 
-      <ThemeToggle className="fixed top-4 right-4" />
+      {/* The brand palette — the one the visual panel used — now covers the
+          WHOLE page, so the artwork reads as a single continuous scene
+          instead of a photo with a coloured half. */}
+      <div
+        aria-hidden
+        className="absolute inset-0 bg-linear-to-br from-indigo-950/95 via-indigo-950/85 to-zinc-950/90"
+      />
+      <div
+        aria-hidden
+        className="absolute inset-0 bg-linear-to-t from-zinc-950 via-transparent to-indigo-950/40"
+      />
 
-      <div className="w-full max-w-md">
-        {/* ── Card ── */}
-        <div className="rounded-2xl border border-zinc-200 bg-white p-8 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
-          {/* Header */}
-          <div className="mb-8 flex flex-col items-center gap-2 text-center">
-            <span className="inline-flex items-center justify-center size-12 rounded-xl bg-indigo-50 text-indigo-600 dark:bg-indigo-950 dark:text-indigo-400">
-              <Lock className="size-6" />
-            </span>
-            <h1 className="mt-2 text-2xl font-bold text-zinc-900 dark:text-white">
-              Welcome back
-            </h1>
-            <p className="text-sm text-zinc-500 dark:text-zinc-400">
-              Sign in to manage your portfolio
-            </p>
+      {/* Faint blueprint grid across the whole page */}
+      <div
+        aria-hidden
+        className="absolute inset-0 opacity-[0.14] bg-[linear-gradient(to_right,white_1px,transparent_1px),linear-gradient(to_bottom,white_1px,transparent_1px)] bg-size-[56px_56px] mask-[radial-gradient(ellipse_at_center,black,transparent_75%)] [-webkit-mask-image:radial-gradient(ellipse_at_center,black,transparent_75%)]"
+      />
+
+      <div className="relative grid min-h-screen lg:grid-cols-[1.05fr_1fr]">
+        {/* ══════════════ LEFT — brand / visual panel ══════════════ */}
+        <aside className="relative hidden overflow-hidden lg:flex lg:flex-col lg:justify-between lg:p-12 xl:p-14">
+          <div className="relative z-10 flex h-full flex-col">
+            {/* Brand lockup */}
+            <Link
+              href="/"
+              className="group inline-flex w-fit items-center gap-3"
+            >
+              <span className="flex size-11 items-center justify-center rounded-2xl bg-linear-to-br from-indigo-500 to-purple-600 text-white shadow-lg shadow-indigo-950/50 transition-transform duration-200 group-hover:scale-105">
+                <BrandMark logo={settings.brand.logo} className="size-5" />
+              </span>
+              <span>
+                <span className="block text-sm font-bold tracking-wide text-white">
+                  {brandName}
+                </span>
+                <span className="block text-xs text-indigo-200/70">
+                  {brandTagline}
+                </span>
+              </span>
+            </Link>
+
+            {/* Headline + highlights */}
+            <div className="max-w-lg">
+              <span className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-3 py-1.5 text-xs font-medium text-indigo-100 backdrop-blur-md mt-5">
+                <ShieldCheck className="size-3.5" />
+                Admin workspace
+              </span>
+
+              <h1 className="mt-6 text-4xl font-bold leading-[1.15] text-white xl:text-5xl">
+                Run your whole portfolio
+                <span className="mt-1 block bg-linear-to-r from-indigo-300 via-purple-300 to-fuchsia-300 bg-clip-text text-transparent">
+                  from one dashboard
+                </span>
+              </h1>
+
+              <p className="mt-5 max-w-md text-base leading-relaxed text-indigo-100/70">
+                Update your projects, publish new articles, reply to messages
+                and watch your numbers — all protected behind a single secure
+                sign-in.
+              </p>
+
+              <ul className="mt-9 space-y-4">
+                {HIGHLIGHTS.map(({ icon: Icon, title, copy }) => (
+                  <li key={title} className="flex items-start gap-4">
+                    <span className="flex size-10 shrink-0 items-center justify-center rounded-xl border border-white/10 bg-white/10 text-indigo-200 backdrop-blur-md transition-colors duration-200 hover:bg-white/15">
+                      <Icon className="size-5" />
+                    </span>
+                    <span>
+                      <span className="block text-sm font-semibold text-white">
+                        {title}
+                      </span>
+                      <span className="block text-sm text-indigo-100/60">
+                        {copy}
+                      </span>
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            {/* Trust strip */}
+            <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-xs text-indigo-100/60 mt-5">
+              {TRUST_POINTS.map((point) => (
+                <span key={point} className="inline-flex items-center gap-1.5">
+                  <ShieldCheck className="size-3.5 text-emerald-300/80" />
+                  {point}
+                </span>
+              ))}
+            </div>
           </div>
+        </aside>
 
-          {/* Form */}
-          <form onSubmit={handleSubmit} className="flex flex-col gap-4" noValidate>
-            <div className="flex flex-col gap-1.5">
-              <label
-                htmlFor="email"
-                className="text-sm font-medium text-zinc-700 dark:text-zinc-300"
-              >
-                Email
-              </label>
-              <div className="relative">
-                <Mail
-                  className={cn(
-                    "absolute left-2.5 top-1/2 -translate-y-1/2 size-4",
-                    emailInvalid ? "text-destructive" : "text-zinc-400",
-                  )}
-                />
-                <Input
-                  id="email"
-                  type="email"
-                  autoComplete="email"
-                  placeholder="admin@example.com"
-                  className={cn("h-9 pl-9", emailInvalid && "ring-destructive/20")}
-                  aria-invalid={emailInvalid || undefined}
-                  aria-describedby={emailInvalid ? "email-error" : undefined}
-                  value={email}
-                  onChange={(e) => {
-                    setEmail(e.target.value);
-                    clearError("email");
-                  }}
-                  onBlur={() => handleBlur("email")}
-                />
-              </div>
-              {emailInvalid && (
-                <p id="email-error" className="text-xs font-medium text-destructive">
-                  {errors.email}
-                </p>
-              )}
+        {/* ══════════════ RIGHT — sign-in card ══════════════ */}
+        <main className="relative flex min-h-screen items-center justify-center px-5 py-12 sm:px-8">
+          <ThemeToggle className="absolute right-4 top-4 z-20 size-9 rounded-full border border-white/15 bg-white/10 text-indigo-100 shadow-sm backdrop-blur-md transition-colors hover:bg-white/20 hover:text-white dark:border-white/15 dark:bg-white/10 dark:text-indigo-100 dark:hover:bg-white/20 dark:hover:text-white" />
+
+          <div className="relative w-full max-w-md animate-fade-in">
+            {/* Brand lockup — shown on small screens only, where the left
+                visual panel is hidden. */}
+            <div className="mb-6 flex items-center gap-3 lg:hidden">
+              <span className="flex size-11 items-center justify-center rounded-2xl bg-linear-to-br from-indigo-500 to-purple-600 text-white shadow-lg shadow-indigo-950/40">
+                <BrandMark logo={settings.brand.logo} className="size-5" />
+              </span>
+              <span>
+                <span className="block text-sm font-bold tracking-wide text-white">
+                  {brandName}
+                </span>
+                <span className="block text-xs text-indigo-200/70">
+                  {brandTagline}
+                </span>
+              </span>
             </div>
 
-            <div className="flex flex-col gap-1.5">
-              <label
-                htmlFor="password"
-                className="text-sm font-medium text-zinc-700 dark:text-zinc-300"
-              >
-                Password
-              </label>
-              <div className="relative">
-                <Lock
-                  className={cn(
-                    "absolute left-2.5 top-1/2 -translate-y-1/2 size-4",
-                    passwordInvalid ? "text-destructive" : "text-zinc-400",
-                  )}
-                />
-                <Input
-                  id="password"
-                  type="password"
-                  autoComplete="current-password"
-                  placeholder="••••••••"
-                  className={cn("h-9 pl-9", passwordInvalid && "ring-destructive/20")}
-                  aria-invalid={passwordInvalid || undefined}
-                  aria-describedby={passwordInvalid ? "password-error" : undefined}
-                  value={password}
-                  onChange={(e) => {
-                    setPassword(e.target.value);
-                    clearError("password");
-                  }}
-                  onBlur={() => handleBlur("password")}
-                />
-              </div>
-              {passwordInvalid && (
-                <p id="password-error" className="text-xs font-medium text-destructive">
-                  {errors.password}
-                </p>
-              )}
-            </div>
-
-            <Button type="submit" disabled={pending} className="mt-2 h-9 gap-2">
-              {pending ? (
-                <Loader2 className="size-4 animate-spin" />
-              ) : (
-                <LogIn className="size-4" />
-              )}
-              {pending ? "Please wait…" : "Log in"}
-            </Button>
-          </form>
-        </div>
-
-        {/* ── Footer ── */}
-        <p className="mt-6 flex items-center justify-center gap-1.5 text-center text-sm text-zinc-500 dark:text-zinc-400">
-          <Sparkles className="size-3.5" />
-          <Link
-            href="/"
-            className="font-medium text-indigo-600 hover:underline dark:text-indigo-400"
-          >
-            Back to portfolio
-          </Link>
-        </p>
+            <LoginForm redirectTo={redirectTo} />
+          </div>
+        </main>
       </div>
     </div>
   );
