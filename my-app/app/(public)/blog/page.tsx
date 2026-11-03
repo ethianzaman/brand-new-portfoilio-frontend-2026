@@ -29,7 +29,7 @@ export default async function BlogPage() {
 
   if (posts.length === 0) {
     return (
-      <div className="min-h-screen bg-white dark:bg-zinc-950">
+      <div className="min-h-screen">
         <div className="max-w-6xl mx-auto px-4 py-16 md:py-24">
           <EmptyState
             icon={FileText}
@@ -42,7 +42,7 @@ export default async function BlogPage() {
   }
 
   return (
-    <div className="min-h-screen bg-white dark:bg-zinc-950">
+    <div className="min-h-screen">
       <div className="max-w-6xl mx-auto px-4 py-16 md:py-24">
         {/* Header */}
         <div className="mb-14 max-w-2xl">

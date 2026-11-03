@@ -25,7 +25,7 @@ export default async function SkillsPage() {
   const skills = await getSkills()
 
   return (
-    <div className="min-h-screen bg-white dark:bg-zinc-950">
+    <div className="min-h-screen">
       <div className="max-w-6xl mx-auto px-4 py-16 md:py-24">
 
         {/* Header */}
