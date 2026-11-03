@@ -22,6 +22,21 @@ export interface SiteSocial {
 }
 
 /**
+ * Global SEO defaults managed in the dashboard (Site Settings → SEO).
+ *
+ * Mirrors the backend `ISiteSeo`. Every field is optional so a settings
+ * document written before SEO existed still normalises cleanly.
+ */
+export interface SiteSeo {
+  defaultMetaTitle?: string;
+  defaultTitleTemplate?: string;
+  defaultMetaDescription?: string;
+  defaultOgImage?: string;
+  twitterHandle?: string;
+  siteUrl?: string;
+}
+
+/**
  * Global Site Settings — the shared brand identity consumed by both the
  * Navbar and the Footer. Sourced from `GET /api/settings`.
  */
@@ -30,4 +45,5 @@ export interface SiteSettings {
   _id?: string;
   brand: SiteBrand;
   socials: SiteSocial[];
+  seo?: SiteSeo;
 }

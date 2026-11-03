@@ -107,6 +107,10 @@ export async function dashboardCreateProject(
     formData.append("tags", tag);
   });
 
+  if (data.seo) {
+    formData.append("seo", JSON.stringify(data.seo));
+  }
+
   if (image) {
     formData.append("image", image);
   }
@@ -148,6 +152,10 @@ export async function dashboardUpdateProject(
 
   if (data.tags) {
     data.tags.forEach((tag) => formData.append("tags", tag));
+  }
+
+  if (data.seo) {
+    formData.append("seo", JSON.stringify(data.seo));
   }
 
   if (image) {

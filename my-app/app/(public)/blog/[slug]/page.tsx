@@ -2,6 +2,10 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, Clock3, CalendarDays, Tag } from "lucide-react";
 import { getBlogPostBySlug } from "@/lib/api/blog";
+import { getSiteSettings } from "@/lib/api/settings";
+import { buildMetadata, normalizeSiteSeo } from "@/lib/seo/metadata";
+import { blogPostingJsonLd } from "@/lib/seo/jsonld";
+import { JsonLd } from "@/app/components/seo/JsonLd";
 
 type Props = {
   params: Promise<{ slug: string }>;
@@ -9,16 +13,26 @@ type Props = {
 
 export async function generateMetadata({ params }: Props) {
   const { slug } = await params;
-  const post = await getBlogPostBySlug(slug);
+  const [post, settings] = await Promise.all([
+    getBlogPostBySlug(slug),
+    getSiteSettings(),
+  ]);
 
-  if (!post) {
-    return { title: "Post not found — Ethian Dev" };
+  // Drafts (and unknown slugs) must never surface metadata — same 404 the page
+  // body returns, so a crawler sees "not found", not the draft's title.
+  if (!post || post.status !== "published") {
+    return { title: "Post not found" };
   }
 
-  return {
-    title: `${post.title} — Ethian Dev`,
+  return buildMetadata({
+    path: `/blog/${post.slug}`,
+    title: post.title,
     description: post.excerpt,
-  };
+    seo: post.seo,
+    siteSeo: settings.seo,
+    fallbackImage: post.coverImage ?? undefined,
+    type: "article",
+  });
 }
 
 export default async function BlogPostPage({ params }: Props) {
@@ -30,6 +44,21 @@ export default async function BlogPostPage({ params }: Props) {
   if (!post || post.status !== "published") {
     notFound();
   }
+
+  const settings = await getSiteSettings();
+  const siteSeo = normalizeSiteSeo(settings.seo);
+
+  const blogPosting = blogPostingJsonLd({
+    title: post.title,
+    description: post.excerpt,
+    path: `/blog/${post.slug}`,
+    datePublished: post.createdAt,
+    dateModified: post.updatedAt ?? post.createdAt,
+    image: post.coverImage ?? undefined,
+    author: post.author,
+    siteSeo,
+    brandName: settings.brand.name,
+  });
 
   const date = post.createdAt
     ? new Date(post.createdAt).toLocaleDateString("en-US", {
@@ -46,6 +75,7 @@ export default async function BlogPostPage({ params }: Props) {
 
   return (
     <div className="min-h-screen bg-white dark:bg-zinc-950">
+      <JsonLd data={blogPosting} />
       <article className="max-w-3xl mx-auto px-4 py-16 md:py-24">
         {/* Back */}
         <Link

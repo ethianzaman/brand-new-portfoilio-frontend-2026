@@ -3,7 +3,8 @@ import "server-only";
 import { publicFetch } from "@/lib/api/core";
 import { TAGS } from "@/lib/api/tags";
 import { DEFAULT_SITE_SETTINGS } from "@/lib/data/settings.default";
-import type { SiteSettings, SiteSocial } from "@/lib/types/settings";
+import { normalizeSiteSeo } from "@/lib/seo/metadata";
+import type { SiteSeo, SiteSettings, SiteSocial } from "@/lib/types/settings";
 
 /**
  * PUBLIC global site settings — shared brand name + logo/icon.
@@ -48,6 +49,7 @@ function normalizeSettings(value: unknown): SiteSettings {
       },
     },
     socials: normalizeSocials(settings.socials),
+    seo: normalizeSiteSeo(settings.seo) as SiteSeo,
   };
 }
 

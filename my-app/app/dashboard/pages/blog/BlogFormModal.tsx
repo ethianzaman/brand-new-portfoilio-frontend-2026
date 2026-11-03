@@ -5,6 +5,13 @@ import { BlogPost, slugify } from "@/lib/types/blog";
 import { estimateReadTime } from "@/lib/services/blog.services";
 import { cn } from "@/lib/utils";
 import Image from "next/image";
+import {
+  SeoFields,
+  EMPTY_SEO_FORM,
+  toSeoFormValue,
+  fromSeoFormValue,
+  type SeoFormValue,
+} from "@/app/components/seo/SeoFields";
 
 const CATEGORIES = [
   "Tutorial",
@@ -50,6 +57,9 @@ export function BlogFormModal({ post, onSave, onCancel }: Props) {
   const isEdit = !!post;
   const [loading, setLoading] = useState(false);
   const [imageFile, setImageFile] = useState<File | null>(null);
+  const [seo, setSeo] = useState<SeoFormValue>(
+    post ? toSeoFormValue(post.seo) : EMPTY_SEO_FORM,
+  );
   const [form, setForm] = useState<FormState>({
     title: post?.title ?? "",
     slug: post?.slug ?? "",
@@ -94,6 +104,7 @@ export function BlogFormModal({ post, onSave, onCancel }: Props) {
         readTime: estimateReadTime(form.content),
         status: form.status,
         featured: form.featured,
+        seo: fromSeoFormValue(seo),
       },
       imageFile ?? undefined,
     );
@@ -305,6 +316,9 @@ export function BlogFormModal({ post, onSave, onCancel }: Props) {
                 Paste a URL or click the icon to upload an image.
               </p>
             </div>
+
+            {/* SEO overrides */}
+            <SeoFields value={seo} onChange={setSeo} />
 
             {/* Status + Featured toggles */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

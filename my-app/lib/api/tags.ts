@@ -22,12 +22,11 @@
  *   services written      →  "services"
  *   projects written      →  "projects"      (covers every page + category)
  *   settings written      →  "settings"      (global brand: Navbar + Footer)
- *   blog post written     →  "blog"          (also drops the list page)
- *   one post, precisely   →  "blog-<slug>"   (e.g. "blog-my-first-post")
+ *   blog post written     →  "blogs"         (also drops the list page)
+ *   seo written           →  "seo"           (global + static-page SEO defaults)
  *
- * Prefer `"blog"` on create/delete/status-change: those alter what the list
- * page renders, not just the detail page. Use `"blog-<slug>"` when only the
- * post body changed and the list is unaffected.
+ * Prefer `"blogs"` on create/delete/status-change: those alter what the list
+ * page renders, not just the detail page.
  */
 export const TAGS = {
   home: "home",
@@ -38,6 +37,7 @@ export const TAGS = {
   projects: "projects",
   settings: "settings",
   blog: "blogs",
+  seo: "seo",
 } as const;
 
 export type StaticTag = (typeof TAGS)[keyof typeof TAGS];

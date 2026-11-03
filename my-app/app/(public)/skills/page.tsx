@@ -1,10 +1,23 @@
 import { Code2 } from 'lucide-react'
 import { SkillsGrid } from '@/app/components/skills/SkillsGrid'
 import { getSkills } from '@/lib/api/skills'
+import { getSiteSettings } from '@/lib/api/settings'
+import { getPageSeo } from '@/lib/api/seo'
+import { buildMetadata } from '@/lib/seo/metadata'
 
-export const metadata = {
-  title: 'Skills — Ethian Dev',
-  description: 'Technologies, languages and tools I work with.',
+export async function generateMetadata() {
+  const [settings, seo] = await Promise.all([
+    getSiteSettings(),
+    getPageSeo('skills'),
+  ])
+
+  return buildMetadata({
+    path: '/skills',
+    title: 'Skills',
+    description: 'Technologies, languages and tools I work with.',
+    seo,
+    siteSeo: settings.seo,
+  })
 }
 
 export default async function SkillsPage() {

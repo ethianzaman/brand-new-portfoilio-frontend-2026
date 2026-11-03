@@ -185,6 +185,10 @@ export async function dashboardCreatePost(
 
   data.tags.forEach((tag) => formData.append("tags", tag));
 
+  if (data.seo) {
+    formData.append("seo", JSON.stringify(data.seo));
+  }
+
   if (image) {
     formData.append("image", image);
   }
@@ -231,6 +235,10 @@ export async function dashboardUpdatePost(
 
   if (data.tags) {
     data.tags.forEach((tag) => formData.append("tags", tag));
+  }
+
+  if (data.seo) {
+    formData.append("seo", JSON.stringify(data.seo));
   }
 
   if (image) {

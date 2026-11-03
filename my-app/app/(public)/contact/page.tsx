@@ -3,10 +3,24 @@ import { ContactInfo } from './ContactInfo'
 import { ContactFAQ } from './ContactFAQ'
 import { MessageCircle } from 'lucide-react'
 import { getContact } from '@/lib/api/contact'
+import { getSiteSettings } from '@/lib/api/settings'
+import { getPageSeo } from '@/lib/api/seo'
+import { buildMetadata } from '@/lib/seo/metadata'
 
-export const metadata = {
-  title: 'Contact — Ethian Dev',
-  description: 'Get in touch for project inquiries, collaborations or just a chat.',
+export async function generateMetadata() {
+  const [settings, seo] = await Promise.all([
+    getSiteSettings(),
+    getPageSeo('contact'),
+  ])
+
+  return buildMetadata({
+    path: '/contact',
+    title: 'Contact',
+    description:
+      'Get in touch for project inquiries, collaborations or just a chat.',
+    seo,
+    siteSeo: settings.seo,
+  })
 }
 
 export default async function  ContactPage() {

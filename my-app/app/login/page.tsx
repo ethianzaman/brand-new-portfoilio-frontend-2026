@@ -113,7 +113,7 @@ export default async function LoginPage({
         className="absolute inset-0 opacity-[0.14] bg-[linear-gradient(to_right,white_1px,transparent_1px),linear-gradient(to_bottom,white_1px,transparent_1px)] bg-size-[56px_56px] mask-[radial-gradient(ellipse_at_center,black,transparent_75%)] [-webkit-mask-image:radial-gradient(ellipse_at_center,black,transparent_75%)]"
       />
 
-      <div className="relative grid min-h-screen lg:grid-cols-[1.05fr_1fr]">
+      <div className="relative flex justify-center items-center gap-28 min-h-screen lg:flex-cols-[1.05fr_1fr]">
         {/* ══════════════ LEFT — brand / visual panel ══════════════ */}
         <aside className="relative hidden overflow-hidden lg:flex lg:flex-col lg:justify-between lg:p-12 xl:p-14">
           <div className="relative z-10 flex h-full flex-col">
@@ -190,7 +190,7 @@ export default async function LoginPage({
         <main className="relative flex min-h-screen items-center justify-center px-5 py-12 sm:px-8">
           <ThemeToggle className="absolute right-4 top-4 z-20 size-9 rounded-full border border-white/15 bg-white/10 text-indigo-100 shadow-sm backdrop-blur-md transition-colors hover:bg-white/20 hover:text-white dark:border-white/15 dark:bg-white/10 dark:text-indigo-100 dark:hover:bg-white/20 dark:hover:text-white" />
 
-          <div className="relative w-full max-w-md animate-fade-in">
+          <div className="relative w-full max-w-md mt-10 animate-fade-in">
             {/* Brand lockup — shown on small screens only, where the left
                 visual panel is hidden. */}
             <div className="mb-6 flex items-center gap-3 lg:hidden">

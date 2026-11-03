@@ -6,12 +6,25 @@ import { AboutValues } from "@/app/components/about/AboutValues";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { getAbout } from "@/lib/api/about";
+import { getSiteSettings } from "@/lib/api/settings";
+import { getPageSeo } from "@/lib/api/seo";
+import { buildMetadata } from "@/lib/seo/metadata";
 
-export const metadata = {
-  title: "About — Ethian Dev",
-  description:
-    "Full Stack Developer with 3+ years experience building scalable web applications.",
-};
+export async function generateMetadata() {
+  const [settings, seo] = await Promise.all([
+    getSiteSettings(),
+    getPageSeo("about"),
+  ]);
+
+  return buildMetadata({
+    path: "/about",
+    title: "About",
+    description:
+      "Full Stack Developer with 3+ years experience building scalable web applications.",
+    seo,
+    siteSeo: settings.seo,
+  });
+}
 
 export default async function AboutPage() {
   // Cached 60s under tag "about"; last-good-on-failure; demo data on build.

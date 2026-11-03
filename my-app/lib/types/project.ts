@@ -24,6 +24,17 @@ export interface Project {
   color: string
   featured?: boolean
   isPlaceholder?: boolean   // true = "coming soon" card
+  /** URL slug (backend-generated; optional for legacy records). */
+  slug?: string
+  /** Per-project SEO overrides. */
+  seo?: {
+    metaTitle?: string
+    metaDescription?: string
+    ogImage?: string
+    canonicalUrl?: string
+    noindex?: boolean
+    nofollow?: boolean
+  }
 }
 
 // What the service always returns — demo or real API
