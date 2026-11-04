@@ -12,7 +12,7 @@ function Bar({ className }: { className: string }) {
  */
 export default function PublicLoading() {
   return (
-    <div className="min-h-screen bg-white dark:bg-zinc-950">
+    <div className="min-h-screen">
       {/* Hero */}
       <section className="max-w-6xl mx-auto px-4 pt-16 md:pt-24 pb-14 md:pb-20">
         <div className="flex flex-col-reverse md:flex-row items-center justify-between gap-12 md:gap-8">

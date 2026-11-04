@@ -23,8 +23,6 @@ import { useCurrentUser } from "@/app/components/dashboard/useCurrentUser";
 import { ROLE_LABELS } from "@/lib/types/user";
 import { BrandSettings } from "./BrandSettings";
 import { SocialSettings } from "./SocialSettings";
-import { SeoSettings } from "./SeoSettings";
-import { PageSeoSettings } from "./PageSeoSettings";
 
 const emptySubscribe = () => () => {};
 
@@ -155,12 +153,6 @@ export default function SettingsPage() {
 
         {/* ── Shared social links (dynamically add/remove) ── */}
         <SocialSettings />
-
-        {/* ── Global SEO defaults (title, OG, canonical origin) ── */}
-        <SeoSettings />
-
-        {/* ── Per static-page SEO overrides ── */}
-        <PageSeoSettings />
 
         {/* ── Appearance ── */}
         <section className="rounded-2xl border border-zinc-200 bg-white p-4 sm:p-5 dark:border-zinc-800 dark:bg-zinc-900">

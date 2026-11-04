@@ -74,7 +74,7 @@ export default async function BlogPostPage({ params }: Props) {
     .filter(Boolean);
 
   return (
-    <div className="min-h-screen bg-white dark:bg-zinc-950">
+    <div className="min-h-screen">
       <JsonLd data={blogPosting} />
       <article className="max-w-3xl mx-auto px-4 py-16 md:py-24">
         {/* Back */}

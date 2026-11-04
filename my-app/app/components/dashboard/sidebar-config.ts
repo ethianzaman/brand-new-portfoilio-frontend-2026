@@ -8,6 +8,7 @@ import {
   Inbox,
   LayoutDashboard,
   Mail,
+  Search,
   Settings,
   UserCog,
   Users,
@@ -49,6 +50,12 @@ export const sidebarSections: SidebarSection[] = [
       { href: "/dashboard/pages/services", label: "Services", icon: Briefcase },
       { href: "/dashboard/pages/blog", label: "Blogs", icon: FileText },
       { href: "/dashboard/pages/contact", label: "Contact", icon: Mail }
+    ],
+  },
+  {
+    label: "SEO",
+    links: [
+      { href: "/dashboard/pages/seo", label: "SEO", icon: Search },
     ],
   },
   {

@@ -28,7 +28,7 @@ export default async function  ContactPage() {
   const contactData = await getContact()
   const {info, faqs} = contactData
   return (
-    <div className="min-h-screen bg-white dark:bg-zinc-950">
+    <div className="min-h-screen">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 py-12 sm:py-16 md:py-24">
 
         {/* ── Header — same pattern as all other pages ── */}
