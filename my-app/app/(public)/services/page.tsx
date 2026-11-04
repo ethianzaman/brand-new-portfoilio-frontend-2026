@@ -84,6 +84,7 @@
 
 
 import { Briefcase, Wrench } from "lucide-react";
+import { SectionHeader } from "@/app/components/SectionHeader";
 import { ServicesGrid } from "../../components/services/ServicesGrid";
 import { ServicesCTA } from "../../components/services/ServicesCTA";
 import { getServices } from "@/lib/api/services";
@@ -108,8 +109,6 @@ export async function generateMetadata() {
   });
 }
 
-const enter = (ms: number) => ({ animationDelay: `${ms}ms` });
-
 export default async function ServicesPage() {
   // Cached 60s under tag "services"; last-good-on-failure; demo data on build.
   const services = await getServices();
@@ -132,41 +131,14 @@ export default async function ServicesPage() {
     <div className="relative isolate min-h-screen overflow-x-clip">
       <div className="max-w-6xl mx-auto px-4 py-16 md:py-24">
         {/* Header */}
-        <div className="mb-14 max-w-2xl">
-          <div
-            className="animate-fade-up flex items-center gap-3 mb-4"
-            style={enter(0)}
-          >
-            <div
-              className="w-10 h-10 rounded-xl bg-indigo-50 dark:bg-indigo-950
-                         flex items-center justify-center"
-            >
-              <Briefcase className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
-            </div>
-            <span
-              className="text-sm font-medium text-indigo-600 dark:text-indigo-400
-                         uppercase tracking-wider"
-            >
-              What I offer
-            </span>
-          </div>
-
-          <h1
-            className="animate-fade-up text-4xl sm:text-5xl font-bold
-                       text-zinc-900 dark:text-white mb-4"
-            style={enter(100)}
-          >
-            Services
-          </h1>
-          <p
-            className="animate-fade-up text-lg text-zinc-500 dark:text-zinc-400 leading-relaxed"
-            style={enter(200)}
-          >
-            From a simple landing page to a complete web application with
-            authentication, database and admin panel — I handle the full stack
-            so you don&apos;t have to juggle multiple developers.
-          </p>
-        </div>
+        <SectionHeader
+          className="mb-14 max-w-2xl"
+          icon={Briefcase}
+          socialPlacement="services"
+          eyebrow="What I offer"
+          title="Services"
+          description="From a simple landing page to a complete web application with authentication, database and admin panel — I handle the full stack so you don't have to juggle multiple developers."
+        />
 
         {/* Services grid */}
         <ServicesGrid services={services} />

@@ -1,7 +1,7 @@
 "use client";
 
-import { Zap } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { SidebarBrand } from "./SidebarBrand";
 import { SidebarNav } from "./SidebarNav";
 
 type Props = {
@@ -28,19 +28,7 @@ export function Sidebar({ collapsed }: Props) {
           collapsed ? "justify-center px-0" : "px-4",
         )}
       >
-        <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-linear-to-br from-indigo-500 to-purple-600 shadow-lg shadow-indigo-600/30">
-          <Zap className="h-4 w-4 fill-white text-white" />
-        </span>
-        {!collapsed && (
-          <span className="min-w-0">
-            <span className="block truncate text-sm font-bold leading-none">
-              EthianCMS
-            </span>
-            <span className="mt-1 block text-[10px] text-zinc-500">
-              Admin Panel
-            </span>
-          </span>
-        )}
+        <SidebarBrand collapsed={collapsed} />
       </div>
 
       <SidebarNav collapsed={collapsed} />

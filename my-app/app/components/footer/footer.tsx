@@ -1,8 +1,10 @@
 import Link from "next/link";
+import Reveal from "@/app/components/motion/Reveal";
 import { Mail, Phone, MapPin, ArrowRight } from "lucide-react";
 import { footerConfig } from "./footer-config";
 import { BrandMark } from "../brand/BrandMark";
 import { SocialIcon } from "../brand/SocialIcon";
+import { resolveSocials } from "@/lib/socials";
 import type { SiteSettings } from "@/lib/types/settings";
 import { getServices } from "@/lib/api/services";
 import { getContact } from "@/lib/api/contact";
@@ -15,7 +17,7 @@ const FOOTER_STACK_LIMIT = 8;
 export async function Footer({ settings }: { settings: SiteSettings }) {
   const { brand, pages } = footerConfig;
   const { name: brandName, logo } = settings.brand;
-  const socials = settings.socials;
+  const socials = resolveSocials(settings, "footer");
   // Reuse the public sections' own data sources so the footer can never drift
   // from the /services, /contact and /skills pages. Cached under the same
   // `services` / `contact` / `skills` tags and refreshed by the backend's
@@ -36,7 +38,7 @@ export async function Footer({ settings }: { settings: SiteSettings }) {
     <footer className="bg-zinc-950 text-zinc-400 border-t border-zinc-900">
       {/* ── Top Section: CTA ── */}
       <div className="max-w-7xl mx-auto px-6 py-12 border-b border-zinc-900">
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-8">
+        <Reveal className="flex flex-col md:flex-row justify-between items-start md:items-center gap-8">
           <div>
             <h2 className="text-2xl font-bold text-white mb-2">
               Ready to start a project?
@@ -48,19 +50,19 @@ export async function Footer({ settings }: { settings: SiteSettings }) {
           </div>
           <Link
             href="/contact"
-            className="group flex items-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white px-6 py-3 rounded-xl transition-all font-medium"
+            className="btn-shine group flex items-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white px-6 py-3 rounded-xl transition-all font-medium"
           >
             Get in touch
             <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
           </Link>
-        </div>
+        </Reveal>
       </div>
 
       {/* ── Middle Section: Links ── */}
       <div className="max-w-7xl mx-auto px-6 py-12 md:py-16">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-12">
           {/* Brand Column */}
-          <div className="flex flex-col gap-6">
+          <Reveal className="flex flex-col gap-6">
             <div className="flex items-center gap-2.5">
               <div className="w-9 h-9 rounded-xl bg-indigo-600 flex items-center justify-center overflow-hidden">
                 <BrandMark
@@ -76,23 +78,23 @@ export async function Footer({ settings }: { settings: SiteSettings }) {
             </div>
             <p className="text-sm leading-relaxed">{brand.bio}</p>
             <div className="flex gap-3">
-              {socials.map(({ label, href, icon }) => (
+              {socials.map(({ id, label, href, icon, imageUrl }) => (
                 <a
-                  key={`${label}-${href}`}
+                  key={id}
                   href={href}
                   target="_blank"
                   rel="noopener noreferrer"
                   aria-label={label}
                   className="w-10 h-10 rounded-lg bg-zinc-900 border border-zinc-800 flex items-center justify-center hover:border-indigo-500 hover:text-white transition-all"
                 >
-                  <SocialIcon icon={icon} className="w-5 h-5" />
+                  <SocialIcon icon={icon} imageUrl={imageUrl} className="w-5 h-5" />
                 </a>
               ))}
             </div>
-          </div>
+          </Reveal>
 
           {/* Quick Links */}
-          <div>
+          <Reveal delay={90}>
             <h3 className="text-white font-semibold mb-6">Navigation</h3>
             <ul className="space-y-4">
               {pages.map((page) => (
@@ -107,10 +109,10 @@ export async function Footer({ settings }: { settings: SiteSettings }) {
                 </li>
               ))}
             </ul>
-          </div>
+          </Reveal>
 
           {/* Services */}
-          <div>
+          <Reveal delay={180}>
             <h3 className="text-white font-semibold mb-6">Services</h3>
             <ul className="space-y-4 text-sm">
               {services.map((service) => (
@@ -124,10 +126,10 @@ export async function Footer({ settings }: { settings: SiteSettings }) {
                 </li>
               ))}
             </ul>
-          </div>
+          </Reveal>
 
           {/* Contact Info */}
-          <div className="flex flex-col gap-6">
+          <Reveal delay={270} className="flex flex-col gap-6">
             <h3 className="text-white font-semibold">Contact</h3>
             <ul className="space-y-4 text-sm">
               <li className="flex items-center gap-3">
@@ -154,7 +156,7 @@ export async function Footer({ settings }: { settings: SiteSettings }) {
                 </span>
               ))}
             </div>
-          </div>
+          </Reveal>
         </div>
       </div>
 

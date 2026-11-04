@@ -1,9 +1,12 @@
+import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { BarChart3, Inbox, Layers, ShieldCheck } from "lucide-react";
 
 import { getSiteSettings } from "@/lib/api/settings";
 import { DEFAULT_DASHBOARD_PATH, safeReturnUrl } from "@/lib/auth/return-url";
+import { verifyCurrentUser } from "@/lib/services/current-user.service";
 
 import { BrandMark } from "../components/brand/BrandMark";
 import { ThemeToggle } from "../components/ThemeToggle";
@@ -12,9 +15,11 @@ import { LoginForm } from "./LoginForm";
 // ─────────────────────────────────────────────────────────────────────────
 //  LOGIN PAGE — PUBLIC.
 //
-//  Anyone may open /login; it is never behind the dashboard guard. An
-//  already-authenticated visitor is sent on to the dashboard by the form
-//  itself, once the session has been verified against the backend.
+//  Anyone may open /login; it is never behind the dashboard guard. A visitor
+//  with a verified session is redirected here on the server, before the form
+//  renders. Only an "authenticated" result redirects: expired sessions, disabled
+//  accounts and an unreachable backend all keep the form, so the dashboard guard
+//  can never bounce them back into a redirect loop.
 //
 //  `returnUrl` is untrusted query-string input, so it is validated HERE, on
 //  the server, before it is ever handed to the browser. Anything that is not
@@ -30,6 +35,10 @@ import { LoginForm } from "./LoginForm";
 //  On phones the visual panel collapses into a banner above the form so the
 //  page keeps the same identity without stealing vertical space.
 // ─────────────────────────────────────────────────────────────────────────
+
+export const metadata: Metadata = {
+  robots: { index: false, follow: false },
+};
 
 /**
  * Decorative artwork for the visual panel. It carries no information, so it
@@ -73,6 +82,9 @@ export default async function LoginPage({
   const redirectTo =
     safeReturnUrl(typeof raw === "string" ? raw : null) ??
     DEFAULT_DASHBOARD_PATH;
+
+  const { status } = await verifyCurrentUser();
+  if (status === "authenticated") redirect(redirectTo);
 
   // Never throws — the settings API falls back to a neutral brand.
   const settings = await getSiteSettings();

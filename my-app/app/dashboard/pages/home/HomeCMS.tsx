@@ -10,12 +10,12 @@ import {
   Image as ImageIcon,
   FileText,
   Loader2,
-  Link2,
 } from "lucide-react";
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { LabeledInput, LabeledTextarea } from "@/components/ui/LabeledInputs";
 import { toast } from "sonner";
-import { HomeData, HomeStat, HomeSocial } from "@/lib/types/hero";
+import { HomeData, HomeStat } from "@/lib/types/hero";
 import { useHomeQuery, usePublishHero, usePublishStats } from "./useHomeMutations";
 import { cn } from "@/lib/utils";
 import { inputCls, labelCls } from "@/components/ui/shared";
@@ -33,33 +33,6 @@ type HeroForm = {
 };
 
 // Same rule the backend enforces (home.controller.ts isValidUrl).
-const HREF_RE = /^(https?:\/\/|mailto:|tel:|#|\/)/;
-
-/**
- * Prepare social rows for publish.
- *
- * - rows where nothing is typed are leftovers from "Add link" → drop silently
- * - half-filled rows or hrefs without a protocol would be rejected (or
- *   silently dropped) by the backend AFTER the optimistic write, which made
- *   the link "never get added" from the user's point of view → block publish
- *   with a precise message instead
- *
- * Returns the cleaned list, or an error message to show in a toast.
- */
-function sanitizeSocials(list: HomeSocial[]): HomeSocial[] | string {
-  const filled = list.filter((s) => s.label.trim() || s.href.trim());
-  for (let i = 0; i < filled.length; i++) {
-    const label = filled[i].label.trim();
-    const href = filled[i].href.trim();
-    if (!label || !href) {
-      return `Social link #${i + 1}: fill in both the label and the URL (or delete the row)`;
-    }
-    if (!HREF_RE.test(href)) {
-      return `Social link "${label}": URL must start with https:// (e.g. https://github.com/you)`;
-    }
-  }
-  return filled.map((s) => ({ label: s.label.trim(), href: s.href.trim() }));
-}
 
 // ── Toggle (URL / UPLOAD) ───────────────────────────────────
 function ModeToggle({
@@ -112,7 +85,6 @@ export function HomeCMS({ initial }: { initial: HomeData }) {
     resumeMode: "url",
     resumeFile: null,
   }));
-  const [socials, setSocials] = useState<HomeSocial[]>(initial.hero.socials);
   const [titles, setTitles] = useState<string[]>(
     initial.hero.titles?.length ? initial.hero.titles : [],
   );
@@ -158,18 +130,12 @@ export function HomeCMS({ initial }: { initial: HomeData }) {
       return;
     }
 
-    const cleanSocials = sanitizeSocials(socials);
-    if (typeof cleanSocials === "string") {
-      toast.error(cleanSocials);
-      return;
-    }
     const cleanTitles = titles.map((t) => t.trim()).filter(Boolean);
 
     const formData = new FormData();
     formData.append("name", hero.name.trim());
     formData.append("title", hero.title.trim());
     formData.append("bio", hero.bio.trim());
-    formData.append("socials", JSON.stringify(cleanSocials));
     formData.append("titles", JSON.stringify(cleanTitles));
 
     if (hero.imageMode === "upload" && hero.imageFile) {
@@ -186,7 +152,6 @@ export function HomeCMS({ initial }: { initial: HomeData }) {
 
     // Snapshot for local rollback if the request fails.
     const previousHero = hero;
-    const previousSocials = socials;
     const previousTitles = titles;
 
     publishHero.mutate(
@@ -199,7 +164,6 @@ export function HomeCMS({ initial }: { initial: HomeData }) {
           bio: hero.bio.trim(),
           image: hero.image || null,
           resumeUrl: hero.resumeUrl.trim(),
-          socials: cleanSocials,
           titles: cleanTitles,
         },
       },
@@ -217,14 +181,12 @@ export function HomeCMS({ initial }: { initial: HomeData }) {
             resumeMode: "url",
             resumeFile: null,
           }));
-          // Always adopt the server's arrays — including when they became
-          // EMPTY (deleting every row used to leave stale rows in the form).
-          setSocials(updatedHero.socials ?? []);
+          // Always adopt the server's array — including when it became EMPTY
+          // (deleting every row used to leave stale rows in the form).
           setTitles(updatedHero.titles ?? []);
         },
         onError: () => {
           setHero(previousHero);
-          setSocials(previousSocials);
           setTitles(previousTitles);
         },
       },
@@ -406,77 +368,17 @@ export function HomeCMS({ initial }: { initial: HomeData }) {
           </div>
 
           {/* Socials */}
-          <div className="flex flex-col gap-3">
-            <div className="flex items-center justify-between">
-              <label className={labelCls}>
-                Social Links{" "}
-                <span className="text-zinc-400 normal-case font-normal">
-                  (github / linkedin / twitter ...)
-                </span>
-              </label>
-              <button
-                type="button"
-                onClick={() =>
-                  setSocials((prev) => [
-                    ...prev,
-                    { label: "", href: "" },
-                  ])
-                }
-                className="flex items-center gap-1 text-xs font-medium text-indigo-600 dark:text-indigo-400 hover:underline"
-              >
-                <Plus className="w-3.5 h-3.5" /> Add link
-              </button>
-            </div>
-            {socials.length === 0 && (
-              <p className="text-xs text-zinc-400">
-                No social links yet — add one to show icons in the hero.
-              </p>
-            )}
-            {socials.map((social, i) => (
-              <div key={i} className="flex flex-col sm:flex-row gap-2.5 sm:items-center">
-                <Link2 className="hidden sm:block w-4 h-4 text-zinc-400 shrink-0" />
-                <input
-                  type="text"
-                  placeholder="Label (e.g. github)"
-                  value={social.label}
-                  onChange={(e) =>
-                    setSocials((prev) =>
-                      prev.map((s, idx) =>
-                        idx === i ? { ...s, label: e.target.value } : s,
-                      ),
-                    )
-                  }
-                  className={cn(inputCls, "sm:w-40 sm:shrink-0")}
-                />
-                <input
-                  type="text"
-                  placeholder="https://..."
-                  value={social.href}
-                  onChange={(e) =>
-                    setSocials((prev) =>
-                      prev.map((s, idx) =>
-                        idx === i ? { ...s, href: e.target.value } : s,
-                      ),
-                    )
-                  }
-                  className={cn(inputCls, "min-w-0 flex-1")}
-                />
-                {canDelete && (
-                  <button
-                    type="button"
-                    onClick={() =>
-                      setSocials((prev) =>
-                        prev.filter((_, idx) => idx !== i),
-                      )
-                    }
-                    className="self-start sm:self-auto p-2 shrink-0 rounded-lg text-zinc-500 dark:text-zinc-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-950 transition-colors"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
-                )}
-              </div>
-            ))}
-          </div>
+          <p className="text-xs text-zinc-500 dark:text-zinc-400">
+            Social links are managed in{" "}
+            <Link
+              href="/dashboard/pages/social-links"
+              className="font-medium text-indigo-600 hover:underline dark:text-indigo-400"
+            >
+              Social Links
+            </Link>
+            .
+          </p>
+
         {/* Typing Titles */}
           <div className="flex flex-col gap-3">
             <div className="flex items-center justify-between">

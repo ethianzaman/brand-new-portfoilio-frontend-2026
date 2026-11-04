@@ -1,4 +1,5 @@
 import { ExternalLink, Clock, ImageIcon } from "lucide-react";
+import SpotlightCard from "@/app/components/motion/SpotlightCard";
 import { GithubIcon } from "../icon/brandIcons";
 import { cn } from "@/lib/utils";
 import { Project } from "@/lib/types/project";
@@ -7,9 +8,9 @@ export function ProjectCard({ project }: { project: Project }) {
   const isPlaceholder = project.isPlaceholder;
 
   return (
-    <div
+    <SpotlightCard
       className={cn(
-        "group relative flex flex-col rounded-2xl overflow-hidden",
+        "rounded-2xl",
         "bg-white dark:bg-zinc-900",
         "border border-zinc-200 dark:border-zinc-800",
         "transition-all duration-300",
@@ -168,6 +169,6 @@ export function ProjectCard({ project }: { project: Project }) {
           </div>
         )}
       </div>
-    </div>
+    </SpotlightCard>
   );
 }

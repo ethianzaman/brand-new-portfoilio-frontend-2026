@@ -310,17 +310,15 @@ import {
   Sparkles,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import {
-  GithubIcon,
-  LinkedinIcon,
-  TwitterIcon,
-} from "@/app/components/icon/brandIcons";
 import { getHeroData } from "@/lib/api/home";
 import { getSkills } from "@/lib/api/skills";
 import HeroTypewriter from "@/app/components/HeroTypeWritter";
-import Reveal from "@/app/components/home/Reveal";
-import CountUp from "@/app/components/home/CountUp";
-import SpotlightCard from "@/app/components/home/SpotlightCard";
+import { SocialIcon } from "@/app/components/brand/SocialIcon";
+import { getSiteSettings } from "@/lib/api/settings";
+import { legacySocial, resolveSocials } from "@/lib/socials";
+import Reveal from "@/app/components/motion/Reveal";
+import CountUp from "@/app/components/motion/CountUp";
+import SpotlightCard from "@/app/components/motion/SpotlightCard";
 import type { SkillCategory } from "@/lib/types/skill";
 
 const categoryIcons: Record<string, ComponentType<{ className?: string }>> = {
@@ -332,18 +330,15 @@ const categoryIcons: Record<string, ComponentType<{ className?: string }>> = {
   "big data": Cpu,
 };
 
-const socialIcons: Record<string, ComponentType<{ className?: string }>> = {
-  github: GithubIcon,
-  linkedin: LinkedinIcon,
-  twitter: TwitterIcon,
-};
-
 const enter = (ms: number) => ({ animationDelay: `${ms}ms` });
 
 export default async function HomeHero() {
   // 60s ISR + tag "home", 5s timeout, last-good-on-failure, demo data on build.
-  const data = await getHeroData();
+  const [data, settings] = await Promise.all([getHeroData(), getSiteSettings()]);
   const hero = data.hero;
+  const socials = settings.socialsConfigured
+    ? resolveSocials(settings, "homeHero")
+    : hero.socials.map(({ label, href }) => legacySocial(label, href));
 
   const skillsData: SkillCategory[] = await getSkills();
   const resumeHref = hero.resumeUrl;
@@ -439,27 +434,28 @@ export default async function HomeHero() {
                 </Button>
               </div>
 
+              {socials.length > 0 && (
               <div
                 className="animate-fade-up flex items-center gap-3"
                 style={enter(500)}
               >
                 <span className="text-sm text-zinc-400">Find me on</span>
-                {hero.socials.map(({ href, label }) => {
-                  const Icon = socialIcons[label?.toLowerCase()] ?? Globe;
+                {socials.map(({ id, href, label, icon, imageUrl }) => {
                   return (
                     <a
-                      key={href || label}
+                      key={id}
                       href={href}
                       target="_blank"
                       rel="noopener noreferrer"
                       aria-label={label}
                       className="rounded-xl border border-transparent p-2 text-zinc-500 transition-all duration-200 hover:-translate-y-0.5 hover:border-indigo-100 hover:bg-indigo-50 hover:text-indigo-600 dark:text-zinc-400 dark:hover:border-indigo-900 dark:hover:bg-indigo-950 dark:hover:text-indigo-300"
                     >
-                      <Icon className="h-5 w-5" />
+                      <SocialIcon icon={icon} imageUrl={imageUrl} className="h-5 w-5" />
                     </a>
                   );
                 })}
               </div>
+              )}
             </div>
 
             {/* Right: portrait */}
@@ -467,7 +463,7 @@ export default async function HomeHero() {
             <div className="shrink-0 w-56 h-56 sm:w-64 sm:h-64 md:w-72 md:h-72 lg:w-80 lg:h-80">
               <div className="relative w-full h-full">
                 {/* Decorative spinning ring */}
-                <div className="absolute inset-0 rounded-full border-2 border-dashed border-indigo-200 dark:border-indigo-800 animate-[spin_10s_linear_infinite]" />
+                <div className="absolute inset-0 rounded-full border-2 border-dashed border-indigo-200 dark:border-indigo-800 animate-[spin_10s_linear_infinite] motion-reduce:animate-none" />
 
                 {/* Inner Circle Border */}
                 <div className="absolute inset-3 rounded-full border-2 border-indigo-100 dark:border-indigo-900" />

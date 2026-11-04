@@ -15,6 +15,7 @@ import { Menu, X } from "lucide-react";
 import { navLinks } from "./nav-config";
 import { BrandMark } from "../brand/BrandMark";
 import { SocialIcon } from "../brand/SocialIcon";
+import { resolveSocials } from "@/lib/socials";
 import type { SiteSettings } from "@/lib/types/settings";
 
 export function MobileMenu({
@@ -25,7 +26,7 @@ export function MobileMenu({
   isAuthenticated: boolean;
 }) {
   const { name, tagline, logo } = settings.brand;
-  const { socials } = settings;
+  const socials = resolveSocials(settings, "mobileMenu");
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
 
@@ -133,14 +134,15 @@ export function MobileMenu({
           <Separator className="mx-3 bg-zinc-100 dark:bg-zinc-800" />
 
           {/* Social links */}
+          {socials.length > 0 && (
           <div className="p-4">
             <p className="text-xs text-zinc-400 dark:text-zinc-500 uppercase tracking-wider mb-3 px-1">
               Find me on
             </p>
             <div className="flex flex-wrap gap-2">
-              {socials.map(({ href, label, icon }) => (
+              {socials.map(({ id, href, label, icon, imageUrl }) => (
                 <a
-                  key={`${label}-${href}`}
+                  key={id}
                   href={href}
                   target="_blank"
                   rel="noreferrer"
@@ -152,12 +154,13 @@ export function MobileMenu({
                              hover:text-zinc-900 dark:hover:text-white
                              transition-colors"
                 >
-                  <SocialIcon icon={icon} className="w-4 h-4" />
+                  <SocialIcon icon={icon} imageUrl={imageUrl} className="w-4 h-4" />
                   <span className="hidden sm:block">{label}</span>
                 </a>
               ))}
             </div>
           </div>
+          )}
 
           {/* CTA */}
           <div className="p-4 pt-0">

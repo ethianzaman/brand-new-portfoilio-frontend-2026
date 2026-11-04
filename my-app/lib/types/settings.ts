@@ -1,3 +1,5 @@
+import type { SocialPlacementMap } from "@/lib/socials";
+
 export type SiteLogoType = "icon" | "image";
 
 export interface SiteBrandLogo {
@@ -14,11 +16,20 @@ export interface SiteBrand {
   logo: SiteBrandLogo;
 }
 
+export type SocialIconType = "icon" | "image";
+
 export interface SiteSocial {
+  /** Stable id that sections refer to. */
+  id: string;
   label: string;
   href: string;
   /** Icon key rendered by `SocialIcon` (see `app/components/brand/SocialIcon`). */
   icon: string;
+  iconType: SocialIconType;
+  /** Cloudinary URL of the uploaded logo. Empty unless `iconType` is "image". */
+  imageUrl: string;
+  /** Optional one-liner, shown where a section has room for it. */
+  description: string;
 }
 
 /**
@@ -44,6 +55,10 @@ export interface SiteSettings {
   id?: string;
   _id?: string;
   brand: SiteBrand;
+  /** The social link library. Sections pick from it through `socialPlacements`. */
   socials: SiteSocial[];
+  socialPlacements?: Partial<SocialPlacementMap>;
+  /** False until the old per-section lists have been merged into the library. */
+  socialsConfigured?: boolean;
   seo?: SiteSeo;
 }

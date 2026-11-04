@@ -123,7 +123,7 @@
 
 import { Briefcase } from 'lucide-react'
 import { Experience } from '@/lib/types/about'
-import Reveal from '@/app/components/home/Reveal'
+import Reveal from '@/app/components/motion/Reveal'
 
 export function AboutExperience({ experiences }: { experiences: Experience[] }) {
   return (

@@ -77,7 +77,7 @@ import {
   Shield, RefreshCw, MessageSquare,
 } from 'lucide-react'
 import { Value } from '@/lib/types/about'
-import Reveal from '@/app/components/home/Reveal'
+import Reveal from '@/app/components/motion/Reveal'
 
 const ICON_MAP: Record<string, React.ElementType> = {
   Code2, Zap, Users, Shield, RefreshCw, MessageSquare,

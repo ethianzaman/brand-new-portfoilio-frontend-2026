@@ -200,7 +200,7 @@ import { AboutHero } from "@/app/components/about/AboutHero";
 import { AboutExperience } from "@/app/components/about/AboutExperience";
 import { AboutEducation } from "@/app/components/about/AboutEducation";
 import { AboutValues } from "@/app/components/about/AboutValues";
-import Reveal from "@/app/components/home/Reveal";
+import Reveal from "@/app/components/motion/Reveal";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { getAbout } from "@/lib/api/about";

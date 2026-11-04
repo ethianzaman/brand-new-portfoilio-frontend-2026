@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import Reveal from "@/app/components/motion/Reveal";
 import Link from "next/link";
 import { ArrowLeft, Clock3, CalendarDays, Tag } from "lucide-react";
 import { getBlogPostBySlug } from "@/lib/api/blog";
@@ -78,6 +79,7 @@ export default async function BlogPostPage({ params }: Props) {
       <JsonLd data={blogPosting} />
       <article className="max-w-3xl mx-auto px-4 py-16 md:py-24">
         {/* Back */}
+        <Reveal>
         <Link
           href="/blog"
           className="inline-flex items-center gap-2 text-sm font-medium
@@ -88,9 +90,10 @@ export default async function BlogPostPage({ params }: Props) {
           <ArrowLeft className="w-4 h-4" />
           Back to blog
         </Link>
+        </Reveal>
 
         {/* Meta */}
-        <div className="flex items-center gap-3 mt-8 flex-wrap">
+        <Reveal delay={100} className="flex items-center gap-3 mt-8 flex-wrap">
           <span
             className="px-3 py-1 rounded-full text-xs font-semibold
                        bg-indigo-50 dark:bg-indigo-950
@@ -106,9 +109,10 @@ export default async function BlogPostPage({ params }: Props) {
             <Clock3 className="w-3.5 h-3.5" />
             {post.readTime} min read
           </span>
-        </div>
+        </Reveal>
 
         {/* Title */}
+        <Reveal delay={200}>
         <h1
           className="text-3xl sm:text-4xl md:text-5xl font-bold
                      text-zinc-900 dark:text-white mt-4 leading-tight"
@@ -118,17 +122,18 @@ export default async function BlogPostPage({ params }: Props) {
         <p className="text-lg text-zinc-500 dark:text-zinc-400 mt-4 leading-relaxed">
           {post.excerpt}
         </p>
+        </Reveal>
 
         {/* Cover */}
         {post.coverImage && (
-          <div className="mt-8 rounded-2xl overflow-hidden border border-zinc-200 dark:border-zinc-800">
+          <Reveal delay={300} className="mt-8 rounded-2xl overflow-hidden border border-zinc-200 dark:border-zinc-800">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={post.coverImage}
               alt={post.title}
-              className="w-full max-h-[420px] object-cover"
+              className="w-full max-h-105 object-cover"
             />
-          </div>
+          </Reveal>
         )}
 
         {/* Body */}

@@ -290,7 +290,7 @@ export function ContactForm() {
           onChange={(e) => setForm((f) => ({ ...f, message: e.target.value }))}
           className={cn(
             inputClass(errors.message),
-            "resize-none min-h-[140px] sm:min-h-[160px]",
+            "resize-none min-h-35 sm:min-h-40",
           )}
         />
       </Field>
@@ -313,8 +313,8 @@ export function ContactForm() {
       <button
         type="submit"
         disabled={state === "loading"}
-        className="flex items-center justify-center gap-2
-                   w-full min-h-[48px] py-3 rounded-xl
+        className="btn-shine flex items-center justify-center gap-2
+                   w-full min-h-12 py-3 rounded-xl
                    bg-indigo-600 hover:bg-indigo-700
                    disabled:opacity-60 disabled:cursor-not-allowed
                    text-white font-medium text-sm

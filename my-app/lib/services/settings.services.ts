@@ -1,5 +1,6 @@
 import { dashboardApiUrl } from "@/lib/api/config";
-import type { SiteSeo, SiteSettings, SiteSocial } from "@/lib/types/settings";
+import type { SocialPlacementMap } from "@/lib/socials";
+import type { SiteSeo, SiteSettings } from "@/lib/types/settings";
 
 /**
  * DASHBOARD access for the global site settings.
@@ -46,14 +47,9 @@ export async function dashboardUpdateSettings(
   return data.settings as SiteSettings;
 }
 
-// ── SOCIALS (replace the whole list) ─────────────────────────────────────────
-export async function dashboardUpdateSettingsSocials(
-  socials: SiteSocial[],
-): Promise<SiteSettings> {
-  const res = await fetch(`${SETTINGS_URL}/socials`, {
-    method: "PUT",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ socials }),
+async function sendSettings(path: string, init: RequestInit): Promise<SiteSettings> {
+  const res = await fetch(`${SETTINGS_URL}${path}`, {
+    ...init,
     credentials: "include",
   });
 
@@ -66,6 +62,36 @@ export async function dashboardUpdateSettingsSocials(
 
   const data = await res.json();
   return data.settings as SiteSettings;
+}
+
+// ── SOCIAL LINK LIBRARY ──────────────────────────────────────────────────
+export function dashboardSetupSocialLibrary(): Promise<SiteSettings> {
+  return sendSettings("/socials/setup", { method: "POST" });
+}
+
+/** FormData, so a link can carry an uploaded logo. */
+export function dashboardSaveSocial(
+  id: string | undefined,
+  formData: FormData,
+): Promise<SiteSettings> {
+  return sendSettings(id ? `/socials/${encodeURIComponent(id)}` : "/socials", {
+    method: id ? "PUT" : "POST",
+    body: formData,
+  });
+}
+
+export function dashboardDeleteSocial(id: string): Promise<SiteSettings> {
+  return sendSettings(`/socials/${encodeURIComponent(id)}`, { method: "DELETE" });
+}
+
+export function dashboardUpdateSocialPlacements(
+  placements: SocialPlacementMap,
+): Promise<SiteSettings> {
+  return sendSettings("/social-placements", {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ placements }),
+  });
 }
 
 // ── SEO (global defaults) ────────────────────────────────────────────────────
