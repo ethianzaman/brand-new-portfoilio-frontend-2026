@@ -70,7 +70,7 @@
 'use client'
 import { Service } from '@/lib/types/services'
 import { ServiceCard } from '@/app/components/services/ServiceCard'
-import Reveal from '@/app/components/home/Reveal'
+import Reveal from '@/app/components/motion/Reveal'
 import { useState } from 'react'
 import { ChevronDown, ChevronUp } from 'lucide-react'
 

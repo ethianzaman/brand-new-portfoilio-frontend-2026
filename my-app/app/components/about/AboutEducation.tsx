@@ -87,7 +87,7 @@
 
 import { GraduationCap } from 'lucide-react'
 import { Education } from '@/lib/types/about'
-import Reveal from '@/app/components/home/Reveal'
+import Reveal from '@/app/components/motion/Reveal'
 
 export function AboutEducation({ educations }: { educations: Education[] }) {
   return (

@@ -11,9 +11,21 @@ import { ThemeProvider } from "next-themes";
  * the class-based dark mode and `suppressHydrationWarning` on `<html>` covers
  * the theme class it injects before hydration.
  */
+// next-themes renders an inline <script>. It only needs to run from the server
+// HTML; a script React creates in the browser never executes, and React 19 warns
+// about it unless it is typed as a data block.
+const themeScriptProps = {
+  type: typeof window === "undefined" ? undefined : "application/json",
+};
+
 export function Providers({ children }: { children: React.ReactNode }) {
   return (
-    <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+    <ThemeProvider
+      attribute="class"
+      defaultTheme="system"
+      enableSystem
+      scriptProps={themeScriptProps}
+    >
       {children}
     </ThemeProvider>
   );

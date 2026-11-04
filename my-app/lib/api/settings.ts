@@ -4,6 +4,7 @@ import { publicFetch } from "@/lib/api/core";
 import { TAGS } from "@/lib/api/tags";
 import { DEFAULT_SITE_SETTINGS } from "@/lib/data/settings.default";
 import { normalizeSiteSeo } from "@/lib/seo/metadata";
+import { SOCIAL_PLACEMENTS, type SocialPlacementMap } from "@/lib/socials";
 import type { SiteSeo, SiteSettings, SiteSocial } from "@/lib/types/settings";
 
 /**
@@ -49,6 +50,8 @@ function normalizeSettings(value: unknown): SiteSettings {
       },
     },
     socials: normalizeSocials(settings.socials),
+    socialPlacements: normalizePlacements(settings.socialPlacements),
+    socialsConfigured: settings.socialsConfigured === true,
     seo: normalizeSiteSeo(settings.seo) as SiteSeo,
   };
 }
@@ -58,22 +61,42 @@ function normalizeSocials(value: unknown): SiteSocial[] {
 
   const socials: SiteSocial[] = [];
 
-  for (const item of value) {
+  for (const [index, item] of value.entries()) {
     if (!item || typeof item !== "object") continue;
 
-    const label = (item as SiteSocial).label;
-    const href = (item as SiteSocial).href;
-    const icon = (item as SiteSocial).icon;
+    const { id, label, href, icon, iconType, imageUrl, description } =
+      item as SiteSocial;
 
     if (typeof label !== "string" || typeof href !== "string") continue;
     if (!label.trim() || !href.trim()) continue;
 
+    const logo = iconType === "image" && typeof imageUrl === "string" ? imageUrl : "";
+
     socials.push({
+      id: typeof id === "string" && id ? id : `legacy-${index}`,
       label,
       href,
       icon: typeof icon === "string" && icon ? icon : "link",
+      iconType: logo ? "image" : "icon",
+      imageUrl: logo,
+      description: typeof description === "string" ? description : "",
     });
   }
 
   return socials;
+}
+
+function normalizePlacements(value: unknown): Partial<SocialPlacementMap> {
+  if (!value || typeof value !== "object") return {};
+
+  const placements: Partial<SocialPlacementMap> = {};
+
+  for (const { key } of SOCIAL_PLACEMENTS) {
+    const ids = (value as Record<string, unknown>)[key];
+    if (Array.isArray(ids)) {
+      placements[key] = ids.filter((id): id is string => typeof id === "string");
+    }
+  }
+
+  return placements;
 }

@@ -1,5 +1,6 @@
 'use client'
 import { useState } from 'react'
+import Reveal from "@/app/components/motion/Reveal";
 import { ChevronDown } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { FAQ } from '@/lib/types/contact'
@@ -42,7 +43,7 @@ export function ContactFAQ({ faqs }: ContactFAQProps) {
     <div className="mt-4">
 
       {/* Header */}
-      <div className="mb-6 sm:mb-8">
+      <Reveal className="mb-6 sm:mb-8">
         <h2 className="text-xl sm:text-2xl font-bold text-zinc-900 dark:text-white mb-2">
           Frequently asked questions
         </h2>
@@ -53,13 +54,14 @@ export function ContactFAQ({ faqs }: ContactFAQProps) {
             Just ask.
           </a>
         </p>
-      </div>
+      </Reveal>
 
       {/* FAQ items */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
         {faqs.map((faq, i) => (
-          <div
+          <Reveal
             key={i}
+            delay={(i % 2) * 90}
             className={cn(
               'rounded-2xl border transition-colors duration-200 overflow-hidden',
               open === i
@@ -70,7 +72,7 @@ export function ContactFAQ({ faqs }: ContactFAQProps) {
             <button
               onClick={() => setOpen(open === i ? null : i)}
               className="w-full flex items-center justify-between gap-3 sm:gap-4
-                         px-4 sm:px-5 py-4 text-left min-h-[52px]"
+                         px-4 sm:px-5 py-4 text-left min-h-13"
             >
               <span className={cn(
                 'text-sm font-semibold leading-snug',
@@ -95,7 +97,7 @@ export function ContactFAQ({ faqs }: ContactFAQProps) {
                 </p>
               </div>
             )}
-          </div>
+          </Reveal>
         ))}
       </div>
 

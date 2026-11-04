@@ -70,7 +70,7 @@
 
 import Link from 'next/link'
 import { ArrowRight, MessageCircle } from 'lucide-react'
-import Reveal from '@/app/components/home/Reveal'
+import Reveal from '@/app/components/motion/Reveal'
 
 export function ServicesCTA() {
   return (

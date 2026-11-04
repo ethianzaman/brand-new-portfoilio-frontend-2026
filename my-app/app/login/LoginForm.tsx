@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { toast } from "sonner";
 import {
   ArrowLeft,
@@ -57,26 +57,6 @@ export function LoginForm({ redirectTo }: { redirectTo: string }) {
   // Validated again on the client — the server already did it, but the
   // redirect target is never trusted from a single place.
   const target = safeReturnUrl(redirectTo) ?? DEFAULT_DASHBOARD_PATH;
-
-  // An already-authenticated visitor has no business on the login page.
-  // The session is verified against the backend (GET /api/auth/me), NOT
-  // inferred from the presence of a cookie, so an expired session keeps the
-  // visitor here instead of bouncing them into a redirect loop.
-  useEffect(() => {
-    let active = true;
-
-    fetch("/api/auth/me", { cache: "no-store" })
-      .then((res) => {
-        if (active && res.ok) router.replace(target);
-      })
-      .catch(() => {
-        // Backend unreachable — stay on the login page.
-      });
-
-    return () => {
-      active = false;
-    };
-  }, [router, target]);
 
   function clearError(field: keyof Errors) {
     setErrors((prev) => {

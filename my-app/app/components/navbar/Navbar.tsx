@@ -10,11 +10,12 @@ import { ThemeToggle } from "../ThemeToggle";
 import { BrandMark } from "../brand/BrandMark";
 import { SocialIcon } from "../brand/SocialIcon";
 import { useAuthStatus } from "./useAuthStatus";
+import { resolveSocials } from "@/lib/socials";
 import type { SiteSettings } from "@/lib/types/settings";
 
 export function Navbar({ settings }: { settings: SiteSettings }) {
   const { name, tagline, logo } = settings.brand;
-  const { socials } = settings;
+  const socials = resolveSocials(settings, "navbar");
   const [scrolled, setScrolled] = useState(false);
 
   // The dashboard link is only rendered while a valid session exists. The
@@ -76,9 +77,9 @@ export function Navbar({ settings }: { settings: SiteSettings }) {
           <ThemeToggle />
 
           {/* Social icons */}
-          {socials.map(({ href, label, icon }) => (
+          {socials.map(({ id, href, label, icon, imageUrl }) => (
             <a
-              key={`${label}-${href}`}
+              key={id}
               href={href}
               target="_blank"
               rel="noreferrer"
@@ -88,7 +89,7 @@ export function Navbar({ settings }: { settings: SiteSettings }) {
                          hover:bg-zinc-100 dark:hover:bg-zinc-800
                          transition-all duration-150 hover:scale-110"
             >
-              <SocialIcon icon={icon} className="w-4 h-4" />
+              <SocialIcon icon={icon} imageUrl={imageUrl} className="w-4 h-4" />
             </a>
           ))}
 

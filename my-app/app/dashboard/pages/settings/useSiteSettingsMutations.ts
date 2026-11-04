@@ -8,12 +8,16 @@ import {
   dashboardUpdatePageSeo,
   dashboardUpdateSettings,
   dashboardUpdateSettingsSeo,
-  dashboardUpdateSettingsSocials,
+  dashboardDeleteSocial,
+  dashboardSaveSocial,
+  dashboardSetupSocialLibrary,
+  dashboardUpdateSocialPlacements,
   type PageSeoMap,
   type PageSeoValue,
 } from "@/lib/services/settings.services";
 import { TAGS } from "@/lib/api/tags";
-import type { SiteSeo, SiteSettings, SiteSocial } from "@/lib/types/settings";
+import type { SocialPlacementMap } from "@/lib/socials";
+import type { SiteSeo, SiteSettings } from "@/lib/types/settings";
 
 export const siteSettingsQueryKey = [TAGS.settings] as const;
 export const pageSeoQueryKey = [TAGS.seo, "pages"] as const;
@@ -70,41 +74,62 @@ export function usePublishSiteSettings() {
 }
 
 /**
- * Replace the whole shared social-links list. The response carries the full
- * settings document, so the cache is patched in one go.
+ * Social library writes answer with the full settings document, so the cache is
+ * adopted in one go. Not optimistic: a logo upload has no result to show until
+ * the server has stored it.
  */
-export function usePublishSocials() {
+function useSocialMutation<Vars>(
+  mutationFn: (vars: Vars) => Promise<SiteSettings>,
+  successMessage: string,
+  fallbackError: string,
+) {
   const queryClient = useQueryClient();
 
-  return useMutation<SiteSettings, Error, SiteSocial[], SettingsCache>({
-    mutationKey: [...siteSettingsQueryKey, "socials"],
-    mutationFn: (socials) => dashboardUpdateSettingsSocials(socials),
-    onMutate: async (next) => {
-      await queryClient.cancelQueries({ queryKey: siteSettingsQueryKey });
-      const previous =
-        queryClient.getQueryData<SiteSettings>(siteSettingsQueryKey);
-      if (previous) {
-        queryClient.setQueryData<SiteSettings>(siteSettingsQueryKey, {
-          ...previous,
-          socials: next,
-        });
-      }
-      return { previous };
-    },
-    onError: (error, _vars, context) => {
-      if (context?.previous) {
-        queryClient.setQueryData(siteSettingsQueryKey, context.previous);
-      }
-      toast.error(error.message || "Failed to publish social links");
-    },
+  return useMutation<SiteSettings, Error, Vars>({
+    mutationFn,
     onSuccess: (settings) => {
       queryClient.setQueryData(siteSettingsQueryKey, settings);
-      toast.success("Social links published");
+      toast.success(successMessage);
+    },
+    onError: (error) => {
+      toast.error(error.message || fallbackError);
     },
     onSettled: () => {
       void queryClient.invalidateQueries({ queryKey: siteSettingsQueryKey });
     },
   });
+}
+
+export function useSetupSocialLibrary() {
+  return useSocialMutation<void>(
+    () => dashboardSetupSocialLibrary(),
+    "Library is ready",
+    "Failed to set up the library",
+  );
+}
+
+export function useSaveSocial() {
+  return useSocialMutation<{ id?: string; formData: FormData }>(
+    ({ id, formData }) => dashboardSaveSocial(id, formData),
+    "Social link saved",
+    "Failed to save the social link",
+  );
+}
+
+export function useDeleteSocial() {
+  return useSocialMutation<string>(
+    (id) => dashboardDeleteSocial(id),
+    "Social link deleted",
+    "Failed to delete the social link",
+  );
+}
+
+export function usePublishSocialPlacements() {
+  return useSocialMutation<SocialPlacementMap>(
+    (placements) => dashboardUpdateSocialPlacements(placements),
+    "Sections published",
+    "Failed to publish the sections",
+  );
 }
 
 /**

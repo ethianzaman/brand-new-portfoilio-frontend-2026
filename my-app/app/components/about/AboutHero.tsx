@@ -181,14 +181,14 @@
 // }
 
 import Image from 'next/image'
+import Reveal from "@/app/components/motion/Reveal";
+import { SocialLinks } from "@/app/components/brand/SocialLinks";
 import Link from 'next/link'
 import {
   Download, Mail, MapPin,
   ImageIcon, ArrowRight,
 } from 'lucide-react'
 import { AboutHero as AboutHeroType } from '@/lib/types/about'
-
-const enter = (ms: number) => ({ animationDelay: `${ms}ms` })
 
 export function AboutHero({ data }: { data: AboutHeroType }) {
   const hasResume = Boolean(data.resumeUrl);
@@ -204,8 +204,7 @@ export function AboutHero({ data }: { data: AboutHeroType }) {
       <div className="flex flex-col gap-6 order-2 lg:order-1">
 
         {/* Badge */}
-        <div className="animate-fade-up flex flex-wrap items-center gap-2 w-fit"
-             style={enter(0)}>
+        <Reveal className="flex flex-wrap items-center gap-2 w-fit">
           <div className="flex items-center gap-2 px-3 py-1.5 rounded-full
                           bg-indigo-50 dark:bg-indigo-950
                           border border-indigo-100 dark:border-indigo-900">
@@ -223,10 +222,10 @@ export function AboutHero({ data }: { data: AboutHeroType }) {
               {data.location}
             </span>
           </div>
-        </div>
+        </Reveal>
 
         {/* Title */}
-        <div className="animate-fade-up" style={enter(100)}>
+        <Reveal delay={100}>
           <h1 className="text-4xl sm:text-5xl font-bold
                          text-zinc-900 dark:text-white mb-3 leading-tight">
             {data.name}
@@ -235,10 +234,10 @@ export function AboutHero({ data }: { data: AboutHeroType }) {
                         text-indigo-600 dark:text-indigo-400">
             {data.subtitle}
           </p>
-        </div>
+        </Reveal>
 
         {/* Bio paragraphs */}
-        <div className="animate-fade-up flex flex-col gap-4" style={enter(200)}>
+        <Reveal delay={200} className="flex flex-col gap-4">
           {data.bio.map((para, i) => (
             <p key={i}
               className="text-base text-zinc-600 dark:text-zinc-400
@@ -246,11 +245,10 @@ export function AboutHero({ data }: { data: AboutHeroType }) {
               {para}
             </p>
           ))}
-        </div>
+        </Reveal>
 
         {/* CTA row */}
-        <div className="animate-fade-up flex flex-wrap gap-3 pt-2"
-             style={enter(300)}>
+        <Reveal delay={300} className="flex flex-wrap gap-3 pt-2">
           <Link
             href="/contact"
             className="btn-shine flex items-center gap-2 px-5 py-2.5 rounded-xl
@@ -290,13 +288,16 @@ export function AboutHero({ data }: { data: AboutHeroType }) {
             <ArrowRight className="w-4 h-4 group-hover:translate-x-1
                                    transition-transform" />
           </Link>
-        </div>
+        </Reveal>
+
+        <Reveal delay={350}>
+          <SocialLinks placement="about" className="-ml-2" />
+        </Reveal>
 
       </div>
 
       {/* ── Right: image ── */}
-      <div className="animate-fade-up flex justify-center lg:justify-end order-1 lg:order-2"
-           style={enter(250)}>
+      <Reveal delay={250} className="flex justify-center lg:justify-end order-1 lg:order-2">
         <div className="relative">
 
           {/* Main image box */}
@@ -363,7 +364,7 @@ export function AboutHero({ data }: { data: AboutHeroType }) {
           />
 
         </div>
-      </div>
+      </Reveal>
 
     </section>
   )

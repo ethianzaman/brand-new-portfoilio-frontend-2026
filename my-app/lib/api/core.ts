@@ -132,6 +132,8 @@ function describe(error: unknown): string {
   return String(error);
 }
 
+const buildFallbackKeys = new Set<string>();
+
 export async function publicFetch<T>(
   path: string,
   options: PublicFetchOptions<T>,
@@ -147,9 +149,11 @@ export async function publicFetch<T>(
   // During a build we still try the real endpoint — a build with the backend
   // UP should bake in real content, not the fallback. Only a failed build-time
   // request drops to `fallback`, which keeps `next build` green when the API
-  // is down. If this process already has a good payload, reuse it immediately.
-  if (isProductionBuild() && cached !== undefined) {
-    return cached;
+  // is down, and later pages skip the wait. A good payload must NOT skip the
+  // call: a page only gets its cache tags and revalidate window from `fetch`,
+  // and without them it stays static forever. Next dedupes the requests.
+  if (isProductionBuild() && buildFallbackKeys.has(key)) {
+    return fallback;
   }
 
   const startedAt = Date.now();
@@ -199,7 +203,7 @@ export async function publicFetch<T>(
       console.warn(
         `[publicFetch] ${tag} unavailable after ${elapsed}ms (${describe(error)}) — using build fallback`,
       );
-      remember(fallback);
+      buildFallbackKeys.add(key);
       return fallback;
     }
 

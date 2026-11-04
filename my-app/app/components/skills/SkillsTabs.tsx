@@ -1,5 +1,6 @@
 'use client'
 import { useState } from 'react'
+import Reveal from "@/app/components/motion/Reveal";
 import { cn } from '@/lib/utils'
 import { SkillCategory } from '@/lib/types/skill'
 import { SkillCard } from './SkillCard'
@@ -13,7 +14,7 @@ export function SkillsTabs({ categories }: { categories: SkillCategory[] }) {
     <div className="flex flex-col gap-8">
 
       {/* ── Tabs ── */}
-      <div className="flex flex-wrap gap-2">
+      <Reveal className="flex flex-wrap gap-2">
         {categories.map(cat => (
           <button
             key={cat.id}
@@ -38,14 +39,14 @@ export function SkillsTabs({ categories }: { categories: SkillCategory[] }) {
             </span>
           </button>
         ))}
-      </div>
+      </Reveal>
 
       {/* ── Skills grid for active tab ── */}
       {current && (
-        <div
-          key={active}   // ✅ key change triggers fade-in on tab switch
+        <Reveal
+          key={active}   // ✅ key change replays the entrance on tab switch
           className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8
-                     gap-3 animate-fade-in"
+                     gap-3"
         >
           {current.skills.map(skill => (
             <SkillCard
@@ -54,7 +55,7 @@ export function SkillsTabs({ categories }: { categories: SkillCategory[] }) {
               icon={skill.icon}
             />
           ))}
-        </div>
+        </Reveal>
       )}
 
     </div>

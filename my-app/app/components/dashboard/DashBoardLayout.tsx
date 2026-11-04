@@ -9,13 +9,14 @@ import {
   PanelLeftClose,
   Settings,
 } from "lucide-react";
-import { useRouter, usePathname } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { Sidebar } from "./SideBar";
 import { MobileSidebar } from "./MobileSideBar";
 import { TopBarNotifications } from "./TopBarNotifications";
 import { ThemeToggle } from "../ThemeToggle";
 import { useMessageNotifications } from "./useMessageNotifications";
 import { useCurrentUser } from "./useCurrentUser";
+import { SiteBackground } from "../background/SiteBackground";
 import { ROLE_LABELS } from "@/lib/types/user";
 import { cn } from "@/lib/utils";
 
@@ -24,22 +25,27 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
   const { unreadCount, notifications, loading, error, markAllRead } =
     useMessageNotifications();
   const { user } = useCurrentUser();
-  const router = useRouter();
   const pathname = usePathname();
   const onSettings = pathname === "/dashboard/pages/settings";
 
   async function handleLogout() {
     await fetch("/api/auth/logout", { method: "POST" });
-    router.push("/");
+    // A full navigation also drops the router cache and in-memory dashboard data,
+    // so Back cannot restore a protected page from the client.
+    window.location.replace("/login");
   }
 
   return (
-    <div className="flex h-screen overflow-hidden bg-zinc-50 dark:bg-zinc-950">
+    <div className="relative isolate flex h-screen overflow-hidden">
+      {/* One shared site background — identical to the public pages. The
+          shell stays transparent so the grid is visible; the sidebar and
+          cards below remain opaque for readability. */}
+      <SiteBackground />
       <Sidebar collapsed={collapsed} />
 
       <div className="flex flex-col flex-1 overflow-hidden min-w-0">
         <header
-          className="h-14 shrink-0 bg-white dark:bg-zinc-950 border-b border-zinc-200 dark:border-zinc-800
+          className="h-14 shrink-0 bg-white/80 dark:bg-zinc-950/80 backdrop-blur-md border-b border-zinc-200 dark:border-zinc-800
                            flex items-center px-4 gap-3 z-10"
         >
           {/* ✅ Desktop toggle — always visible, switches icon based on state */}

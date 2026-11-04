@@ -10,6 +10,7 @@ import {
   Mail,
   Search,
   Settings,
+  Share2,
   UserCog,
   Users,
 } from "lucide-react";
@@ -50,6 +51,12 @@ export const sidebarSections: SidebarSection[] = [
       { href: "/dashboard/pages/services", label: "Services", icon: Briefcase },
       { href: "/dashboard/pages/blog", label: "Blogs", icon: FileText },
       { href: "/dashboard/pages/contact", label: "Contact", icon: Mail }
+    ],
+  },
+  {
+    label: "Social",
+    links: [
+      { href: "/dashboard/pages/social-links", label: "Social Links", icon: Share2 },
     ],
   },
   {

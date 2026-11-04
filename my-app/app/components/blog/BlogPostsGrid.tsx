@@ -1,5 +1,7 @@
 "use client";
 import { useState, useMemo } from "react";
+import Reveal from "@/app/components/motion/Reveal";
+import SpotlightCard from "@/app/components/motion/SpotlightCard";
 import {
   Search,
   X,
@@ -24,14 +26,17 @@ function PostCard({ post }: { post: BlogPost }) {
     : null;
 
   return (
-    <a
-      href={`/blog/${post.slug}`}
-      className="group flex flex-col overflow-hidden rounded-2xl
+    <SpotlightCard
+      className="rounded-2xl
                  border border-zinc-200 dark:border-zinc-800
                  bg-white dark:bg-zinc-900
-                 transition-all duration-200
                  hover:border-indigo-300 dark:hover:border-indigo-700
                  hover:shadow-lg hover:shadow-indigo-500/5"
+    >
+    <a
+      href={`/blog/${post.slug}`}
+      className="flex flex-col rounded-2xl
+                 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-indigo-500"
     >
       {/* Cover */}
       <div className="aspect-video overflow-hidden bg-zinc-100 dark:bg-zinc-800 relative">
@@ -95,6 +100,7 @@ function PostCard({ post }: { post: BlogPost }) {
         </span>
       </div>
     </a>
+    </SpotlightCard>
   );
 }
 
@@ -108,13 +114,16 @@ function FeaturedHero({ post }: { post: BlogPost }) {
     : null;
 
   return (
-    <a
-      href={`/blog/${post.slug}`}
-      className="group grid grid-cols-1 lg:grid-cols-2 gap-0 overflow-hidden rounded-2xl
+    <SpotlightCard
+      className="rounded-2xl
                  border border-zinc-200 dark:border-zinc-800
                  bg-white dark:bg-zinc-900
-                 transition-all duration-200
                  hover:border-indigo-300 dark:hover:border-indigo-700"
+    >
+    <a
+      href={`/blog/${post.slug}`}
+      className="grid grid-cols-1 lg:grid-cols-2 gap-0 rounded-2xl
+                 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-indigo-500"
     >
       <div className="aspect-16/10 lg:aspect-auto overflow-hidden bg-zinc-100 dark:bg-zinc-800 relative">
         {post.coverImage ? (
@@ -174,6 +183,7 @@ function FeaturedHero({ post }: { post: BlogPost }) {
         </span>
       </div>
     </a>
+    </SpotlightCard>
   );
 }
 
@@ -212,11 +222,13 @@ export function BlogPostsGrid({ posts }: { posts: BlogPost[] }) {
     <div className="flex flex-col gap-10">
       {/* Featured */}
       {featured && filtered.includes(featured) && (
-        <FeaturedHero post={featured} />
+        <Reveal>
+          <FeaturedHero post={featured} />
+        </Reveal>
       )}
 
       {/* ── Filter section ── */}
-      <div className="flex flex-col gap-3">
+      <Reveal className="flex flex-col gap-3">
         {/* Search */}
         <div className="relative">
           <Search
@@ -311,7 +323,7 @@ export function BlogPostsGrid({ posts }: { posts: BlogPost[] }) {
         <p className="sm:hidden text-sm text-zinc-400 dark:text-zinc-500">
           {filtered.length} article{filtered.length !== 1 ? "s" : ""}
         </p>
-      </div>
+      </Reveal>
 
       {/* Grid */}
       {shown.length === 0 ? (
@@ -333,13 +345,9 @@ export function BlogPostsGrid({ posts }: { posts: BlogPost[] }) {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
           {shown.map((post, i) => (
-            <div
-              key={post.id}
-              className="animate-fade-in"
-              style={{ animationDelay: `${(i % PAGE_SIZE) * 80}ms` }}
-            >
+            <Reveal key={post.id} delay={(i % 3) * 90}>
               <PostCard post={post} />
-            </div>
+            </Reveal>
           ))}
         </div>
       )}

@@ -138,20 +138,9 @@
   animation: fade-in 0.3s ease both;
 }
 
-/* @keyframes fade-in {
-  from { opacity: 0; transform: translateY(10px); }
-  to   { opacity: 1; transform: translateY(0);    }
-}
-.animate-fade-in {
-  animation: fade-in 0.3s ease both;
-} */
-
 @keyframes spin-slow {
   from { transform: rotate(0deg);   }
   to   { transform: rotate(360deg); }
-}
-.animate-spin-slow {
-  animation: spin-slow 60s linear infinite;
 }
 
 /* Slim sidebar scrollbar — appears on hover */
@@ -198,7 +187,7 @@
   background: oklch(0.35 0 0 / 0.45);
 }
 
-/* hero animations.css */
+/* Shared animation utilities (public sections + SiteBackground) */
 
 @keyframes fade-up {
   from { opacity: 0; transform: translateY(22px); }
@@ -225,14 +214,46 @@
   to   { transform: translateX(260%) skewX(-20deg); }
 }
 
-.animate-fade-up       { animation: fade-up 0.8s cubic-bezier(0.22, 1, 0.36, 1) both; }
+:root {
+  --motion-duration: 0.8s;
+  --motion-ease: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/*
+ * Entrance animation for public sections. Phases are set by motion/Reveal.tsx.
+ * Starts at 0.01, not 0: browsers skip fully transparent text when timing
+ * Largest Contentful Paint, which would report these sections as late.
+ */
+@keyframes reveal-up {
+  from { opacity: 0.01; transform: translateY(22px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.reveal {
+  animation: reveal-up var(--motion-duration) var(--motion-ease) var(--reveal-delay, 0ms) both;
+}
+.reveal[data-reveal="hidden"] {
+  animation: none;
+  opacity: 0;
+  transform: translateY(22px);
+}
+.reveal[data-reveal="shown"] {
+  animation: none;
+  transition:
+    opacity var(--motion-duration) var(--motion-ease) var(--reveal-delay, 0ms),
+    transform var(--motion-duration) var(--motion-ease) var(--reveal-delay, 0ms);
+}
+.reveal[data-reveal="done"] {
+  animation: none;
+}
+
+.animate-fade-up       { animation: fade-up var(--motion-duration) var(--motion-ease) both; }
 .animate-float         { animation: float 6s ease-in-out infinite; }
 .animate-float-slow    { animation: float 8s ease-in-out infinite 1.2s; }
 .animate-aurora        { animation: aurora 14s ease-in-out infinite; }
 .animate-aurora-slow   { animation: aurora 20s ease-in-out infinite reverse; }
 .animate-gradient-pan  { animation: gradient-pan 6s linear infinite; }
 .animate-marquee       { animation: marquee 32s linear infinite; }
-.animate-spin-slow     { animation: spin 12s linear infinite; }
+.animate-spin-slow     { animation: spin-slow 12s linear infinite; }
 
 /* Button shine on hover */
 .btn-shine { position: relative; overflow: hidden; }
@@ -249,7 +270,9 @@
 /* Tilt used by SpotlightCard */
 .spotlight-card {
   transform: perspective(900px) rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg));
-  transition: transform 0.2s ease-out, border-color 0.2s, box-shadow 0.2s;
+  transition: transform 0.2s ease-out, translate 0.2s ease-out, border-color 0.2s, box-shadow 0.2s;
+}
+.spotlight-card:hover {
   will-change: transform;
 }
 
@@ -275,10 +298,20 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .reveal, .animate-fade-in,
   .animate-fade-up, .animate-float, .animate-float-slow, .animate-aurora,
   .animate-aurora-slow, .animate-gradient-pan, .animate-marquee,
   .animate-spin-slow, .btn-shine:hover::after {
     animation: none !important;
   }
   .spotlight-card { transform: none; }
+}
+
+@media print {
+  .reveal {
+    animation: none !important;
+    transition: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
 }

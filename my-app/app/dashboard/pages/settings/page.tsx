@@ -18,11 +18,12 @@ import {
 
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { sectionCls } from "@/components/ui/shared";
 import { adminProfile } from "@/app/components/dashboard/sidebar-config";
+import { PageHeader } from "@/app/components/dashboard/PageHeader";
 import { useCurrentUser } from "@/app/components/dashboard/useCurrentUser";
 import { ROLE_LABELS } from "@/lib/types/user";
 import { BrandSettings } from "./BrandSettings";
-import { SocialSettings } from "./SocialSettings";
 
 const emptySubscribe = () => () => {};
 
@@ -131,31 +132,19 @@ export default function SettingsPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      {/* ── Page header ── */}
-      <div className="flex items-start gap-3">
-        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-indigo-50 dark:bg-indigo-950">
-          <Settings className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
-        </div>
-        <div className="min-w-0">
-          <h1 className="text-xl font-bold text-zinc-900 dark:text-white">
-            Settings
-          </h1>
-          <p className="text-sm text-zinc-500 dark:text-zinc-400">
-            Manage the global brand, shared social links, appearance,
-            preferences and your account
-          </p>
-        </div>
-      </div>
+      <PageHeader
+        icon={Settings}
+        title="Settings"
+        description="Manage the global brand, shared social links, appearance, preferences and your account"
+        className="items-start"
+      />
 
       <div className="grid gap-4 sm:gap-6 lg:grid-cols-2">
         {/* ── Global brand (shared by Navbar + Footer) ── */}
         <BrandSettings />
 
-        {/* ── Shared social links (dynamically add/remove) ── */}
-        <SocialSettings />
-
         {/* ── Appearance ── */}
-        <section className="rounded-2xl border border-zinc-200 bg-white p-4 sm:p-5 dark:border-zinc-800 dark:bg-zinc-900">
+        <section className={cn(sectionCls, "p-4 sm:p-5")}>
           <div className="mb-4 flex items-center gap-2.5">
             <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-indigo-50 text-indigo-600 dark:bg-indigo-950 dark:text-indigo-400">
               <Sun className="h-4 w-4" />
@@ -213,7 +202,7 @@ export default function SettingsPage() {
         </section>
 
         {/* ── Account ── */}
-        <section className="rounded-2xl border border-zinc-200 bg-white p-4 sm:p-5 dark:border-zinc-800 dark:bg-zinc-900">
+        <section className={cn(sectionCls, "p-4 sm:p-5")}>
           <div className="mb-4 flex items-center gap-2.5">
             <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-indigo-50 text-indigo-600 dark:bg-indigo-950 dark:text-indigo-400">
               <User className="h-4 w-4" />
@@ -258,7 +247,7 @@ export default function SettingsPage() {
         </section>
 
         {/* ── Preferences ── */}
-        <section className="rounded-2xl border border-zinc-200 bg-white p-4 sm:p-5 lg:col-span-2 dark:border-zinc-800 dark:bg-zinc-900">
+        <section className={cn(sectionCls, "p-4 sm:p-5 lg:col-span-2")}>
           <div className="mb-2 flex items-center gap-2.5">
             <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-indigo-50 text-indigo-600 dark:bg-indigo-950 dark:text-indigo-400">
               <Bell className="h-4 w-4" />

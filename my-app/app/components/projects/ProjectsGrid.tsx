@@ -1,5 +1,6 @@
 "use client";
 import { useMemo, useState, useTransition } from "react";
+import Reveal from "@/app/components/motion/Reveal";
 import { ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ProjectCard } from "./ProjectCard";
@@ -77,7 +78,7 @@ export function ProjectsGrid({ initialData }: Props) {
   return (
     <div className="flex flex-col gap-8">
       {/* ── Filter section ── */}
-      <div className="flex flex-col gap-3">
+      <Reveal className="flex flex-col gap-3">
         {/* ✅ Native select — mobile only */}
         <div className="relative sm:hidden">
           <select
@@ -151,7 +152,7 @@ export function ProjectsGrid({ initialData }: Props) {
             ? "Loading..."
             : `${total} project${total !== 1 ? "s" : ""}`}
         </p>
-      </div>
+      </Reveal>
 
       {/* ── Cards grid ── */}
       {isPending && page === 1 ? (
@@ -159,13 +160,9 @@ export function ProjectsGrid({ initialData }: Props) {
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {projects.map((project, i) => (
-            <div
-              key={project.id}
-              className="animate-fade-in"
-              style={{ animationDelay: `${(i % PAGE_SIZE) * 80}ms` }}
-            >
+            <Reveal key={project.id} delay={(i % 3) * 90}>
               <ProjectCard project={project} />
-            </div>
+            </Reveal>
           ))}
         </div>
       )}

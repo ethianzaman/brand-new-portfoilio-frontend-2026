@@ -8,19 +8,16 @@ import {
   ArrowUpRight,
 } from 'lucide-react'
 
-import {
-  GithubIcon,
-  LinkedinIcon,
-  TwitterIcon,
-} from '@/app/components/icon/brandIcons'
-
+import { SocialIcon } from '@/app/components/brand/SocialIcon'
 import { ContactInfo as ContactInfoType } from '@/lib/types/contact'
+import type { SiteSocial } from '@/lib/types/settings'
 
 interface ContactInfoProps {
   info: ContactInfoType
+  socials: SiteSocial[]
 }
 
-export function ContactInfo({ info }: ContactInfoProps) {
+export function ContactInfo({ info, socials }: ContactInfoProps) {
   const contactDetails = [
     {
       icon: Mail,
@@ -52,31 +49,10 @@ export function ContactInfo({ info }: ContactInfoProps) {
     },
   ]
 
-  const socials = [
-    {
-      label: 'GitHub',
-      href: info.socials.github,
-      Icon: GithubIcon,
-      desc: 'Check my open source work',
-    },
-    {
-      label: 'LinkedIn',
-      href: info.socials.linkedin,
-      Icon: LinkedinIcon,
-      desc: 'Connect professionally',
-    },
-    {
-      label: 'Twitter',
-      href: info.socials.twitter,
-      Icon: TwitterIcon,
-      desc: 'Follow for dev updates',
-    },
-  ]
-
   return (
     <div className="flex flex-col gap-4 h-full">
       {/* Contact details */}
-      <div className="rounded-2xl border bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 p-5 sm:p-6">
+      <div className="rounded-2xl border bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 p-5 sm:p-6 flex-1">
         <h3 className="mb-5 text-sm font-semibold uppercase tracking-wider text-zinc-900 dark:text-white">
           Contact Details
         </h3>
@@ -131,15 +107,16 @@ export function ContactInfo({ info }: ContactInfoProps) {
       </div>
 
       {/* Social links */}
-      <div className="rounded-2xl border bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 p-5 sm:p-6 flex-1">
+      {socials.length > 0 && (
+      <div className="rounded-2xl border bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 p-5 sm:p-6">
         <h3 className="mb-4 font-semibold text-zinc-900 dark:text-white">
           Find me on
         </h3>
 
         <div className="space-y-2">
-          {socials.map(({ label, href, Icon, desc }) => (
+          {socials.map(({ id, label, href, icon, imageUrl, description }) => (
             <a
-              key={label}
+              key={id}
               href={href}
               target="_blank"
               rel="noreferrer"
@@ -152,7 +129,9 @@ export function ContactInfo({ info }: ContactInfoProps) {
                               rounded-xl bg-zinc-100 dark:bg-zinc-800
                               group-hover:bg-indigo-50 dark:group-hover:bg-indigo-950
                               transition-colors">
-                <Icon
+                <SocialIcon
+                  icon={icon}
+                  imageUrl={imageUrl}
                   className="h-4 w-4 text-zinc-600 dark:text-zinc-400
                              group-hover:text-indigo-600 dark:group-hover:text-indigo-400
                              transition-colors"
@@ -163,9 +142,11 @@ export function ContactInfo({ info }: ContactInfoProps) {
                 <p className="text-sm font-medium text-zinc-800 dark:text-zinc-200">
                   {label}
                 </p>
-                <p className="text-xs text-zinc-500 dark:text-zinc-400 truncate">
-                  {desc}
-                </p>
+                {description && (
+                  <p className="text-xs text-zinc-500 dark:text-zinc-400 truncate">
+                    {description}
+                  </p>
+                )}
               </div>
 
               <ArrowUpRight
@@ -177,6 +158,7 @@ export function ContactInfo({ info }: ContactInfoProps) {
           ))}
         </div>
       </div>
+      )}
     </div>
   )
 }

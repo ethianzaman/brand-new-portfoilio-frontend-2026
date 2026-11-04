@@ -30,9 +30,6 @@ export function ContactInfoModal({ info, onSave, onCancel }: Props) {
   const [responseTime,  setResponseTime]  = useState(info.responseTime)
   const [available,     setAvailable]     = useState(info.available)
   const [availableText, setAvailableText] = useState(info.availableText)
-  const [github,        setGithub]        = useState(info.socials.github)
-  const [linkedin,      setLinkedin]      = useState(info.socials.linkedin)
-  const [twitter,       setTwitter]       = useState(info.socials.twitter)
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -45,14 +42,7 @@ export function ContactInfoModal({ info, onSave, onCancel }: Props) {
       responseTime:  responseTime.trim(),
       available,
       availableText: availableText.trim(),
-      socials: {
-        github:   github.trim(),
-        linkedin: linkedin.trim(),
-        twitter:  twitter.trim(),
-        facebook: info.socials.facebook,
-        instagram: info.socials.instagram,
-        tiktok:   info.socials.tiktok,
-      },
+      socials: info.socials,
     })
     setLoading(false)
   }
@@ -117,40 +107,6 @@ export function ContactInfoModal({ info, onSave, onCancel }: Props) {
                   onChange={e => setResponseTime(e.target.value)}
                   placeholder="Within 24 hours"
                   className={inputCls} />
-              </div>
-            </div>
-
-            {/* Social links */}
-            <div className="flex flex-col gap-3">
-              <p className={labelCls}>Social Links</p>
-              <div className="flex flex-col gap-3">
-                <div className="flex items-center gap-3">
-                  <span className="text-xs font-medium text-zinc-500 w-16 shrink-0">
-                    GitHub
-                  </span>
-                  <input type="url" value={github}
-                    onChange={e => setGithub(e.target.value)}
-                    placeholder="https://github.com/yourusername"
-                    className={inputCls} />
-                </div>
-                <div className="flex items-center gap-3">
-                  <span className="text-xs font-medium text-zinc-500 w-16 shrink-0">
-                    LinkedIn
-                  </span>
-                  <input type="url" value={linkedin}
-                    onChange={e => setLinkedin(e.target.value)}
-                    placeholder="https://linkedin.com/in/yourusername"
-                    className={inputCls} />
-                </div>
-                <div className="flex items-center gap-3">
-                  <span className="text-xs font-medium text-zinc-500 w-16 shrink-0">
-                    Twitter
-                  </span>
-                  <input type="url" value={twitter}
-                    onChange={e => setTwitter(e.target.value)}
-                    placeholder="https://twitter.com/yourusername"
-                    className={inputCls} />
-                </div>
               </div>
             </div>
 

@@ -26,11 +26,7 @@ import {
   dashboardDeleteFAQ,
 } from "@/lib/services/contact.services";
 import { cn } from "@/lib/utils";
-import {
-  GithubIcon,
-  LinkedinIcon,
-  TwitterIcon,
-} from "@/app/components/icon/brandIcons";
+import Link from "next/link";
 
 // ── Stat card ─────────────────────────────────────────────────
 function StatCard({
@@ -239,43 +235,16 @@ export function ContactCMS({ initial }: { initial: ContactData }) {
 
         {/* Social links row */}
         <div className="px-5 pb-4">
-          <p
-            className="text-xs font-semibold text-zinc-400 dark:text-zinc-500
-                         uppercase tracking-wider mb-3"
-          >
-            Social Links
+          <p className="text-xs text-zinc-500 dark:text-zinc-400">
+            Social links are managed in{" "}
+            <Link
+              href="/dashboard/pages/social-links"
+              className="font-medium text-indigo-600 hover:underline dark:text-indigo-400"
+            >
+              Social Links
+            </Link>
+            .
           </p>
-          <div className="flex flex-wrap gap-3">
-            {[
-              { label: "GitHub", url: info.socials.github, Icon: GithubIcon },
-              {
-                label: "LinkedIn",
-                url: info.socials.linkedin,
-                Icon: LinkedinIcon,
-              },
-              {
-                label: "Twitter",
-                url: info.socials.twitter,
-                Icon: TwitterIcon,
-              },
-            ].map(({ label, url, Icon }) => (
-              <a
-                key={label}
-                href={url}
-                target="_blank"
-                rel="noreferrer"
-                className="flex items-center gap-2 px-3 py-2 rounded-xl text-sm
-                           bg-zinc-100 dark:bg-zinc-800
-                           text-zinc-600 dark:text-zinc-400
-                           hover:text-indigo-600 dark:hover:text-indigo-400
-                           hover:bg-indigo-50 dark:hover:bg-indigo-950
-                           transition-colors"
-              >
-                <Icon className="w-3.5 h-3.5" />
-                {label}
-              </a>
-            ))}
-          </div>
         </div>
 
         {/* Availability badge */}
