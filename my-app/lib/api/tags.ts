@@ -15,7 +15,7 @@
  *
  * Tag to call for each section:
  *
- *   hero / stats written  →  "home"
+ *   hero / stats written  →  "hero"
  *   about section written →  "about"
  *   contact written       →  "contact"
  *   skills written        →  "skills"
@@ -29,7 +29,7 @@
  * page renders, not just the detail page.
  */
 export const TAGS = {
-  home: "home",
+  hero: "hero",
   about: "about",
   contact: "contact",
   skills: "skills",

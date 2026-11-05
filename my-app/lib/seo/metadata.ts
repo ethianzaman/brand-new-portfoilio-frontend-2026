@@ -126,11 +126,12 @@ export function buildMetadata(input: BuildMetadataInput): Metadata {
   const origin = resolveSiteOrigin(site.siteUrl);
   const canonical = seo.canonicalUrl || absoluteUrl(origin, input.path);
 
+  // Without one of its own, a page shares the generated card with the real name.
   const image =
     seo.ogImage ||
     input.fallbackImage ||
     site.defaultOgImage ||
-    "";
+    "/og-image";
 
   const ogImageUrl = image ? absoluteUrl(origin, image) : "";
 

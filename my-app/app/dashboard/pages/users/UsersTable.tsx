@@ -1,31 +1,37 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Loader2, Plus, Search, Trash2, UserCog } from "lucide-react";
+import { Eye, KeyRound, Loader2, Lock, Plus, Search, Trash2, UserCog } from "lucide-react";
 import { toast } from "sonner";
 
 import {
   dashboardDeleteUser,
   dashboardUpdateUserRole,
+  dashboardResetUserPassword,
   dashboardUpdateUserStatus,
-} from "@/lib/services/user.services";
+} from "@/lib/services/user.service";
 import {
+  CONFIGURABLE_ROLES,
   ROLE_LABELS,
   USER_ROLES,
+  type CurrentUser,
   type ManagedUser,
+  type RolePermissionConfig,
   type UserRole,
 } from "@/lib/types/user";
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
 import { UserFormModal } from "./UserFormModal";
-import { UserDeleteModal } from "./UserDeleteModal";
-
-const ROLE_STYLES: Record<UserRole, string> = {
-  admin: "bg-indigo-50 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-400",
-  manager:
-    "bg-amber-50 dark:bg-amber-950 text-amber-700 dark:text-amber-400",
-  editor:
-    "bg-emerald-50 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-400",
-};
+import { ConfirmDeleteModal, DeleteTarget } from "@/app/components/dashboard/ConfirmDeleteModal";
+import { TemporaryPasswordModal } from "./TemporaryPasswordModal";
+import { PermissionChips } from "./RolePermissions";
+import { RoleBadge, RoleSelect } from "./RoleSelect";
 
 function formatDate(value: string): string {
   const date = new Date(value);
@@ -39,11 +45,23 @@ function formatDate(value: string): string {
 
 export function UsersTable({
   initial,
-  currentUserId,
+  currentUser,
+  config,
 }: {
   initial: ManagedUser[];
-  currentUserId: string;
+  currentUser: CurrentUser;
+  config: RolePermissionConfig;
 }) {
+  const currentUserId = currentUser.id;
+  const isSuperAdmin = currentUser.role === "super_admin";
+  const canCreate = currentUser.permissions.includes("users.create");
+  const canEdit = currentUser.permissions.includes("users.edit");
+  const canDelete = currentUser.permissions.includes("users.delete");
+  const [viewing, setViewing] = useState<ManagedUser | null>(null);
+  const [resetResult, setResetResult] = useState<{
+    email: string;
+    password: string;
+  } | null>(null);
   const [users, setUsers] = useState<ManagedUser[]>(initial);
   const [search, setSearch] = useState("");
   const [showForm, setShowForm] = useState(false);
@@ -74,6 +92,25 @@ export function UsersTable({
       toast.success(`${user.email} is now ${ROLE_LABELS[role]}`);
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Failed to update role.");
+    } finally {
+      setBusyId(null);
+    }
+  }
+
+  async function resetPassword(user: ManagedUser) {
+    const confirmed = window.confirm(
+      `Reset the password for ${user.email}? They will be signed out everywhere.`,
+    );
+    if (!confirmed) return;
+
+    setBusyId(user.id);
+    try {
+      const password = await dashboardResetUserPassword(user.id);
+      setResetResult({ email: user.email, password });
+    } catch (err) {
+      toast.error(
+        err instanceof Error ? err.message : "Failed to reset the password.",
+      );
     } finally {
       setBusyId(null);
     }
@@ -136,6 +173,7 @@ export function UsersTable({
           />
         </div>
 
+        {canCreate && (
         <button
           onClick={() => setShowForm(true)}
           className="inline-flex items-center justify-center gap-2 px-4 py-2.5
@@ -146,6 +184,7 @@ export function UsersTable({
           <Plus className="w-4 h-4" />
           Add user
         </button>
+        )}
       </div>
 
       {/* ── Table ── */}
@@ -163,6 +202,7 @@ export function UsersTable({
               >
                 <th className="px-4 py-3 font-semibold">Email</th>
                 <th className="px-4 py-3 font-semibold">Role</th>
+                <th className="px-4 py-3 font-semibold">Access</th>
                 <th className="px-4 py-3 font-semibold">Status</th>
                 <th className="px-4 py-3 font-semibold">Joined</th>
                 <th className="px-4 py-3 font-semibold text-right">Actions</th>
@@ -173,7 +213,7 @@ export function UsersTable({
               {filtered.length === 0 && (
                 <tr>
                   <td
-                    colSpan={5}
+                    colSpan={6}
                     className="px-4 py-10 text-center text-zinc-500 dark:text-zinc-400"
                   >
                     <UserCog className="w-5 h-5 mx-auto mb-2 opacity-60" />
@@ -187,6 +227,11 @@ export function UsersTable({
               {filtered.map((user) => {
                 const isSelf = user.id === currentUserId;
                 const busy = busyId === user.id;
+                // Only a Super Admin may touch a Super Admin, as the backend enforces.
+                const protectedUser = user.role === "super_admin" && !isSuperAdmin;
+                const canChangeRole = canEdit && !isSelf && !protectedUser;
+                const granted = config.roles[user.role]?.length ?? 0;
+                const total = config.roles.super_admin.length;
 
                 return (
                   <tr
@@ -210,37 +255,43 @@ export function UsersTable({
                     {/* Role */}
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-2">
-                        <span
-                          className={cn(
-                            "inline-flex items-center rounded-lg px-2 py-0.5 text-[11px] font-semibold",
-                            ROLE_STYLES[user.role],
-                          )}
-                        >
-                          {ROLE_LABELS[user.role]}
-                        </span>
-                        <select
-                          value={user.role}
-                          disabled={busy}
-                          onChange={(e) =>
-                            changeRole(user, e.target.value as UserRole)
-                          }
-                          aria-label={`Change role for ${user.email}`}
-                          className="h-7 rounded-lg border border-zinc-200 dark:border-zinc-700
-                                     bg-white dark:bg-zinc-950 px-1.5 text-xs
-                                     text-zinc-600 dark:text-zinc-300
-                                     focus:outline-none focus:ring-2 focus:ring-indigo-500
-                                     disabled:opacity-50 transition-colors"
-                        >
-                          {USER_ROLES.map((role) => (
-                            <option key={role} value={role}>
-                              {ROLE_LABELS[role]}
-                            </option>
-                          ))}
-                        </select>
+                        {canChangeRole ? (
+                          <RoleSelect
+                            value={user.role}
+                            roles={isSuperAdmin ? USER_ROLES : CONFIGURABLE_ROLES}
+                            disabled={busy}
+                            label={`Change role for ${user.email}`}
+                            onChange={(role) => changeRole(user, role)}
+                            className="w-36"
+                          />
+                        ) : (
+                          <>
+                            <RoleBadge role={user.role} />
+                            {(isSelf || protectedUser) && (
+                              <Lock
+                                className="h-3.5 w-3.5 text-zinc-400"
+                                aria-label="Role cannot be changed here"
+                              />
+                            )}
+                          </>
+                        )}
                         {busy && (
                           <Loader2 className="w-3.5 h-3.5 animate-spin text-zinc-400" />
                         )}
                       </div>
+                    </td>
+
+                    {/* Access */}
+                    <td className="px-4 py-3">
+                      <button
+                        type="button"
+                        onClick={() => setViewing(user)}
+                        aria-label={`View permissions for ${user.email}`}
+                        className="inline-flex h-8 items-center gap-1.5 whitespace-nowrap rounded-lg border border-zinc-200 px-2.5 text-xs font-medium text-zinc-600 transition-colors hover:border-indigo-300 hover:text-indigo-600 dark:border-zinc-700 dark:text-zinc-300 dark:hover:border-indigo-700 dark:hover:text-indigo-400"
+                      >
+                        <Eye className="h-3.5 w-3.5" />
+                        {granted} / {total}
+                      </button>
                     </td>
 
                     {/* Status */}
@@ -263,6 +314,7 @@ export function UsersTable({
                           {user.isActive ? "Active" : "Disabled"}
                         </span>
 
+                        {canEdit && !protectedUser && (
                         <button
                           onClick={() => toggleStatus(user)}
                           disabled={busy || (isSelf && user.isActive)}
@@ -280,6 +332,7 @@ export function UsersTable({
                         >
                           {user.isActive ? "Disable" : "Enable"}
                         </button>
+                        )}
                       </div>
                     </td>
 
@@ -291,7 +344,21 @@ export function UsersTable({
                     {/* Actions */}
                     <td className="px-4 py-3">
                       <div className="flex items-center justify-end gap-1">
-                        {!isSelf && (
+                        {!isSelf && canEdit && user.role !== "super_admin" && (
+                          <button
+                            onClick={() => resetPassword(user)}
+                            disabled={busy}
+                            aria-label={`Reset password for ${user.email}`}
+                            title="Reset password"
+                            className="p-2 rounded-lg text-zinc-400
+                                       hover:text-indigo-600 hover:bg-indigo-50
+                                       dark:hover:text-indigo-400 dark:hover:bg-indigo-950/50
+                                       disabled:opacity-40 transition-colors"
+                          >
+                            <KeyRound className="w-4 h-4" />
+                          </button>
+                        )}
+                        {!isSelf && canDelete && !protectedUser && (
                           <button
                             onClick={() => setDeleteTarget(user)}
                             disabled={busy}
@@ -314,6 +381,56 @@ export function UsersTable({
         </div>
       </div>
 
+      {resetResult && (
+        <TemporaryPasswordModal
+          title="Password reset"
+          email={resetResult.email}
+          password={resetResult.password}
+          onClose={() => setResetResult(null)}
+        />
+      )}
+
+      <Sheet
+        open={viewing !== null}
+        onOpenChange={(open) => {
+          if (!open) setViewing(null);
+        }}
+      >
+        <SheetContent className="flex w-full flex-col gap-0 sm:max-w-md">
+          {viewing && (
+            <>
+              <SheetHeader>
+                <SheetTitle className="truncate pr-6">{viewing.email}</SheetTitle>
+                <SheetDescription asChild>
+                  <div className="pt-1">
+                    <RoleBadge role={viewing.role} />
+                  </div>
+                </SheetDescription>
+              </SheetHeader>
+              <ul className="flex-1 divide-y divide-zinc-100 overflow-y-auto px-4 pb-4 dark:divide-zinc-800">
+                {config.sections.map((section) => (
+                  <li
+                    key={section.key}
+                    className="flex items-center justify-between gap-3 py-3"
+                  >
+                    <span className="text-sm font-medium text-zinc-900 dark:text-white">
+                      {section.label}
+                    </span>
+                    <PermissionChips
+                      actions={section.actions.filter((action) =>
+                        config.roles[viewing.role]?.includes(
+                          `${section.key}.${action}`,
+                        ),
+                      )}
+                    />
+                  </li>
+                ))}
+              </ul>
+            </>
+          )}
+        </SheetContent>
+      </Sheet>
+
       {showForm && (
         <UserFormModal
           onCancel={() => setShowForm(false)}
@@ -322,11 +439,15 @@ export function UsersTable({
       )}
 
       {deleteTarget && (
-        <UserDeleteModal
-          user={deleteTarget}
+        <ConfirmDeleteModal
+          title="Delete user?"
           onConfirm={handleDelete}
           onCancel={() => setDeleteTarget(null)}
-        />
+        >
+          You are about to permanently delete <DeleteTarget>{deleteTarget.email}</DeleteTarget> (
+          {ROLE_LABELS[deleteTarget.role]}). They will lose access immediately and this action cannot
+          be undone.
+        </ConfirmDeleteModal>
       )}
     </>
   );

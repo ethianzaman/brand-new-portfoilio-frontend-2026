@@ -1,26 +1,26 @@
-export interface HomeSocial {
+export interface HeroSocial {
   _id?: string;
   label: string;
   href: string;
 }
 
-export interface HomeHero {
+export interface HeroContent {
   name: string;
   title: string;
   titles: string[];
   bio: string;
   image: string | null;
   resumeUrl: string;
-  socials: HomeSocial[];
+  socials: HeroSocial[];
 }
 
-export interface HomeStat {
+export interface HeroStat {
   _id?: string;
   value: string;
   label: string;
 }
 
-export interface HomeData {
-  hero: HomeHero;
-  stats: HomeStat[];
+export interface HeroData {
+  hero: HeroContent;
+  stats: HeroStat[];
 }

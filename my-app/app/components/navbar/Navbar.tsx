@@ -4,8 +4,8 @@ import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 
-import { NavLinks } from "./navLinks";
-import { MobileMenu } from "./mobileMenu";
+import { NavLinks } from "./NavLinks";
+import { MobileMenu } from "./MobileMenu";
 import { ThemeToggle } from "../ThemeToggle";
 import { BrandMark } from "../brand/BrandMark";
 import { SocialIcon } from "../brand/SocialIcon";

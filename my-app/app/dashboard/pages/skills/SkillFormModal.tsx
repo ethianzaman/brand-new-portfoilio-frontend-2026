@@ -44,7 +44,6 @@ export function SkillFormModal({
   const [loading, setLoading] = useState(false);
   const [name, setName] = useState(skill?.name ?? "");
   const [icon, setIcon] = useState(skill?.icon ?? "");
-  // const [selCatId, setSelCatId] = useState(categoryId);
   const [selCatId, setSelCatId] = useState(categoryId || "");
   const [iconError, setIconError] = useState(false);
   const [file, setFile] = useState<File | null>(null);
@@ -68,9 +67,6 @@ export function SkillFormModal({
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
 
-    console.log("categoryId prop =", categoryId);
-    console.log("selCatId =", selCatId);
-    console.log("isEdit =", isEdit);
     if (!name.trim() || !icon.trim()) return;
     setLoading(true);
     await onSave(

@@ -19,8 +19,8 @@ export type SidebarLink = {
   href: string;
   label: string;
   icon: LucideIcon;
-  /** Only rendered for admins (see SidebarNav). */
-  adminOnly?: boolean;
+  /** Only rendered with this permission (see SidebarNav). */
+  permission?: string;
 };
 
 export type SidebarSection = {
@@ -38,31 +38,31 @@ export const sidebarSections: SidebarSection[] = [
   {
     label: "Inbox",
     links: [
-      { href: "/dashboard/pages/messages", label: "Messages", icon: Inbox },
+      { href: "/dashboard/pages/messages", label: "Messages", icon: Inbox, permission: "messages.view" },
     ],
   },
   {
     label: "Content",
     links: [
-      { href: "/dashboard/pages/home", label: "Hero", icon: Home },
-      { href: "/dashboard/pages/about", label: "About", icon: Users },
-      { href: "/dashboard/pages/projects", label: "Projects", icon: Image },
-      { href: "/dashboard/pages/skills", label: "Skills", icon: Code2 },
-      { href: "/dashboard/pages/services", label: "Services", icon: Briefcase },
-      { href: "/dashboard/pages/blog", label: "Blogs", icon: FileText },
-      { href: "/dashboard/pages/contact", label: "Contact", icon: Mail }
+      { href: "/dashboard/pages/hero", label: "Hero", icon: Home, permission: "hero.view" },
+      { href: "/dashboard/pages/about", label: "About", icon: Users, permission: "about.view" },
+      { href: "/dashboard/pages/projects", label: "Projects", icon: Image, permission: "projects.view" },
+      { href: "/dashboard/pages/skills", label: "Skills", icon: Code2, permission: "skills.view" },
+      { href: "/dashboard/pages/services", label: "Services", icon: Briefcase, permission: "services.view" },
+      { href: "/dashboard/pages/blog", label: "Blogs", icon: FileText, permission: "blog.view" },
+      { href: "/dashboard/pages/contact", label: "Contact", icon: Mail, permission: "contact.view" }
     ],
   },
   {
     label: "Social",
     links: [
-      { href: "/dashboard/pages/social-links", label: "Social Links", icon: Share2 },
+      { href: "/dashboard/pages/social-links", label: "Social Links", icon: Share2, permission: "socialLinks.view" },
     ],
   },
   {
     label: "SEO",
     links: [
-      { href: "/dashboard/pages/seo", label: "SEO", icon: Search },
+      { href: "/dashboard/pages/seo", label: "SEO", icon: Search, permission: "seo.view" },
     ],
   },
   {
@@ -72,12 +72,13 @@ export const sidebarSections: SidebarSection[] = [
         href: "/dashboard/pages/settings",
         label: "Site Settings",
         icon: Settings,
+        permission: "settings.view",
       },
       {
         href: "/dashboard/pages/users",
         label: "Users",
         icon: UserCog,
-        adminOnly: true,
+        permission: "users.view",
       },
     ],
   },

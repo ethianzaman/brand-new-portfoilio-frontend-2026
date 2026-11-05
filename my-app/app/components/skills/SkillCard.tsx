@@ -1,5 +1,6 @@
 'use client'
 import Image from 'next/image'
+import SpotlightCard from "@/app/components/motion/SpotlightCard";
 import { useState } from 'react'
 
 interface Props {
@@ -11,13 +12,16 @@ export function SkillCard({ name, icon }: Props) {
   const [imgError, setImgError] = useState(false)
 
   return (
-    <div className="flex flex-col items-center gap-3 p-4 rounded-2xl
-                    bg-white dark:bg-zinc-900
-                    border border-zinc-200 dark:border-zinc-800
-                    hover:border-indigo-200 dark:hover:border-indigo-800
-                    hover:-translate-y-1 hover:shadow-md
-                    hover:shadow-zinc-100 dark:hover:shadow-zinc-900
-                    transition-all duration-200 group cursor-default">
+    <SpotlightCard
+      className="p-4 rounded-2xl
+                 bg-white dark:bg-zinc-900
+                 border border-zinc-200 dark:border-zinc-800
+                 hover:border-indigo-200 dark:hover:border-indigo-800
+                 hover:-translate-y-1 hover:shadow-md
+                 hover:shadow-zinc-100 dark:hover:shadow-zinc-900
+                 cursor-default"
+      contentClassName="flex flex-col items-center gap-3"
+    >
 
       {/* Icon */}
       <div className="w-12 h-12 flex items-center justify-center
@@ -50,6 +54,6 @@ export function SkillCard({ name, icon }: Props) {
                        transition-colors duration-200">
         {name}
       </span>
-    </div>
+    </SpotlightCard>
   )
 }

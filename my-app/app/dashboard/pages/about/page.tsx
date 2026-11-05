@@ -1,7 +1,7 @@
 import { User } from 'lucide-react'
 import { AboutCMS } from './AboutCMS'
 import { PageHeader } from '@/app/components/dashboard/PageHeader'
-import { dashboardGetAbout } from '@/lib/services/about.services'
+import { dashboardGetAbout } from '@/lib/services/about.service'
 
 
 export default async function DashboardAboutPage() {

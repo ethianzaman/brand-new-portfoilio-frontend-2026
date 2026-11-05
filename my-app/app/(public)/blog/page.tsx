@@ -56,7 +56,21 @@ export default async function BlogPage() {
         />
 
         {/* Posts grid — client handles search + category filters */}
-        <BlogPostsGrid posts={posts} />
+        <BlogPostsGrid
+          posts={posts.map((post) => ({
+            id: post.id,
+            title: post.title,
+            slug: post.slug,
+            excerpt: post.excerpt,
+            coverImage: post.coverImage,
+            category: post.category,
+            tags: post.tags,
+            readTime: post.readTime,
+            status: post.status,
+            featured: post.featured,
+            createdAt: post.createdAt,
+          }))}
+        />
       </div>
     </div>
   );

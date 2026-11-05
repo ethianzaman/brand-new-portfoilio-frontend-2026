@@ -2,7 +2,6 @@
 
 import { useSyncExternalStore, useState } from "react";
 import { useTheme } from "next-themes";
-import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import {
   Bell,
@@ -22,6 +21,7 @@ import { sectionCls } from "@/components/ui/shared";
 import { adminProfile } from "@/app/components/dashboard/sidebar-config";
 import { PageHeader } from "@/app/components/dashboard/PageHeader";
 import { useCurrentUser } from "@/app/components/dashboard/useCurrentUser";
+import { ChangePassword } from "@/app/components/dashboard/ChangePassword";
 import { ROLE_LABELS } from "@/lib/types/user";
 import { BrandSettings } from "./BrandSettings";
 
@@ -90,7 +90,6 @@ export default function SettingsPage() {
     () => true,
     () => false,
   );
-  const router = useRouter();
   const { user } = useCurrentUser();
 
   const email = user?.email ?? adminProfile.email;
@@ -125,7 +124,7 @@ export default function SettingsPage() {
 
   async function handleLogout() {
     await fetch("/api/auth/logout", { method: "POST" });
-    router.push("/");
+    window.location.replace("/login");
   }
 
   const activeTheme = mounted ? theme : null;
@@ -235,15 +234,18 @@ export default function SettingsPage() {
             </span>
           </div>
 
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleLogout}
-            className="mt-4 gap-2"
-          >
-            <LogOut className="h-3.5 w-3.5" />
-            Sign out
-          </Button>
+          <div className="mt-4 flex flex-wrap gap-2">
+            <ChangePassword />
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleLogout}
+              className="gap-2"
+            >
+              <LogOut className="h-3.5 w-3.5" />
+              Sign out
+            </Button>
+          </div>
         </section>
 
         {/* ── Preferences ── */}

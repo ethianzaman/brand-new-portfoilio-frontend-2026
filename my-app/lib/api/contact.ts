@@ -2,8 +2,16 @@ import "server-only";
 
 import { publicFetch, requireEnvelope } from "@/lib/api/core";
 import { TAGS } from "@/lib/api/tags";
-import { DEMO_CONTACT } from "@/lib/data/contact.demo";
-import type { ContactData, ContactInfo, FAQ } from "@/lib/types/contact";
+import {
+  DEFAULT_CONTACT_FORM_OPTIONS,
+  DEMO_CONTACT,
+} from "@/lib/data/contact.demo";
+import type {
+  ContactData,
+  ContactFormOptions,
+  ContactInfo,
+  FAQ,
+} from "@/lib/types/contact";
 
 /**
  * The API returns Mongo `_id`s (`ContactApiFAQ`), but `DEMO_CONTACT` uses `id`.
@@ -21,6 +29,7 @@ type ApiFaq = {
 type ApiContact = {
   info: ContactInfo;
   faqs?: ApiFaq[];
+  formOptions?: ContactFormOptions;
 };
 
 type ContactApiResponse = { contact?: ApiContact };
@@ -28,6 +37,7 @@ type ContactApiResponse = { contact?: ApiContact };
 function normalizeContact(contact: ApiContact): ContactData {
   return {
     info: contact.info,
+    formOptions: contact.formOptions ?? DEFAULT_CONTACT_FORM_OPTIONS,
     faqs: (contact.faqs ?? []).map(
       (faq): FAQ => ({
         id: faq._id ?? faq.id ?? "",

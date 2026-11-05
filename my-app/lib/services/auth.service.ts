@@ -67,10 +67,11 @@ function buildSession(
 // ── POST /auth/login ─────────────────────────────────────────────
 export async function loginWithPassword(
   credentials: LoginCredentials,
+  headers: Record<string, string> = {},
 ): Promise<AuthSession> {
   const res = await fetch(`${API_AUTH_URL}/login`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: { "Content-Type": "application/json", ...headers },
     body: JSON.stringify(credentials),
     cache: "no-store",
   });
@@ -78,10 +79,44 @@ export async function loginWithPassword(
   const json: AuthResponse = await res.json().catch(() => ({}));
 
   if (!res.ok) {
-    throw new Error(json.message ?? `Login failed (${res.status})`);
+    throw Object.assign(new Error(json.message ?? `Login failed (${res.status})`), {
+      status: res.status,
+    });
   }
 
   const cookieToken = extractTokenFromCookie(res.headers.get("set-cookie"));
 
   return buildSession(json, cookieToken, credentials.email);
+}
+
+// ── POST /auth/change-password ──────────────────────
+/** Returns the new session token; the backend revokes every older one. */
+export async function changePassword(
+  token: string,
+  input: { currentPassword: unknown; newPassword: unknown },
+  headers: Record<string, string> = {},
+): Promise<string> {
+  const res = await fetch(`${API_AUTH_URL}/change-password`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Cookie: `token=${token}`,
+      ...headers,
+    },
+    body: JSON.stringify(input),
+    cache: "no-store",
+  });
+
+  const json: AuthResponse = await res.json().catch(() => ({}));
+
+  if (!res.ok) {
+    throw Object.assign(
+      new Error(json.message ?? `Could not change the password (${res.status})`),
+      { status: res.status },
+    );
+  }
+
+  const nextToken = extractTokenFromCookie(res.headers.get("set-cookie"));
+  if (!nextToken) throw new Error("Backend did not return a session token");
+  return nextToken;
 }

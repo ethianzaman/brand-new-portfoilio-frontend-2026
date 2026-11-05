@@ -22,7 +22,8 @@ const MAX_SOCIALS = 30;
 type Editing = { mode: "create" } | { mode: "edit"; social: SiteSocial } | null;
 
 export function SocialLibrary({ settings }: { settings: SiteSettings }) {
-  const { canDelete } = useCurrentUser();
+  const { can } = useCurrentUser();
+  const canDelete = can("socialLinks.delete");
   const remove = useDeleteSocial();
   const [editing, setEditing] = useState<Editing>(null);
   const socials = settings.socials;
@@ -47,14 +48,16 @@ export function SocialLibrary({ settings }: { settings: SiteSettings }) {
           {socials.length} of {MAX_SOCIALS} links. A new link shows nowhere until
           you add it to a section.
         </p>
+        {can("socialLinks.create") && (
         <Button
           onClick={() => setEditing({ mode: "create" })}
           disabled={socials.length >= MAX_SOCIALS}
-          className="rounded-xl bg-indigo-600 hover:bg-indigo-700"
+          className="rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white"
         >
           <Plus className="h-4 w-4" />
           Add link
         </Button>
+        )}
       </div>
 
       {socials.length === 0 ? (
@@ -94,6 +97,7 @@ export function SocialLibrary({ settings }: { settings: SiteSettings }) {
                   </p>
                 </div>
                 <div className="flex shrink-0 items-center transition-opacity focus-within:opacity-100 md:opacity-0 md:group-hover:opacity-100">
+                  {can("socialLinks.edit") && (
                   <button
                     type="button"
                     onClick={() => setEditing({ mode: "edit", social })}
@@ -102,6 +106,7 @@ export function SocialLibrary({ settings }: { settings: SiteSettings }) {
                   >
                     <Pencil className="h-4 w-4" />
                   </button>
+                  )}
                   {canDelete && (
                     <button
                       type="button"

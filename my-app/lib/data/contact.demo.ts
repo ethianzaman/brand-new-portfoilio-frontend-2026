@@ -1,6 +1,28 @@
-import { ContactData } from '@/lib/types/contact'
+import { ContactData, ContactFormOptions } from '@/lib/types/contact'
+
+export const DEFAULT_CONTACT_FORM_OPTIONS: ContactFormOptions = {
+  services: [
+    'Frontend Development',
+    'Backend Development',
+    'Full-Stack Web App',
+    'API Integration',
+    'Database Design',
+    'Python / Django',
+    'General Inquiry',
+    'Other',
+  ],
+  budgets: [
+    'Less than $500',
+    '$500 – $1,000',
+    '$1,000 – $3,000',
+    '$3,000 – $5,000',
+    '$5,000+',
+    'Not sure yet',
+  ],
+}
 
 export const DEMO_CONTACT: ContactData = {
+  formOptions: DEFAULT_CONTACT_FORM_OPTIONS,
   info: {
     email:         'john@example.com',
     phone:         '+1 234 567 890',

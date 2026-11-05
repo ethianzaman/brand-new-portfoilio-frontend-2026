@@ -37,6 +37,15 @@ export async function destroySession(): Promise<void> {
   store.delete(USER_COOKIE);
 }
 
+/**
+ * For server renders calling a private backend route directly. The browser goes
+ * through /api/backend instead, which attaches the same cookie.
+ */
+export async function backendAuthHeaders(): Promise<Record<string, string>> {
+  const token = (await cookies()).get(SESSION_COOKIE)?.value;
+  return token ? { Cookie: `token=${token}` } : {};
+}
+
 export async function getSession(): Promise<AuthSession | null> {
   const store = await cookies();
   const token = store.get(SESSION_COOKIE)?.value;

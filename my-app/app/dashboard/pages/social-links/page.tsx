@@ -11,6 +11,7 @@ import {
 } from "../settings/useSiteSettingsMutations";
 import { SettingsError, SettingsSkeleton } from "../settings/SettingsStates";
 import { SocialLibrary } from "./SocialLibrary";
+import { useCurrentUser } from "@/app/components/dashboard/useCurrentUser";
 import { SocialPlacements } from "./SocialPlacements";
 
 const TABS = [
@@ -27,6 +28,7 @@ type Tab = (typeof TABS)[number]["key"];
 export default function SocialLinksPage() {
   const query = useSiteSettingsQuery();
   const setup = useSetupSocialLibrary();
+  const { can } = useCurrentUser();
   const [tab, setTab] = useState<Tab>("library");
 
   const settings = query.data;
@@ -63,14 +65,16 @@ export default function SocialLinksPage() {
             be merged without duplicates. Each section keeps showing what it
             shows today, so the public site will not change.
           </p>
-          <Button
-            onClick={() => setup.mutate()}
-            disabled={setup.isPending}
-            className="mt-4 rounded-xl bg-indigo-600 hover:bg-indigo-700"
-          >
-            {setup.isPending && <Loader2 className="h-4 w-4 animate-spin" />}
-            {setup.isPending ? "Setting up..." : "Set up library"}
-          </Button>
+          {can("socialLinks.edit") && (
+            <Button
+              onClick={() => setup.mutate()}
+              disabled={setup.isPending}
+              className="mt-4 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white"
+            >
+              {setup.isPending && <Loader2 className="h-4 w-4 animate-spin" />}
+              {setup.isPending ? "Setting up..." : "Set up library"}
+            </Button>
+          )}
         </section>
       ) : (
         <>

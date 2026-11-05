@@ -1,7 +1,7 @@
 import { MessageCircle } from 'lucide-react'
 import { ContactCMS } from './ContactCMS'
 import { PageHeader } from '@/app/components/dashboard/PageHeader'
-import { dashboardGetContact } from '@/lib/services/contact.services'
+import { dashboardGetContact } from '@/lib/services/contact.service'
 
 
 export default async function DashboardContactPage() {
@@ -12,7 +12,7 @@ export default async function DashboardContactPage() {
       <PageHeader
         icon={MessageCircle}
         title="Contact Page"
-        description="Manage contact info, social links and FAQs"
+        description="Manage contact info, form options and FAQs"
       />
 
       <ContactCMS initial={contact} />

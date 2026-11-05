@@ -10,8 +10,9 @@ import {
   dashboardGetBlogPosts,
   dashboardGetBlogStats,
   type BlogListQuery,
-} from "@/lib/services/blog.services";
+} from "@/lib/services/blog.service";
 import { DASHBOARD_PAGE_SIZE } from "@/lib/constants/pagination";
+import { backendAuthHeaders } from "@/lib/session";
 
 /**
  * The exact query the table starts on. It MUST match the table's initial
@@ -31,15 +32,16 @@ export default async function DashboardBlogPage() {
   // with data already in the cache — no loading flash, no duplicate request
   // for the page the user is looking at.
   const queryClient = new QueryClient();
+  const headers = await backendAuthHeaders();
 
   await Promise.all([
     queryClient.prefetchQuery({
       queryKey: ["blogs", "list", INITIAL_PARAMS],
-      queryFn: () => dashboardGetBlogPosts(INITIAL_PARAMS),
+      queryFn: () => dashboardGetBlogPosts(INITIAL_PARAMS, headers),
     }),
     queryClient.prefetchQuery({
       queryKey: ["blogs", "stats"],
-      queryFn: dashboardGetBlogStats,
+      queryFn: () => dashboardGetBlogStats(headers),
     }),
   ]);
 

@@ -16,7 +16,6 @@ import {
   UserPlus,
 } from "lucide-react";
 
-import { Toaster } from "@/components/ui/sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { DEFAULT_DASHBOARD_PATH, safeReturnUrl } from "@/lib/auth/return-url";
@@ -116,8 +115,6 @@ export function LoginForm({ redirectTo }: { redirectTo: string }) {
 
   return (
     <>
-      <Toaster position="top-center" />
-
       {/* ── Card ──
           The page behind the card is always the deep brand palette, so the
           card carries its OWN surface colour: light and frosted-white in

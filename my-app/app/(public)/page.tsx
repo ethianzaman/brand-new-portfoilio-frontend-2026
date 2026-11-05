@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import ServicesPage from "./services/page";
 import ContactPage from "./contact/page";
-import HomeHero from "@/app/components/home/HomeHero";
+import Hero from "./hero/Hero";
+import { NestedPage } from "@/app/components/PageHeading";
 import ProjectsPage from "./projects/page";
 import AboutPage from "./about/page";
 import BlogPage from "./blog/page";
@@ -27,12 +28,14 @@ export async function generateMetadata(): Promise<Metadata> {
 export default function Home() {
   return (
     <div>
-      <HomeHero />
-      <ServicesPage />
-      <ProjectsPage />
-      <AboutPage />
-      <BlogPage />
-      <ContactPage />
+      <Hero />
+      <NestedPage>
+        <ServicesPage />
+        <ProjectsPage />
+        <AboutPage />
+        <BlogPage />
+        <ContactPage />
+      </NestedPage>
     </div>
   );
 }

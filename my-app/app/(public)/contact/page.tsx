@@ -1,8 +1,8 @@
-import { ContactForm } from './ContactForm'
+import { ContactForm } from '@/app/components/contact/ContactForm'
 import { SectionHeader } from "@/app/components/SectionHeader";
 import Reveal from "@/app/components/motion/Reveal";
-import { ContactInfo } from './ContactInfo'
-import { ContactFAQ } from './ContactFAQ'
+import { ContactInfo } from '@/app/components/contact/ContactInfo'
+import { ContactFAQ } from '@/app/components/contact/ContactFAQ'
 import { MessageCircle } from 'lucide-react'
 import { getContact } from '@/lib/api/contact'
 import { getSiteSettings } from '@/lib/api/settings'
@@ -35,7 +35,7 @@ export async function generateMetadata() {
 export default async function  ContactPage() {
   // Cached 60s under tag "contact"; last-good-on-failure; demo data on build.
   const contactData = await getContact()
-  const {info, faqs} = contactData
+  const {info, faqs, formOptions} = contactData
   const settings = await getSiteSettings()
   const socials = settings.socialsConfigured
     ? resolveSocials(settings, 'contact')
@@ -60,7 +60,7 @@ export default async function  ContactPage() {
         {/* ── Main grid ── */}
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 sm:gap-8 mb-12 sm:mb-16">
           <Reveal className="lg:col-span-3">
-            <ContactForm />
+            <ContactForm options={formOptions} />
           </Reveal>
           <Reveal delay={90} className="lg:col-span-2">
             <ContactInfo info={info} socials={socials}/>

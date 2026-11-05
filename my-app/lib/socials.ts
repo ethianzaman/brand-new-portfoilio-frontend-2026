@@ -14,6 +14,16 @@ export const SOCIAL_PLACEMENTS = [
   { key: "contact", label: "Contact", hint: "The “Find me on” card" },
 ] as const;
 
+/** A link to the network itself ("https://linkedin.com") is not a profile. */
+export function isProfileLink(href: string): boolean {
+  try {
+    const { protocol, pathname } = new URL(href);
+    return /^https?:$/.test(protocol) && pathname !== "" && pathname !== "/";
+  } catch {
+    return false;
+  }
+}
+
 export type SocialPlacement = (typeof SOCIAL_PLACEMENTS)[number]["key"];
 
 export type SocialPlacementMap = Record<SocialPlacement, string[]>;

@@ -3,8 +3,9 @@ import { Inter as FontSans } from "next/font/google";
 import { cn } from "@/lib/utils";
 import { Providers } from "./providers";
 import { JsonLd } from "./components/seo/JsonLd";
-import { organizationJsonLd, websiteJsonLd } from "@/lib/seo/jsonld";
+import { personJsonLd, websiteJsonLd } from "@/lib/seo/jsonld";
 import { buildMetadata } from "@/lib/seo/metadata";
+import { getAbout } from "@/lib/api/about";
 import { getSiteSettings } from "@/lib/api/settings";
 import "./globals.css";
 
@@ -40,15 +41,21 @@ export default async function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
-  // Site-wide Organization + WebSite structured data. Emitted once here so no
+  // Site-wide Person + WebSite structured data. Emitted once here so no
   // page duplicates it. Both builders return `null` when there is no site
   // origin/brand configured, and `JsonLd` renders nothing for `null`.
-  const settings = await getSiteSettings();
-  const organization = organizationJsonLd({
+  const [settings, about] = await Promise.all([
+    getSiteSettings(),
+    // The site must still render when the About section cannot be read.
+    getAbout().catch(() => null),
+  ]);
+  const person = personJsonLd({
     siteSeo: settings.seo,
     brandName: settings.brand.name,
+    name: about?.hero?.name,
+    jobTitle: about?.hero?.title,
+    image: about?.hero?.image,
     socials: settings.socials,
-    logo: settings.brand.logo.type === "image" ? settings.brand.logo.url : "",
   });
   const website = websiteJsonLd({
     siteSeo: settings.seo,
@@ -63,7 +70,7 @@ export default async function RootLayout({
           fontSans.variable,
         )}
       >
-        <JsonLd data={organization} />
+        <JsonLd data={person} />
         <JsonLd data={website} />
         <Providers>{children}</Providers>
       </body>

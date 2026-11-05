@@ -1,5 +1,5 @@
 import { Layers, Globe, Server, Smartphone, Monitor, Star } from 'lucide-react'
-import type { ProjectStats } from '@/lib/services/project.services'
+import type { ProjectStats } from '@/lib/services/project.service'
 
 const STAT_CONFIG = [
   { key: 'all',       label: 'Total Projects', icon: Layers,    color: 'indigo' },

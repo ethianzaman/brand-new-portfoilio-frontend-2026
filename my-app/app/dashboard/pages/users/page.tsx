@@ -3,23 +3,27 @@ import { AlertTriangle, UserCog } from "lucide-react";
 
 import { apiUrl } from "@/lib/api/config";
 import { getToken } from "@/lib/session";
-import type { ManagedUser, UserRole } from "@/lib/types/user";
+import type {
+  CurrentUser,
+  ManagedUser,
+  RolePermissionConfig,
+} from "@/lib/types/user";
 import { PageHeader } from "@/app/components/dashboard/PageHeader";
-import { UsersTable } from "./UsersTable";
+import { UsersManager } from "./UsersManager";
 
 // ─────────────────────────────────────────────────────────────────
-//  User Management — ADMIN ONLY.
+//  User Management — requires the users.view permission.
 //
 //  Access is enforced three times over:
 //   1. proxy.ts — any /dashboard route needs a session cookie
 //   2. this page — the role is read from the DB via GET /auth/me and
-//      non-admins are redirected before anything renders (covers
+//      anyone without it is redirected before anything renders (covers
 //      direct URL access by managers/editors)
 //   3. the backend — every /api/users call re-checks the role
 // ─────────────────────────────────────────────────────────────────
 
 interface MeBody {
-  user?: { id: string; role: UserRole };
+  user?: CurrentUser;
 }
 
 interface UsersBody {
@@ -58,12 +62,15 @@ export default async function UsersPage() {
   }
 
   const me = (await meRes.json().catch(() => ({}))) as MeBody;
-  if (me.user?.role !== "admin") {
+  if (!me.user?.permissions?.includes("users.view")) {
     redirect("/dashboard");
   }
 
   // ── Load users ────────────────────────────────────────────────
-  const usersRes = await backendFetch("/users", token);
+  const [usersRes, configRes] = await Promise.all([
+    backendFetch("/users", token),
+    backendFetch("/roles/permissions", token),
+  ]);
 
   let users: ManagedUser[] = [];
   let loadError: string | null = null;
@@ -78,18 +85,23 @@ export default async function UsersPage() {
     users = body.users ?? [];
   }
 
+  const config = configRes?.ok
+    ? ((await configRes.json().catch(() => null)) as RolePermissionConfig | null)
+    : null;
+  if (!config && !loadError) loadError = "Failed to load role permissions.";
+
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
         icon={UserCog}
         title="User Management"
-        description="Create accounts and assign roles — admin, manager or editor"
+        description="Manage accounts, roles and what each role can do"
       />
 
       {loadError ? (
         <LoadError message={loadError} />
       ) : (
-        <UsersTable initial={users} currentUserId={me.user!.id} />
+        <UsersManager users={users} config={config!} currentUser={me.user!} />
       )}
     </div>
   );

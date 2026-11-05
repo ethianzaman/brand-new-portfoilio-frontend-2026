@@ -9,9 +9,12 @@ import { useRef, type ReactNode } from "react";
 export default function SpotlightCard({
   children,
   className = "",
+  contentClassName = "",
 }: {
   children: ReactNode;
   className?: string;
+  /** For a card that lays out its children, such as a flex column. */
+  contentClassName?: string;
 }) {
   const ref = useRef<HTMLDivElement>(null);
 
@@ -49,7 +52,7 @@ export default function SpotlightCard({
             "radial-gradient(260px circle at var(--mx, 50%) var(--my, 50%), rgba(99,102,241,0.16), transparent 70%)",
         }}
       />
-      <div className="relative">{children}</div>
+      <div className={`relative ${contentClassName}`}>{children}</div>
     </div>
   );
 }

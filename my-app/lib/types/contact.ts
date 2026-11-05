@@ -22,9 +22,15 @@ export interface FAQ {
   order:    number
 }
 
+export interface ContactFormOptions {
+  services: string[]
+  budgets: string[]
+}
+
 export interface ContactData {
   info: ContactInfo
   faqs: FAQ[]
+  formOptions: ContactFormOptions
 }
 
 
@@ -40,6 +46,7 @@ export interface ContactApiFAQ {
 }
 
 export interface ContactApiData {
+  formOptions?: ContactFormOptions
   info: ContactInfo;
   faqs: ContactApiFAQ[];
 }

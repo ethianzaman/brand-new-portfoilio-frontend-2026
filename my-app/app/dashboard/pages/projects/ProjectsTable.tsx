@@ -1,4 +1,6 @@
 "use client";
+
+import { toast } from "sonner";
 import { useMemo, useState } from "react";
 import {
   keepPreviousData,
@@ -17,14 +19,13 @@ import {
   Filter,
   ChevronUp,
   ChevronDown,
-  Check,
   AlertCircle,
   RotateCcw,
   X,
 } from "lucide-react";
 import { Project, Category } from "@/lib/types/project";
 import { ProjectFormModal } from "./ProjectFormModal";
-import { DeleteConfirmModal } from "./DeleteConfirmModal";
+import { ConfirmDeleteModal, DeleteTarget } from "@/app/components/dashboard/ConfirmDeleteModal";
 import { ProjectsStats } from "./ProjectsStats";
 import { ProjectDrawer } from "./ProjectDrawer";
 import {
@@ -34,7 +35,7 @@ import {
   dashboardGetProjectsAll,
   dashboardGetProjectStats,
   type ProjectStats,
-} from "@/lib/services/project.services";
+} from "@/lib/services/project.service";
 import { cn } from "@/lib/utils";
 import Image from "next/image";
 import { Pagination } from "@/app/components/dashboard/Pagination";
@@ -71,7 +72,8 @@ type SortField = "title" | "category";
 const EMPTY_STATS: ProjectStats = { total: 0, featured: 0, byCategory: {} };
 
 export function ProjectsTable() {
-  const { canDelete } = useCurrentUser();
+  const { can } = useCurrentUser();
+  const canDelete = can("projects.delete");
   const queryClient = useQueryClient();
 
   const [search, setSearch] = useState("");
@@ -84,16 +86,9 @@ export function ProjectsTable() {
   const [editProject, setEditProject] = useState<Project | null>(null);
   const [deleteProject, setDeleteProject] = useState<Project | null>(null);
   const [drawerProject, setDrawerProject] = useState<Project | null>(null);
-  const [toast, setToast] = useState<string | null>(null);
 
   // The search box stays instant; the (server-side) query waits for a pause.
   const debouncedSearch = useDebouncedValue(search);
-
-  // ── Toast ─────────────────────────────────────────────────
-  function showToast(msg: string) {
-    setToast(msg);
-    setTimeout(() => setToast(null), 3000);
-  }
 
   // ── Data ──────────────────────────────────────────────────
   // Filtering AND sorting happen in the database: sorting only the rows of
@@ -122,7 +117,7 @@ export function ProjectsTable() {
 
   const statsQuery = useQuery({
     queryKey: ["projects", "stats"],
-    queryFn: dashboardGetProjectStats,
+    queryFn: () => dashboardGetProjectStats(),
   });
 
   const projects = listQuery.data?.projects ?? [];
@@ -167,18 +162,17 @@ export function ProjectsTable() {
   };
 
   async function handleSave(data: Omit<Project, "id">, image?: File) {
-    console.log(editProject?.id);
     if (editProject) {
       const updated = await dashboardUpdateProject(editProject.id, data, image);
 
       if (updated) {
-        showToast("Project updated successfully");
+        toast.success("Project updated successfully");
         queryClient.invalidateQueries({ queryKey: ["projects"] });
       }
     } else {
       await dashboardCreateProject(data, image);
 
-      showToast("Project created successfully");
+      toast.success("Project created successfully");
       queryClient.invalidateQueries({ queryKey: ["projects"] });
     }
 
@@ -190,7 +184,7 @@ export function ProjectsTable() {
     if (!deleteProject) return;
     const ok = await dashboardDeleteProject(deleteProject.id);
     if (ok) {
-      showToast("Project deleted");
+      toast.success("Project deleted");
       queryClient.invalidateQueries({ queryKey: ["projects"] });
     }
     setDeleteProject(null);
@@ -275,6 +269,7 @@ export function ProjectsTable() {
         </div>
 
         {/* Add project */}
+        {can("projects.create") && (
         <button
           onClick={() => {
             setEditProject(null);
@@ -288,6 +283,7 @@ export function ProjectsTable() {
           <Plus className="w-4 h-4" />
           Add Project
         </button>
+        )}
       </div>
 
       {/* ── Table ── */}
@@ -494,6 +490,7 @@ export function ProjectsTable() {
                         <ExternalLink className="w-4 h-4" />
                       </a>
 
+                      {can("projects.edit") && (
                       <button
                         title="Edit project"
                         onClick={(e) => {
@@ -508,6 +505,7 @@ export function ProjectsTable() {
                       >
                         <Pencil className="w-4 h-4" />
                       </button>
+                      )}
 
                       {canDelete && (
                         <button
@@ -547,25 +545,6 @@ export function ProjectsTable() {
 
       {/* ── Toast notification ── */}
 
-      {toast && (
-        <div
-          className="fixed top-6 left-1/2 -translate-x-1/2 z-100
-               flex items-center gap-3 px-5 py-3 rounded-2xl
-               bg-zinc-900 dark:bg-white
-               text-white dark:text-zinc-900
-               text-sm font-semibold shadow-2xl
-               animate-in fade-in slide-in-from-top-4 duration-300
-               max-w-[calc(100vw-2rem)] text-center border border-white/10 dark:border-zinc-200"
-        >
-          {/* The Tick Icon */}
-          <div className="flex items-center justify-center w-5 h-5 rounded-full bg-emerald-500/20 text-emerald-500">
-            <Check className="w-3.5 h-3.5 stroke-[3px]" />
-          </div>
-
-          <span>{toast}</span>
-        </div>
-      )}
-
       {/* ── Project detail drawer ── */}
       <ProjectDrawer
         project={drawerProject}
@@ -589,11 +568,14 @@ export function ProjectsTable() {
 
       {/* ── Delete confirm modal ── */}
       {deleteProject && (
-        <DeleteConfirmModal
-          project={deleteProject}
+        <ConfirmDeleteModal
+          title="Confirm Deletion"
           onConfirm={handleDelete}
           onCancel={() => setDeleteProject(null)}
-        />
+        >
+          Are you sure you want to delete <DeleteTarget>{deleteProject.title}</DeleteTarget>? This
+          action cannot be undone.
+        </ConfirmDeleteModal>
       )}
     </>
   );

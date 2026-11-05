@@ -1,8 +1,33 @@
-export type UserRole = "admin" | "manager" | "editor";
+export type UserRole = "super_admin" | "admin" | "manager" | "editor";
+export type ConfigurableRole = Exclude<UserRole, "super_admin">;
 
-export const USER_ROLES: UserRole[] = ["admin", "manager", "editor"];
+export const USER_ROLES: UserRole[] = ["super_admin", "admin", "manager", "editor"];
+export const CONFIGURABLE_ROLES: ConfigurableRole[] = ["admin", "manager", "editor"];
+
+export const PERMISSION_ACTIONS = ["view", "create", "edit", "delete"] as const;
+export type PermissionAction = (typeof PERMISSION_ACTIONS)[number];
+
+export interface PermissionSection {
+  key: string;
+  label: string;
+  actions: PermissionAction[];
+}
+
+/** GET /api/roles/permissions */
+export interface RolePermissionConfig {
+  sections: PermissionSection[];
+  roles: Record<UserRole, string[]>;
+}
+
+export const ROLE_DESCRIPTIONS: Record<UserRole, string> = {
+  super_admin: "Full access to everything. Cannot be limited.",
+  admin: "Access is set under Roles & Permissions.",
+  manager: "Access is set under Roles & Permissions.",
+  editor: "Access is set under Roles & Permissions.",
+};
 
 export const ROLE_LABELS: Record<UserRole, string> = {
+  super_admin: "Super Admin",
   admin: "Admin",
   manager: "Manager",
   editor: "Editor",
@@ -18,6 +43,8 @@ export interface CurrentUser {
   role: UserRole;
   isActive: boolean;
   createdAt?: string;
+  /** Keys such as "blog.delete". Always read fresh from the backend. */
+  permissions: string[];
 }
 
 /** Safe user shape returned by the backend — never contains a password hash. */

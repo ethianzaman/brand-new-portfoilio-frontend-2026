@@ -1,7 +1,7 @@
 import { Code2 } from 'lucide-react'
 import { SkillsTable } from './SkillsTable'    
 import { PageHeader } from '@/app/components/dashboard/PageHeader'
-import { dashboardGetSkills } from '@/lib/services/skill.services'
+import { dashboardGetSkills } from '@/lib/services/skill.service'
 
 export default async function DashboardSkillsPage() {
   const skills = await dashboardGetSkills()

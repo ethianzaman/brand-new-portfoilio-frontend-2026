@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import { resizedImageUrl } from "@/lib/images";
 import Reveal from "@/app/components/motion/Reveal";
 import Link from "next/link";
 import { ArrowLeft, Clock3, CalendarDays, Tag } from "lucide-react";
@@ -129,8 +130,10 @@ export default async function BlogPostPage({ params }: Props) {
           <Reveal delay={300} className="mt-8 rounded-2xl overflow-hidden border border-zinc-200 dark:border-zinc-800">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
-              src={post.coverImage}
+              src={resizedImageUrl(post.coverImage, 1200)}
               alt={post.title}
+              fetchPriority="high"
+              decoding="async"
               className="w-full max-h-105 object-cover"
             />
           </Reveal>

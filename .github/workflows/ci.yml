@@ -1,0 +1,31 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: my-app
+    # Nothing listens here, so the build falls back to the demo content.
+    env:
+      API_URL: http://127.0.0.1:9/api
+      NEXT_PUBLIC_API_URL: http://127.0.0.1:9/api
+      REVALIDATE_SECRET: ci-only-secret
+      SITE_URL: https://example.com
+      NEXT_PUBLIC_SITE_URL: https://example.com
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: my-app/package-lock.json
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run typecheck
+      - run: npm run build

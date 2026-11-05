@@ -14,7 +14,7 @@ import {
   dashboardUpdateSocialPlacements,
   type PageSeoMap,
   type PageSeoValue,
-} from "@/lib/services/settings.services";
+} from "@/lib/services/settings.service";
 import { TAGS } from "@/lib/api/tags";
 import type { SocialPlacementMap } from "@/lib/socials";
 import type { SiteSeo, SiteSettings } from "@/lib/types/settings";

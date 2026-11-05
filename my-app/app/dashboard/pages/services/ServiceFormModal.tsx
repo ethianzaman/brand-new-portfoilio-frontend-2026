@@ -79,7 +79,6 @@ export function ServiceFormModal({ service, onSave, onCancel }: Props) {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     if (!title.trim() || !desc.trim()) return
-    console.log("Form is submitting data..."); 
     setLoading(true)
     await onSave({
       title:       title.trim(),

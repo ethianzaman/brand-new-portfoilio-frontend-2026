@@ -1,4 +1,6 @@
 "use client";
+
+import { toast } from "sonner";
 import { useState, useMemo } from "react";
 import { useCurrentUser } from "@/app/components/dashboard/useCurrentUser";
 import {
@@ -18,13 +20,16 @@ import {
 import { ContactData, FAQ, ContactInfo } from "@/lib/types/contact";
 import { ContactInfoModal } from "./ContactInfoModal";
 import { FAQModal } from "./FAQModal";
-import { DeleteModal } from "./DeleteModal";
+import { ContactFormOptions } from "./ContactFormOptions";
+import { useSiteSettingsQuery } from "../settings/useSiteSettingsMutations";
+import { resolveSocials } from "@/lib/socials";
+import { ConfirmDeleteModal } from "@/app/components/dashboard/ConfirmDeleteModal";
 import {
   dashboardUpdateInfo,
   dashboardCreateFAQ,
   dashboardUpdateFAQ,
   dashboardDeleteFAQ,
-} from "@/lib/services/contact.services";
+} from "@/lib/services/contact.service";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
 
@@ -66,10 +71,12 @@ function StatCard({
 
 // ── Main CMS ──────────────────────────────────────────────────
 export function ContactCMS({ initial }: { initial: ContactData }) {
-  const { canDelete } = useCurrentUser();
+  const { can } = useCurrentUser();
+  const canDelete = can("contact.delete");
+  const { data: settings } = useSiteSettingsQuery();
+  const socialLinks = settings && resolveSocials(settings, "contact").length;
   const [info, setInfo] = useState<ContactInfo>(initial.info);
   const [faqs, setFaqs] = useState<FAQ[]>(initial.faqs);
-  const [toast, setToast] = useState<string | null>(null);
   const [faqSearch, setFaqSearch] = useState("");
 
   // ── Modal state ───────────────────────────────────────────
@@ -80,12 +87,6 @@ export function ContactCMS({ initial }: { initial: ContactData }) {
     id: string;
     label: string;
   } | null>(null);
-
-  // ── Toast ─────────────────────────────────────────────────
-  function showToast(msg: string) {
-    setToast(msg);
-    setTimeout(() => setToast(null), 3000);
-  }
 
   // ── Filtered FAQs ─────────────────────────────────────────
   const filteredFAQs = useMemo(() => {
@@ -101,10 +102,9 @@ export function ContactCMS({ initial }: { initial: ContactData }) {
   // ── Info save ─────────────────────────────────────────────
   async function handleSaveInfo(data: Partial<ContactInfo>) {
     const updated = await dashboardUpdateInfo(data);
-    console.log("Updated contact info:", updated);
     setInfo(updated);
     setShowInfoModal(false);
-    showToast("Contact info updated");
+    toast.success("Contact info updated");
   }
 
   // ── FAQ CRUD ──────────────────────────────────────────────
@@ -114,11 +114,11 @@ export function ContactCMS({ initial }: { initial: ContactData }) {
       if (updated) {
         setFaqs((prev) => prev.map((f) => (f.id === editFAQ.id ? updated : f)));
       }
-      showToast("FAQ updated");
+      toast.success("FAQ updated");
     } else {
       const created = await dashboardCreateFAQ(data);
       setFaqs((prev) => [...prev, created]);
-      showToast("FAQ added");
+      toast.success("FAQ added");
     }
     setShowFAQModal(false);
     setEditFAQ(null);
@@ -130,7 +130,7 @@ export function ContactCMS({ initial }: { initial: ContactData }) {
     await dashboardDeleteFAQ(deleteTarget.id);
     setFaqs((prev) => prev.filter((f) => f.id !== deleteTarget.id));
     setDeleteTarget(null);
-    showToast("FAQ deleted");
+    toast.success("FAQ deleted");
   }
 
   return (
@@ -151,7 +151,11 @@ export function ContactCMS({ initial }: { initial: ContactData }) {
         />
         <StatCard
           label="Social Links"
-          value="3 platforms"
+          value={
+            socialLinks === undefined
+              ? "—"
+              : `${socialLinks} ${socialLinks === 1 ? "link" : "links"}`
+          }
           color="#f59e0b"
           icon={MessageCircle}
         />
@@ -186,10 +190,11 @@ export function ContactCMS({ initial }: { initial: ContactData }) {
                 Contact Details
               </h3>
               <p className="text-xs text-zinc-500 dark:text-zinc-400">
-                Email, phone, location, socials and availability
+                Email, phone, location and availability
               </p>
             </div>
           </div>
+          {can("contact.edit") && (
           <button
             onClick={() => setShowInfoModal(true)}
             className="flex items-center gap-1.5 px-3 py-2 rounded-xl
@@ -203,6 +208,7 @@ export function ContactCMS({ initial }: { initial: ContactData }) {
             <Pencil className="w-3.5 h-3.5" />
             Edit Info
           </button>
+          )}
         </div>
 
         {/* Contact info grid */}
@@ -294,6 +300,11 @@ export function ContactCMS({ initial }: { initial: ContactData }) {
         </div>
       </div>
 
+      {/* ── Contact form dropdowns ── */}
+      {can("contact.edit") && (
+        <ContactFormOptions initial={initial.formOptions} />
+      )}
+
       {/* ── FAQ Table ── */}
       <div
         className="bg-white dark:bg-zinc-900
@@ -321,6 +332,7 @@ export function ContactCMS({ initial }: { initial: ContactData }) {
               </p>
             </div>
           </div>
+          {can("contact.create") && (
           <button
             onClick={() => {
               setEditFAQ(null);
@@ -333,6 +345,7 @@ export function ContactCMS({ initial }: { initial: ContactData }) {
             <Plus className="w-3.5 h-3.5" />
             Add FAQ
           </button>
+          )}
         </div>
 
         {/* Search */}
@@ -426,6 +439,7 @@ export function ContactCMS({ initial }: { initial: ContactData }) {
 
                     {/* Actions */}
                     <div className="col-span-1 flex items-center justify-end gap-1">
+                      {can("contact.edit") && (
                       <button
                         onClick={() => {
                           setEditFAQ(faq);
@@ -438,6 +452,7 @@ export function ContactCMS({ initial }: { initial: ContactData }) {
                       >
                         <Pencil className="w-3.5 h-3.5" />
                       </button>
+                      )}
                       {canDelete && (
                         <button
                           onClick={() =>
@@ -473,20 +488,6 @@ export function ContactCMS({ initial }: { initial: ContactData }) {
         </div>
       </div>
 
-      {/* ── Toast ── */}
-      {toast && (
-        <div
-          className="fixed bottom-6 left-1/2 -translate-x-1/2 z-60
-                        px-5 py-3 rounded-xl
-                        bg-zinc-900 dark:bg-white
-                        text-white dark:text-zinc-900
-                        text-sm font-medium shadow-xl
-                        animate-fade-in max-w-[calc(100vw-2rem)] text-center"
-        >
-          {toast}
-        </div>
-      )}
-
       {/* ── Modals ── */}
       {showInfoModal && (
         <ContactInfoModal
@@ -509,12 +510,13 @@ export function ContactCMS({ initial }: { initial: ContactData }) {
       )}
 
       {deleteTarget && (
-        <DeleteModal
+        <ConfirmDeleteModal
           title="Delete FAQ?"
-          desc={`Delete "${deleteTarget.label.slice(0, 60)}"? This cannot be undone.`}
           onConfirm={handleDeleteFAQ}
           onCancel={() => setDeleteTarget(null)}
-        />
+        >
+          Delete &quot;{deleteTarget.label.slice(0, 60)}&quot;? This cannot be undone.
+        </ConfirmDeleteModal>
       )}
     </>
   );

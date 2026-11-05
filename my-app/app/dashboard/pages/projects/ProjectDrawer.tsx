@@ -12,7 +12,7 @@ import {
 } from "lucide-react";
 import { Project } from "@/lib/types/project";
 import { cn } from "@/lib/utils";
-import { GithubIcon } from "@/app/components/icon/brandIcons";
+import { GithubIcon } from "@/app/components/icon/BrandIcons";
 
 const CATEGORY_COLORS: Record<string, string> = {
   frontend:
@@ -68,7 +68,8 @@ function DetailRow({
 }
 
 export function ProjectDrawer({ project, onClose, onEdit, onDelete }: Props) {
-  const { canDelete } = useCurrentUser();
+  const { can } = useCurrentUser();
+  const canDelete = can("projects.delete");
   const isOpen = !!project;
 
   // ✅ Close on Escape key
@@ -330,6 +331,7 @@ export function ProjectDrawer({ project, onClose, onEdit, onDelete }: Props) {
                 <ExternalLink className="w-4 h-4" />
                 View Live
               </a>
+              {can("projects.edit") && (
               <button
                 onClick={() => onEdit(project)}
                 className="flex items-center justify-center gap-2
@@ -339,6 +341,7 @@ export function ProjectDrawer({ project, onClose, onEdit, onDelete }: Props) {
               >
                 Edit
               </button>
+              )}
             </div>
           </>
         )}

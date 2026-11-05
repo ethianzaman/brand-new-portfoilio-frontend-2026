@@ -16,6 +16,8 @@ import { TopBarNotifications } from "./TopBarNotifications";
 import { ThemeToggle } from "../ThemeToggle";
 import { useMessageNotifications } from "./useMessageNotifications";
 import { useCurrentUser } from "./useCurrentUser";
+import { PermissionGate } from "./PermissionGate";
+import { ChangePassword } from "./ChangePassword";
 import { SiteBackground } from "../background/SiteBackground";
 import { ROLE_LABELS } from "@/lib/types/user";
 import { cn } from "@/lib/utils";
@@ -24,7 +26,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
   const [collapsed, setCollapsed] = useState(false);
   const { unreadCount, notifications, loading, error, markAllRead } =
     useMessageNotifications();
-  const { user } = useCurrentUser();
+  const { user, can } = useCurrentUser();
   const pathname = usePathname();
   const onSettings = pathname === "/dashboard/pages/settings";
 
@@ -73,15 +75,20 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
 
           <div className="ml-auto flex items-center gap-2 sm:gap-3">
             {/* Notifications */}
-            <TopBarNotifications
-              unreadCount={unreadCount}
-              notifications={notifications}
-              loading={loading}
-              error={error}
-              onMarkAllRead={markAllRead}
-            />
+            {can("messages.view") && (
+              <TopBarNotifications
+                unreadCount={unreadCount}
+                notifications={notifications}
+                loading={loading}
+                error={error}
+                onMarkAllRead={markAllRead}
+              />
+            )}
+
+            <ChangePassword iconOnly />
 
             {/* Settings */}
+            {can("settings.view") && (
             <Link
               href="/dashboard/pages/settings"
               aria-label="Settings"
@@ -94,6 +101,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
             >
               <Settings className="h-4 w-4" />
             </Link>
+            )}
 
             <ThemeToggle />
             <span className="text-sm text-zinc-500 dark:text-zinc-400 hidden sm:block">
@@ -110,7 +118,9 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
             </Button>
           </div>
         </header>
-        <main className="flex-1 overflow-y-auto p-4 md:p-6">{children}</main>
+        <main className="flex-1 overflow-y-auto p-4 md:p-6">
+          <PermissionGate>{children}</PermissionGate>
+        </main>
       </div>
     </div>
   );

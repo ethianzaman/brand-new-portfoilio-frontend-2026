@@ -124,7 +124,7 @@ test("home sections wait for scroll instead of animating off screen", async ({ p
   await page.goto("/");
   await expect.poll(() => count(page, "hidden")).toBeGreaterThan(0);
 
-  const heading = page.getByRole("heading", { level: 1, name: "Services", exact: true });
+  const heading = page.getByRole("heading", { level: 2, name: "Services", exact: true });
   const reveal = heading.locator("xpath=ancestor::*[contains(@class,'reveal')][1]");
   await expect(reveal).toHaveAttribute("data-reveal", "hidden");
 

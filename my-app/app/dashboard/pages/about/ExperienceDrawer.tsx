@@ -63,7 +63,8 @@ export function ExperienceDrawer({
   onEdit,
   onDelete,
 }: Props) {
-  const { canDelete } = useCurrentUser();
+  const { can } = useCurrentUser();
+  const canDelete = can("about.delete");
   const isOpen = !!experience;
 
   // ✅ Close on Escape key
@@ -290,6 +291,7 @@ export function ExperienceDrawer({
                   Delete
                 </button>
               )}
+              {can("about.edit") && (
               <button
                 onClick={() => onEdit(experience)}
                 className="flex items-center justify-center gap-2
@@ -299,6 +301,7 @@ export function ExperienceDrawer({
               >
                 Edit
               </button>
+              )}
             </div>
           </>
         )}

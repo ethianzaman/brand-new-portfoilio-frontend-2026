@@ -1,4 +1,6 @@
 "use client";
+
+import { toast } from "sonner";
 import { useMemo, useState } from "react";
 import { keepPreviousData, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useCurrentUser } from "@/app/components/dashboard/useCurrentUser";
@@ -8,7 +10,6 @@ import {
   Trash2,
   Search,
   Star,
-  Check,
   Eye,
   Clock3,
   AlertCircle,
@@ -17,7 +18,7 @@ import {
 } from "lucide-react";
 import { BlogPost } from "@/lib/types/blog";
 import { BlogFormModal } from "./BlogFormModal";
-import { BlogDeleteModal } from "./BlogDeleteModal";
+import { ConfirmDeleteModal, DeleteTarget } from "@/app/components/dashboard/ConfirmDeleteModal";
 import { BlogDrawer } from "./BlogDrawer";
 import {
   dashboardCreatePost,
@@ -27,7 +28,7 @@ import {
   dashboardGetBlogStats,
   type BlogStats,
   type BlogStatusFilter,
-} from "@/lib/services/blog.services";
+} from "@/lib/services/blog.service";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
 import { Pagination } from "@/app/components/dashboard/Pagination";
@@ -90,6 +91,7 @@ function BlogRow({
   onDelete: (p: BlogPost) => void;
   canDelete: boolean;
 }) {
+  const { can } = useCurrentUser();
   const date = post.createdAt
     ? new Date(post.createdAt).toLocaleDateString("en-US", {
         month: "short",
@@ -187,6 +189,7 @@ function BlogRow({
 
         {/* Actions */}
         <div className="flex items-center gap-1 shrink-0">
+          {can("blog.edit") && (
           <button
             title="Edit post"
             onClick={(e) => {
@@ -200,6 +203,7 @@ function BlogRow({
           >
             <Pencil className="w-4 h-4" />
           </button>
+          )}
           {canDelete && (
             <button
               title="Delete post"
@@ -246,7 +250,8 @@ const EMPTY_STATS: BlogStats = {
 
 // ── Main component ───────────────────────────────────────────────
 export function BlogTable() {
-  const { canDelete } = useCurrentUser();
+  const { can } = useCurrentUser();
+  const canDelete = can("blog.delete");
   const queryClient = useQueryClient();
 
   const [search, setSearch] = useState("");
@@ -258,15 +263,9 @@ export function BlogTable() {
   const [editPost, setEditPost] = useState<BlogPost | null>(null);
   const [deletePost, setDeletePost] = useState<BlogPost | null>(null);
   const [drawerPost, setDrawerPost] = useState<BlogPost | null>(null);
-  const [toast, setToast] = useState<string | null>(null);
 
   // The search box stays instant; the (server-side) query waits for a pause.
   const debouncedSearch = useDebouncedValue(search);
-
-  function showToast(msg: string) {
-    setToast(msg);
-    setTimeout(() => setToast(null), 3000);
-  }
 
   // ── Data ──────────────────────────────────────────────────────
   // The first page + the stats are prefetched on the server and hydrated
@@ -286,7 +285,7 @@ export function BlogTable() {
 
   const statsQuery = useQuery({
     queryKey: ["blogs", "stats"],
-    queryFn: dashboardGetBlogStats,
+    queryFn: () => dashboardGetBlogStats(),
   });
 
   const posts = listQuery.data?.blogs ?? [];
@@ -318,13 +317,13 @@ export function BlogTable() {
         const updated = await dashboardUpdatePost(editPost.id, data, image);
         if (updated) {
           setDrawerPost((prev) => (prev?.id === updated.id ? updated : prev));
-          showToast("Post updated successfully");
+          toast.success("Post updated successfully");
           queryClient.invalidateQueries({ queryKey: ["blogs"] });
         }
       } else {
         const created = await dashboardCreatePost(data, image);
         if (created) {
-          showToast("Post published successfully");
+          toast.success("Post published successfully");
           queryClient.invalidateQueries({ queryKey: ["blogs"] });
         }
       }
@@ -332,7 +331,7 @@ export function BlogTable() {
       console.error("handleSave error:", err);
       const message =
         err instanceof Error ? err.message : "Something went wrong.";
-      showToast(message);
+      toast.error(message);
     } finally {
       setShowForm(false);
       setEditPost(null);
@@ -345,7 +344,7 @@ export function BlogTable() {
       const ok = await dashboardDeletePost(deletePost.id);
       if (ok) {
         setDrawerPost(null);
-        showToast("Post deleted");
+        toast.success("Post deleted");
         queryClient.invalidateQueries({ queryKey: ["blogs"] });
       }
     } catch (err) {
@@ -427,6 +426,7 @@ export function BlogTable() {
           )}
         </div>
 
+        {can("blog.create") && (
         <button
           onClick={() => {
             setEditPost(null);
@@ -440,6 +440,7 @@ export function BlogTable() {
           <Plus className="w-4 h-4" />
           Write Post
         </button>
+        )}
       </div>
 
       {/* ── Status filter ── */}
@@ -556,24 +557,6 @@ export function BlogTable() {
         busy={listQuery.isFetching}
       />
 
-      {/* ── Toast ── */}
-      {toast && (
-        <div
-          className="fixed top-6 left-1/2 -translate-x-1/2 z-100
-               flex items-center gap-3 px-5 py-3 rounded-2xl
-               bg-zinc-900 dark:bg-white
-               text-white dark:text-zinc-900
-               text-sm font-semibold shadow-2xl
-               animate-in fade-in slide-in-from-top-4 duration-300
-               max-w-[calc(100vw-2rem)] text-center border border-white/10 dark:border-zinc-200"
-        >
-          <div className="flex items-center justify-center w-5 h-5 rounded-full bg-emerald-500/20 text-emerald-500">
-            <Check className="w-3.5 h-3.5 stroke-[3px]" />
-          </div>
-          <span>{toast}</span>
-        </div>
-      )}
-
       {/* ── Blog detail drawer ── */}
       <BlogDrawer
         post={drawerPost}
@@ -596,11 +579,14 @@ export function BlogTable() {
       )}
 
       {deletePost && (
-        <BlogDeleteModal
-          post={deletePost}
+        <ConfirmDeleteModal
+          title="Delete post?"
           onConfirm={handleDelete}
           onCancel={() => setDeletePost(null)}
-        />
+        >
+          You are about to delete <DeleteTarget>&quot;{deletePost.title}&quot;</DeleteTarget>. This
+          will permanently remove the article from your blog. This action cannot be undone.
+        </ConfirmDeleteModal>
       )}
     </>
   );

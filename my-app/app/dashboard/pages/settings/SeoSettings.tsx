@@ -1,10 +1,12 @@
 "use client";
 
 import { useState } from "react";
+import { useCurrentUser } from "@/app/components/dashboard/useCurrentUser";
 import { Loader2, Save, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { inputCls, labelCls } from "@/components/ui/shared";
 import { cn } from "@/lib/utils";
+import { OgImageField } from "@/app/components/seo/OgImageField";
 import type { SiteSeo, SiteSettings } from "@/lib/types/settings";
 import {
   usePublishSiteSeo,
@@ -91,6 +93,7 @@ function isValidOrigin(value: string): boolean {
 }
 
 function SeoForm({ initial }: { initial: SiteSettings }) {
+  const { can } = useCurrentUser();
   const publish = usePublishSiteSeo();
   const [form, setForm] = useState<FormState>(toFormState(initial.seo));
 
@@ -194,16 +197,11 @@ function SeoForm({ initial }: { initial: SiteSettings }) {
       </div>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-        <div className="flex flex-col gap-1.5">
-          <label className={labelCls}>Default OG Image</label>
-          <input
-            type="text"
-            placeholder="https://... or /images/og.png"
-            value={form.defaultOgImage}
-            onChange={(e) => set("defaultOgImage", e.target.value)}
-            className={inputCls}
-          />
-        </div>
+        <OgImageField
+          label="Default OG Image"
+          value={form.defaultOgImage}
+          onChange={(next) => set("defaultOgImage", next)}
+        />
 
         <div className="flex flex-col gap-1.5">
           <label className={labelCls}>Twitter Handle</label>
@@ -238,10 +236,11 @@ function SeoForm({ initial }: { initial: SiteSettings }) {
         )}
       </div>
 
+      {can("seo.edit") && (
       <Button
         onClick={handlePublish}
         disabled={!canPublish}
-        className="w-full rounded-xl bg-indigo-600 hover:bg-indigo-700 sm:w-auto"
+        className="w-full rounded-xl bg-indigo-600 hover:bg-indigo-700 sm:w-auto text-white"
       >
         {publish.isPending ? (
           <Loader2 className="h-4 w-4 animate-spin" />
@@ -250,6 +249,7 @@ function SeoForm({ initial }: { initial: SiteSettings }) {
         )}
         {publish.isPending ? "Publishing..." : "Publish SEO Defaults"}
       </Button>
+      )}
     </div>
   );
 }
