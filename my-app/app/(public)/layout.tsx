@@ -1,7 +1,7 @@
-import { Footer } from "../components/footer/footer";
+import { Footer } from "../components/footer/Footer";
 import { Navbar } from "../components/navbar/Navbar";
 import { SiteBackground } from "@/app/components/background/SiteBackground";
-import { LiveRefresh } from "@/components/LiveRefresh";
+import { LiveRefresh } from "@/app/components/LiveRefresh";
 import { getSiteSettings } from "@/lib/api/settings";
 
 export default async function PublicLayout({

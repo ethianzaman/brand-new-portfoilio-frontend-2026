@@ -1,6 +1,8 @@
 import type { MetadataRoute } from "next";
 import { getSiteSettings } from "@/lib/api/settings";
 import { getPublishedBlogPosts } from "@/lib/api/blog";
+import { getProjects } from "@/lib/api/projects";
+import { getServices } from "@/lib/api/services";
 import { resolveSiteOrigin, absoluteUrl } from "@/lib/seo/metadata";
 
 /**
@@ -9,10 +11,8 @@ import { resolveSiteOrigin, absoluteUrl } from "@/lib/seo/metadata";
  * Lists only the routes that actually render indexable content:
  *   • the public static pages
  *   • every PUBLISHED blog post (`getPublishedBlogPosts` filters drafts out)
- *
- * Project/service detail routes are intentionally absent — they do not exist
- * yet, and listing a route that 404s is a sitemap error. When those routes
- * are added, extend this file with their slugs.
+ *   • every project and service with a page of its own, read from the database,
+ *     so a new or removed one is reflected here without a code change
  *
  * `noindex` pages are also excluded? Not here: no public page is `noindex` by
  * default, and robots.txt governs crawling. Per-page `noindex` is expressed in
@@ -22,6 +22,17 @@ import { resolveSiteOrigin, absoluteUrl } from "@/lib/seo/metadata";
  * origin configured the sitemap degrades to relative-safe empty output rather
  * than emitting `undefined` URLs.
  */
+/** Every project, across as many pages as the API needs. */
+async function allProjects() {
+  const pageSize = 100;
+  const projects = [];
+  for (let page = 1; ; page += 1) {
+    const result = await getProjects({ category: "all", page, pageSize });
+    projects.push(...result.projects);
+    if (!result.hasMore || result.projects.length === 0) return projects;
+  }
+}
+
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const settings = await getSiteSettings();
   const origin = resolveSiteOrigin(settings.seo?.siteUrl);
@@ -66,6 +77,32 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       lastModified: post.updatedAt ? new Date(post.updatedAt) : now,
       changeFrequency: "monthly",
       priority: 0.6,
+    });
+  }
+
+  const [projects, services] = await Promise.all([allProjects(), getServices()]);
+
+  for (const project of projects) {
+    if (!project.slug || project.isPlaceholder || project.seo?.noindex) continue;
+    const url = absoluteUrl(origin, `/projects/${project.slug}`);
+    if (!url) continue;
+    entries.push({
+      url,
+      lastModified: project.updatedAt ? new Date(project.updatedAt) : now,
+      changeFrequency: "monthly",
+      priority: 0.7,
+    });
+  }
+
+  for (const service of services) {
+    if (!service.slug || service.seo?.noindex) continue;
+    const url = absoluteUrl(origin, `/services/${service.slug}`);
+    if (!url) continue;
+    entries.push({
+      url,
+      lastModified: service.updatedAt ? new Date(service.updatedAt) : now,
+      changeFrequency: "monthly",
+      priority: 0.7,
     });
   }
 

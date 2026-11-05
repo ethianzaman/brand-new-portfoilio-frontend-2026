@@ -1,4 +1,5 @@
 import { absoluteUrl, resolveSiteOrigin, normalizeSiteSeo } from "@/lib/seo/metadata";
+import { isProfileLink } from "@/lib/socials";
 
 /**
  * Typed JSON-LD builders + a safe serializer.
@@ -17,41 +18,55 @@ export function serializeJsonLd(data: unknown): string {
     .replace(/\u2029/g, "\\u2029");
 }
 
-interface OrganizationInput {
+// What a brand-new About document is created with. It is not anyone's name.
+const PLACEHOLDER_NAME = "Your Name";
+
+/** The real name from the About page, or else the brand name. */
+export function resolvePersonName(heroName?: string, brandName?: string): string {
+  const name = heroName?.trim();
+  return name && name !== PLACEHOLDER_NAME ? name : brandName?.trim() || "";
+}
+
+const personId = (origin: string) => `${origin}/#person`;
+
+interface PersonInput {
   siteSeo?: unknown;
-  /** Brand name from Site Settings, used when no SEO title is set. */
   brandName?: string;
+  /** From the About page. */
+  name?: string;
+  jobTitle?: string;
+  image?: string | null;
   /** Social/profile links from Site Settings. */
   socials?: { href: string }[];
-  /** Absolute or same-origin logo URL, when one exists. */
-  logo?: string;
 }
 
 /**
- * Organization schema. Emitted once, site-wide, in the root layout.
- *
- * Everything is derived from real Site Settings — no fabricated address,
- * founding date or contact details.
+ * Person schema, since this is one person's portfolio. Emitted once, site-wide,
+ * in the root layout, and everything comes from the real site content. `sameAs`
+ * tells search engines these profiles are the same person, so it only lists
+ * real profiles, not a link to a network's home page.
  */
-export function organizationJsonLd(input: OrganizationInput) {
+export function personJsonLd(input: PersonInput) {
   const site = normalizeSiteSeo(input.siteSeo);
   const origin = resolveSiteOrigin(site.siteUrl);
-  const name = input.brandName || site.defaultMetaTitle || "";
+  const name = resolvePersonName(input.name, input.brandName);
 
   if (!origin || !name) return null;
 
-  const sameAs = (input.socials ?? [])
-    .map((s) => s.href)
-    .filter((href): href is string => typeof href === "string" && /^https?:\/\//i.test(href));
-
-  const logo = input.logo ? absoluteUrl(origin, input.logo) : "";
+  const sameAs = [
+    ...new Set((input.socials ?? []).map((s) => s.href).filter(isProfileLink)),
+  ];
+  const image = input.image ? absoluteUrl(origin, input.image) : "";
+  const jobTitle = input.jobTitle?.trim();
 
   return {
     "@context": "https://schema.org",
-    "@type": "Organization",
+    "@type": "Person",
+    "@id": personId(origin),
     name,
     url: origin,
-    ...(logo ? { logo } : {}),
+    ...(jobTitle ? { jobTitle } : {}),
+    ...(image ? { image } : {}),
     ...(sameAs.length ? { sameAs } : {}),
   };
 }
@@ -79,6 +94,7 @@ export function websiteJsonLd(input: WebsiteInput) {
     "@type": "WebSite",
     name,
     url: origin,
+    publisher: { "@id": personId(origin) },
   };
 }
 
@@ -118,7 +134,53 @@ export function blogPostingJsonLd(input: BlogPostingInput) {
     ...(input.dateModified ? { dateModified: input.dateModified } : {}),
     ...(image ? { image: [image] } : {}),
     ...(authorName
-      ? { author: { "@type": "Organization", name: authorName } }
+      ? { author: { "@type": "Person", name: authorName, url: origin } }
       : {}),
+  };
+}
+
+interface DetailInput {
+  title: string;
+  description?: string;
+  /** Path relative to the origin, e.g. `/projects/my-project`. */
+  path: string;
+  siteSeo?: unknown;
+}
+
+/** One piece of portfolio work, on its detail page. */
+export function projectJsonLd(
+  input: DetailInput & { image?: string; keywords?: string[] },
+) {
+  const origin = resolveSiteOrigin(normalizeSiteSeo(input.siteSeo).siteUrl);
+  const url = absoluteUrl(origin, input.path);
+  if (!url) return null;
+
+  const image = input.image ? absoluteUrl(origin, input.image) : "";
+
+  return {
+    "@context": "https://schema.org",
+    "@type": "CreativeWork",
+    name: input.title,
+    description: input.description || undefined,
+    url,
+    author: { "@id": personId(origin) },
+    ...(image ? { image } : {}),
+    ...(input.keywords?.length ? { keywords: input.keywords.join(", ") } : {}),
+  };
+}
+
+/** A service on offer, on its detail page. */
+export function serviceJsonLd(input: DetailInput) {
+  const origin = resolveSiteOrigin(normalizeSiteSeo(input.siteSeo).siteUrl);
+  const url = absoluteUrl(origin, input.path);
+  if (!url) return null;
+
+  return {
+    "@context": "https://schema.org",
+    "@type": "Service",
+    name: input.title,
+    description: input.description || undefined,
+    url,
+    provider: { "@id": personId(origin) },
   };
 }

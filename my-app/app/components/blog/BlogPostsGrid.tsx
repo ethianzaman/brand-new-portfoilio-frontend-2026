@@ -1,5 +1,11 @@
 "use client";
 import { useState, useMemo } from "react";
+import {
+  CategoryFilter,
+  setCategoryParam,
+  useCategoryParam,
+} from "@/app/components/CategoryFilter";
+import { resizedImageUrl } from "@/lib/images";
 import Reveal from "@/app/components/motion/Reveal";
 import SpotlightCard from "@/app/components/motion/SpotlightCard";
 import {
@@ -12,10 +18,8 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { BlogPost } from "@/lib/types/blog";
-import { cn } from "@/lib/utils";
 
 const PAGE_SIZE = 3;
-
 function PostCard({ post }: { post: BlogPost }) {
   const date = post.createdAt
     ? new Date(post.createdAt).toLocaleDateString("en-US", {
@@ -43,8 +47,10 @@ function PostCard({ post }: { post: BlogPost }) {
         {post.coverImage ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
-            src={post.coverImage}
+            src={resizedImageUrl(post.coverImage!, 640)}
             alt={post.title}
+            loading="lazy"
+            decoding="async"
             className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
           />
         ) : (
@@ -129,8 +135,10 @@ function FeaturedHero({ post }: { post: BlogPost }) {
         {post.coverImage ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
-            src={post.coverImage}
+            src={resizedImageUrl(post.coverImage!, 960)}
             alt={post.title}
+            loading="lazy"
+            decoding="async"
             className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
           />
         ) : (
@@ -189,144 +197,139 @@ function FeaturedHero({ post }: { post: BlogPost }) {
 
 export function BlogPostsGrid({ posts }: { posts: BlogPost[] }) {
   const [query, setQuery] = useState("");
-  const [category, setCategory] = useState("All");
-  const [visible, setVisible] = useState(PAGE_SIZE);
+  const [more, setMore] = useState({ filter: "", visible: PAGE_SIZE });
+  const urlCategory = useCategoryParam();
 
-  const categories = useMemo(
-    () => ["All", ...Array.from(new Set(posts.map((p) => p.category)))],
-    [posts],
-  );
+  const categories = useMemo(() => {
+    const counts = new Map<string, number>();
+    for (const post of posts) {
+      counts.set(post.category, (counts.get(post.category) ?? 0) + 1);
+    }
+    return Array.from(counts, ([name, count]) => ({
+      value: name,
+      label: name,
+      count,
+    }));
+  }, [posts]);
+
+  // A shared or edited link can name a category that no longer exists.
+  const category = categories.some((c) => c.value === urlCategory)
+    ? urlCategory
+    : null;
+  const search = query.trim().toLowerCase();
+  const isFiltering = category !== null || search !== "";
 
   const filtered = useMemo(() => {
     return posts.filter((p) => {
-      const matchCategory = category === "All" || p.category === category;
+      const matchCategory = category === null || p.category === category;
       const matchQuery =
-        !query.trim() ||
-        p.title.toLowerCase().includes(query.toLowerCase()) ||
-        p.excerpt.toLowerCase().includes(query.toLowerCase()) ||
-        p.tags.some((t) => t.toLowerCase().includes(query.toLowerCase()));
+        !search ||
+        p.title.toLowerCase().includes(search) ||
+        p.excerpt.toLowerCase().includes(search) ||
+        p.tags.some((t) => t.toLowerCase().includes(search));
       return matchCategory && matchQuery;
     });
-  }, [posts, query, category]);
+  }, [posts, search, category]);
 
-  const featured = posts.find((p) => p.featured);
+  // While filtering, the featured post is an ordinary result in the grid.
+  const featured = isFiltering ? undefined : posts.find((p) => p.featured);
   const rest = filtered.filter((p) => p !== featured);
+
+  // "See more" starts over whenever the filter changes, including back/forward.
+  const filterKey = `${category ?? ""}|${search}`;
+  const visible = more.filter === filterKey ? more.visible : PAGE_SIZE;
   const shown = rest.slice(0, visible);
   const hasMore = visible < rest.length;
 
   function handleSeeMore() {
-    setVisible((v) => v + PAGE_SIZE);
+    setMore({ filter: filterKey, visible: visible + PAGE_SIZE });
+  }
+
+  function clearFilters() {
+    setQuery("");
+    if (category !== null) setCategoryParam(null);
   }
 
   return (
     <div className="flex flex-col gap-10">
+      {/* ── Filter section ── */}
+      <Reveal className="flex flex-col gap-3">
+        <div className="flex flex-col gap-3 sm:flex-row">
+          {/* Search */}
+          <div className="relative min-w-0 flex-1">
+            <Search
+              className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400 pointer-events-none"
+            />
+            <input
+              type="text"
+              aria-label="Search articles"
+              placeholder="Search articles..."
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              className="w-full h-11 pl-10 pr-10 rounded-xl text-sm
+                         bg-white dark:bg-zinc-900
+                         border border-zinc-200 dark:border-zinc-700
+                         text-zinc-900 dark:text-white placeholder:text-zinc-400
+                         focus:outline-none focus:ring-2 focus:ring-indigo-500
+                         transition-colors"
+            />
+            {query && (
+              <button
+                type="button"
+                onClick={() => setQuery("")}
+                aria-label="Clear search"
+                className="absolute right-3 top-1/2 -translate-y-1/2
+                           w-6 h-6 rounded-md flex items-center justify-center
+                           text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white
+                           hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            )}
+          </div>
+
+          {/* Category */}
+          <CategoryFilter options={categories} value={category} />
+        </div>
+
+        {/* Result summary */}
+        <div className="flex min-h-7 items-center justify-between gap-3">
+          <p
+            aria-live="polite"
+            className="min-w-0 text-sm text-zinc-500 dark:text-zinc-400"
+          >
+            {filtered.length} article{filtered.length !== 1 ? "s" : ""}
+            {category && (
+              <>
+                {" in "}
+                <span className="font-medium text-zinc-900 dark:text-white">
+                  {category}
+                </span>
+              </>
+            )}
+          </p>
+          {isFiltering && (
+            <button
+              type="button"
+              onClick={clearFilters}
+              className="flex shrink-0 items-center gap-1 rounded-lg px-2 py-1 text-sm font-medium text-indigo-600 transition-colors hover:bg-indigo-50 dark:text-indigo-400 dark:hover:bg-indigo-950"
+            >
+              <X className="h-3.5 w-3.5" />
+              Clear filters
+            </button>
+          )}
+        </div>
+      </Reveal>
+
       {/* Featured */}
-      {featured && filtered.includes(featured) && (
+      {featured && (
         <Reveal>
           <FeaturedHero post={featured} />
         </Reveal>
       )}
 
-      {/* ── Filter section ── */}
-      <Reveal className="flex flex-col gap-3">
-        {/* Search */}
-        <div className="relative">
-          <Search
-            className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400 pointer-events-none"
-          />
-          <input
-            type="text"
-            placeholder="Search articles..."
-            value={query}
-            onChange={(e) => {
-              setQuery(e.target.value);
-              setVisible(PAGE_SIZE);
-            }}
-            className="w-full h-11 pl-10 pr-10 rounded-xl text-sm
-                       bg-white dark:bg-zinc-900
-                       border border-zinc-200 dark:border-zinc-700
-                       text-zinc-900 dark:text-white placeholder:text-zinc-400
-                       focus:outline-none focus:ring-2 focus:ring-indigo-500
-                       transition-colors"
-          />
-          {query && (
-            <button
-              onClick={() => setQuery("")}
-              aria-label="Clear search"
-              className="absolute right-3 top-1/2 -translate-y-1/2
-                         w-6 h-6 rounded-md flex items-center justify-center
-                         text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white
-                         hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
-            >
-              <X className="w-4 h-4" />
-            </button>
-          )}
-        </div>
-
-        {/* Native select — mobile only */}
-        <div className="relative sm:hidden">
-          <select
-            value={category}
-            onChange={(e) => {
-              setCategory(e.target.value);
-              setVisible(PAGE_SIZE);
-            }}
-            className="w-full appearance-none
-                       h-11 pl-4 pr-10 rounded-xl
-                       text-sm font-medium
-                       bg-white dark:bg-zinc-900
-                       border border-zinc-200 dark:border-zinc-700
-                       text-zinc-900 dark:text-white
-                       focus:outline-none focus:ring-2 focus:ring-indigo-500
-                       cursor-pointer"
-          >
-            {categories.map((c) => (
-              <option key={c} value={c}>
-                {c}
-              </option>
-            ))}
-          </select>
-          <ChevronDown
-            className="absolute right-3 top-1/2 -translate-y-1/2
-                       w-4 h-4 text-zinc-400 pointer-events-none"
-          />
-        </div>
-
-        {/* Pill tabs — desktop only, always visible */}
-        <div className="hidden sm:flex items-center gap-2 flex-wrap">
-          {categories.map((c) => (
-            <button
-              key={c}
-              onClick={() => {
-              setCategory(c);
-              setVisible(PAGE_SIZE);
-            }}
-              className={cn(
-                "h-10 px-5 rounded-full text-sm font-medium",
-                "border transition-all duration-150",
-                category === c
-                  ? "bg-indigo-600 text-white border-indigo-600 shadow-sm"
-                  : "bg-white dark:bg-zinc-900 text-zinc-600 dark:text-zinc-400 border-zinc-200 dark:border-zinc-700 hover:border-indigo-300 dark:hover:border-indigo-700 hover:text-indigo-600 dark:hover:text-indigo-400",
-              )}
-            >
-              {c}
-            </button>
-          ))}
-
-          {/* Count */}
-          <span className="ml-auto text-sm text-zinc-400 dark:text-zinc-500">
-            {filtered.length} article{filtered.length !== 1 ? "s" : ""}
-          </span>
-        </div>
-
-        {/* Mobile count */}
-        <p className="sm:hidden text-sm text-zinc-400 dark:text-zinc-500">
-          {filtered.length} article{filtered.length !== 1 ? "s" : ""}
-        </p>
-      </Reveal>
-
       {/* Grid */}
-      {shown.length === 0 ? (
+      {filtered.length === 0 ? (
         <div
           className="flex flex-col items-center justify-center gap-3 py-20
                         text-zinc-400 rounded-2xl border border-dashed
@@ -341,15 +344,24 @@ export function BlogPostsGrid({ posts }: { posts: BlogPost[] }) {
               Try a different search or category
             </p>
           </div>
+          <button
+            type="button"
+            onClick={clearFilters}
+            className="mt-1 rounded-xl bg-indigo-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-indigo-700"
+          >
+            Clear filters
+          </button>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-          {shown.map((post, i) => (
-            <Reveal key={post.id} delay={(i % 3) * 90}>
-              <PostCard post={post} />
-            </Reveal>
-          ))}
-        </div>
+        shown.length > 0 && (
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+            {shown.map((post, i) => (
+              <Reveal key={post.id} delay={(i % 3) * 90}>
+                <PostCard post={post} />
+              </Reveal>
+            ))}
+          </div>
+        )
       )}
 
       {/* ── See More ── */}

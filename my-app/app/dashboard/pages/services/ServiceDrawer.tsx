@@ -1,43 +1,10 @@
 "use client";
 import { useEffect } from "react";
+import { ServiceIcon } from "@/app/components/services/ServiceIcon";
 import { useCurrentUser } from "@/app/components/dashboard/useCurrentUser";
-import {
-  X,
-  Star,
-  Sparkles,
-  Tag,
-  Palette,
-  Layers,
-  ListChecks,
-  Code2,
-  Monitor,
-  Server,
-  Database,
-  Webhook,
-  Globe,
-  Smartphone,
-  Shield,
-  Zap,
-  Cloud,
-  Lock,
-} from "lucide-react";
+import { X, Star, Sparkles, Tag, Palette, ListChecks, Code2 } from "lucide-react";
 import { Service } from "@/lib/types/services";
 import { cn } from "@/lib/utils";
-
-const ICON_MAP: Record<string, React.ElementType> = {
-  Monitor,
-  Server,
-  Layers,
-  Database,
-  Webhook,
-  Code2,
-  Globe,
-  Smartphone,
-  Shield,
-  Zap,
-  Cloud,
-  Lock,
-};
 
 interface Props {
   service: Service | null;
@@ -82,9 +49,9 @@ function DetailRow({
 }
 
 export function ServiceDrawer({ service, onClose, onEdit, onDelete }: Props) {
-  const { canDelete } = useCurrentUser();
+  const { can } = useCurrentUser();
+  const canDelete = can("services.delete");
   const isOpen = !!service;
-  const Icon = ICON_MAP[service?.icon ?? ""] ?? Code2;
 
   // ✅ Close on Escape key
   useEffect(() => {
@@ -141,7 +108,7 @@ export function ServiceDrawer({ service, onClose, onEdit, onDelete }: Props) {
                 className="w-20 h-20 rounded-3xl flex items-center justify-center"
                 style={{ backgroundColor: `${service.color}25` }}
               >
-                <Icon className="w-10 h-10" style={{ color: service.color }} />
+                <ServiceIcon icon={service?.icon} color={service.color} className="w-10 h-10" />
               </div>
 
               {/* Color accent bar */}
@@ -269,7 +236,7 @@ export function ServiceDrawer({ service, onClose, onEdit, onDelete }: Props) {
 
                 <DetailRow icon={Code2} label="Icon">
                   <span className="flex items-center gap-2">
-                    <Icon className="w-4 h-4" style={{ color: service.color }} />
+                    <ServiceIcon icon={service?.icon} color={service.color} className="w-4 h-4" />
                     {service.icon}
                   </span>
                 </DetailRow>
@@ -324,6 +291,7 @@ export function ServiceDrawer({ service, onClose, onEdit, onDelete }: Props) {
                   Delete
                 </button>
               )}
+              {can("services.edit") && (
               <button
                 onClick={() => onEdit(service)}
                 className="flex items-center justify-center gap-2
@@ -333,6 +301,7 @@ export function ServiceDrawer({ service, onClose, onEdit, onDelete }: Props) {
               >
                 Edit
               </button>
+              )}
             </div>
           </>
         )}

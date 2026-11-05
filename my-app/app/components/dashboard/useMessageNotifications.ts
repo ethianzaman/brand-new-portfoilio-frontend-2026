@@ -1,16 +1,16 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef } from "react";
+import { useCurrentUser } from "./useCurrentUser";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Mail } from "lucide-react";
 
-import { publicApiUrl } from "@/lib/api/config";
 import {
   dashboardGetMessages,
   dashboardMarkAllRead,
   dashboardMarkLeadRead,
-} from "@/lib/services/message.services";
+} from "@/lib/services/message.service";
 import type { ContactMessage } from "@/lib/types/message";
 import type { AppNotification } from "./sidebar-config";
 import { useInboxActivity } from "./inboxActivity";
@@ -59,13 +59,15 @@ function toNotification(message: ContactMessage): AppNotification {
 /**
  * Live contact-inbox notifications for the dashboard top bar.
  *
- * Backed by TanStack Query (polls as a fallback) plus the backend SSE stream:
- * the message controller broadcasts a `message` event the instant a submission
- * lands, so the bell updates without a reload.
+ * Backed by TanStack Query (polls as a fallback) plus the backend's private
+ * inbox stream, reached through the session proxy: the message controller sends
+ * a `message` event the instant a submission lands, so the bell updates without
+ * a reload.
  */
 export function useMessageNotifications() {
   const queryClient = useQueryClient();
   const { activeLeadId } = useInboxActivity();
+  const canView = useCurrentUser().can("messages.view");
 
   const { data, isPending, isError } = useQuery({
     queryKey: [...MESSAGES_QUERY_KEY, "notifications"],
@@ -73,15 +75,20 @@ export function useMessageNotifications() {
     staleTime: 15_000,
     refetchInterval: 30_000,
     refetchOnWindowFocus: true,
+    enabled: canView,
   });
 
   // Keep the latest active-thread value readable inside the SSE closure,
   // which is only mounted once.
   const activeLeadRef = useRef(activeLeadId);
-  activeLeadRef.current = activeLeadId;
+  useEffect(() => {
+    activeLeadRef.current = activeLeadId;
+  }, [activeLeadId]);
 
   useEffect(() => {
-    const source = new EventSource(`${publicApiUrl()}/events`);
+    if (!canView) return;
+
+    const source = new EventSource("/api/backend/events/inbox");
 
     const refresh = () => {
       queryClient.invalidateQueries({ queryKey: MESSAGES_QUERY_KEY });
@@ -146,7 +153,7 @@ export function useMessageNotifications() {
       source.removeEventListener("message:update", refresh);
       source.close();
     };
-  }, [queryClient]);
+  }, [canView, queryClient]);
 
   const notifications: AppNotification[] = useMemo(
     () => (data?.messages ?? []).map(toNotification),

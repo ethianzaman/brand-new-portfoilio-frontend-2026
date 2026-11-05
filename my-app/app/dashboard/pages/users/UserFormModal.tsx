@@ -1,18 +1,21 @@
 "use client";
 
 import { useState } from "react";
-import { Check, Copy, Loader2, ShieldCheck, UserPlus, X } from "lucide-react";
+import { Loader2, ShieldCheck, UserPlus, X } from "lucide-react";
 import { toast } from "sonner";
 
-import { dashboardCreateUser } from "@/lib/services/user.services";
+import { dashboardCreateUser } from "@/lib/services/user.service";
 import {
-  ROLE_LABELS,
+  CONFIGURABLE_ROLES,
   USER_ROLES,
   type CreateUserInput,
   type ManagedUser,
   type UserRole,
 } from "@/lib/types/user";
 import { cn } from "@/lib/utils";
+import { useCurrentUser } from "@/app/components/dashboard/useCurrentUser";
+import { RoleSelect } from "./RoleSelect";
+import { TemporaryPasswordModal } from "./TemporaryPasswordModal";
 
 interface Props {
   onCancel: () => void;
@@ -23,14 +26,9 @@ type Errors = { email?: string; password?: string };
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-const ROLE_HELP: Record<UserRole, string> = {
-  admin: "Full access, including user management and all content.",
-  manager: "Can create, edit and delete content. No user management.",
-  editor: "Can create and edit content. Cannot delete.",
-};
-
 export function UserFormModal({ onCancel, onCreated }: Props) {
   const [email, setEmail] = useState("");
+  const { isSuperAdmin } = useCurrentUser();
   const [role, setRole] = useState<UserRole>("editor");
   const [password, setPassword] = useState("");
   const [errors, setErrors] = useState<Errors>({});
@@ -38,7 +36,6 @@ export function UserFormModal({ onCancel, onCreated }: Props) {
   const [temporaryPassword, setTemporaryPassword] = useState<string | null>(
     null,
   );
-  const [copied, setCopied] = useState(false);
 
   function validate(): Errors {
     const next: Errors = {};
@@ -80,83 +77,15 @@ export function UserFormModal({ onCancel, onCreated }: Props) {
     }
   }
 
-  async function copyPassword() {
-    if (!temporaryPassword) return;
-    try {
-      await navigator.clipboard.writeText(temporaryPassword);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    } catch {
-      toast.error("Could not copy — select the password manually.");
-    }
-  }
-
   // ── Success state: temporary password shown exactly once ──────
   if (temporaryPassword) {
     return (
-      <div
-        className="fixed inset-0 z-50 flex items-center justify-center p-4
-                    bg-zinc-950/60 backdrop-blur-sm overflow-y-auto"
-        onClick={onCancel}
-      >
-        <div
-          className="w-full max-w-md my-4 bg-white dark:bg-zinc-900
-                      rounded-2xl border border-zinc-200 dark:border-zinc-800
-                      shadow-2xl"
-          onClick={(e) => e.stopPropagation()}
-        >
-          <div className="p-6">
-            <div
-              className="w-12 h-12 rounded-2xl bg-emerald-50 dark:bg-emerald-950
-                          flex items-center justify-center mb-4"
-            >
-              <Check className="w-6 h-6 text-emerald-600 dark:text-emerald-400" />
-            </div>
-            <h3 className="text-lg font-bold text-zinc-900 dark:text-white">
-              Account created
-            </h3>
-            <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
-              A temporary password was generated for{" "}
-              <span className="font-semibold text-zinc-900 dark:text-white">
-                {email.trim().toLowerCase()}
-              </span>
-              . Share it securely — it is shown only once.
-            </p>
-
-            <div
-              className="mt-4 flex items-center gap-2 rounded-xl border
-                          border-zinc-200 dark:border-zinc-700
-                          bg-zinc-50 dark:bg-zinc-950 p-3"
-            >
-              <code className="flex-1 font-mono text-sm text-zinc-900 dark:text-white break-all">
-                {temporaryPassword}
-              </code>
-              <button
-                type="button"
-                onClick={copyPassword}
-                aria-label="Copy temporary password"
-                className="p-2 rounded-lg text-zinc-500 hover:text-indigo-600
-                           hover:bg-indigo-50 dark:hover:bg-indigo-950
-                           transition-colors"
-              >
-                {copied ? (
-                  <Check className="w-4 h-4 text-emerald-500" />
-                ) : (
-                  <Copy className="w-4 h-4" />
-                )}
-              </button>
-            </div>
-
-            <button
-              onClick={onCancel}
-              className="mt-5 w-full py-2.5 rounded-xl text-sm font-medium
-                         bg-indigo-600 hover:bg-indigo-700 text-white transition-colors"
-            >
-              Done
-            </button>
-          </div>
-        </div>
-      </div>
+      <TemporaryPasswordModal
+        title="Account created"
+        email={email.trim().toLowerCase()}
+        password={temporaryPassword}
+        onClose={onCancel}
+      />
     );
   }
 
@@ -239,25 +168,14 @@ export function UserFormModal({ onCancel, onCreated }: Props) {
               >
                 Role
               </label>
-              <select
+              <RoleSelect
                 id="new-user-role"
+                label="Role"
                 value={role}
-                onChange={(e) => setRole(e.target.value as UserRole)}
-                className="h-9 w-full rounded-xl border border-zinc-200 dark:border-zinc-700
-                           bg-white dark:bg-zinc-950 px-3 text-sm
-                           text-zinc-900 dark:text-white
-                           focus:outline-none focus:ring-2 focus:ring-indigo-500
-                           transition-colors"
-              >
-                {USER_ROLES.map((r) => (
-                  <option key={r} value={r}>
-                    {ROLE_LABELS[r]}
-                  </option>
-                ))}
-              </select>
-              <p className="text-xs text-zinc-500 dark:text-zinc-400">
-                {ROLE_HELP[role]}
-              </p>
+                roles={isSuperAdmin ? USER_ROLES : CONFIGURABLE_ROLES}
+                onChange={setRole}
+                className="h-10 w-full rounded-xl text-sm"
+              />
             </div>
 
             {/* Password (optional) */}

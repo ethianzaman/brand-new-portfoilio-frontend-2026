@@ -236,7 +236,7 @@ export function SocialLinkForm({
         <Button
           type="submit"
           disabled={save.isPending}
-          className="flex-1 rounded-xl bg-indigo-600 hover:bg-indigo-700"
+          className="flex-1 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white"
         >
           {save.isPending && <Loader2 className="h-4 w-4 animate-spin" />}
           {save.isPending ? "Saving..." : "Save link"}

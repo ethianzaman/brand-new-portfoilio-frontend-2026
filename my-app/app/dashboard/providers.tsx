@@ -39,12 +39,7 @@ export function DashboardProviders({ children }: { children: React.ReactNode }) 
   return (
     <QueryClientProvider client={queryClient}>
       {children}
-      <Toaster
-        position="top-center"
-        richColors
-        closeButton
-        duration={3000}
-      />
+      <Toaster />
     </QueryClientProvider>
   );
 }

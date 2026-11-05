@@ -272,14 +272,6 @@ export function ProjectFormModal({ project, onSave, onCancel }: Props) {
                   id="project-image-upload"
                   className="hidden"
                   accept="image/*"
-                  // onChange={(e) => {
-                  //   const file = e.target.files?.[0];
-                  //   if (file) {
-                  //     // Creates a temporary local URL for previewing
-                  //     const localUrl = URL.createObjectURL(file);
-                  //     set("thumbnail", localUrl);
-                  //   }
-                  // }}
                   onChange={(e) => {
                     const file = e.target.files?.[0];
 

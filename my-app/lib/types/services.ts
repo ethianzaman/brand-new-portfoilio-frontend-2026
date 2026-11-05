@@ -13,6 +13,7 @@ export interface Service {
   popular?: boolean
   /** URL slug (backend-generated; optional for legacy records). */
   slug?: string
+  updatedAt?: string
   /** Per-service SEO overrides. */
   seo?: {
     metaTitle?: string

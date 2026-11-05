@@ -14,9 +14,9 @@ import {
  *
  *  Adding a new public page is ~1 line:
  *
- *      const data = await publicFetch<{ home: HomeData }>("/home", {
- *        tag: "home",
- *        fallback: { home: DEMO_HOME },
+ *      const data = await publicFetch<{ hero: HeroData }>("/hero", {
+ *        tag: "hero",
+ *        fallback: { hero: DEMO_HERO },
  *      });
  *
  *  Behaviour:

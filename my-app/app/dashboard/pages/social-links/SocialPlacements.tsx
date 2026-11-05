@@ -23,6 +23,7 @@ import { CSS } from "@dnd-kit/utilities";
 import { Loader2, Plus, Search, X } from "lucide-react";
 import { Popover } from "radix-ui";
 import { Button } from "@/components/ui/button";
+import { useCurrentUser } from "@/app/components/dashboard/useCurrentUser";
 import { SocialIcon } from "@/app/components/brand/SocialIcon";
 import {
   SOCIAL_PLACEMENTS,
@@ -45,6 +46,7 @@ function fromSettings(settings: SiteSettings): SocialPlacementMap {
 }
 
 export function SocialPlacements({ settings }: { settings: SiteSettings }) {
+  const canEdit = useCurrentUser().can("socialLinks.edit");
   const publish = usePublishSocialPlacements();
   const saved = useMemo(() => fromSettings(settings), [settings]);
   const [draft, setDraft] = useState(saved);
@@ -71,7 +73,7 @@ export function SocialPlacements({ settings }: { settings: SiteSettings }) {
         ))}
       </div>
 
-      {changedCount > 0 && (
+      {canEdit && changedCount > 0 && (
         <div
           role="status"
           className="sticky bottom-4 z-20 mx-auto flex w-full max-w-xl items-center justify-between gap-3 rounded-2xl bg-zinc-900 py-2.5 pl-5 pr-2.5 text-white shadow-xl shadow-zinc-950/20 dark:bg-zinc-800"
@@ -91,7 +93,7 @@ export function SocialPlacements({ settings }: { settings: SiteSettings }) {
             <Button
               onClick={() => publish.mutate(draft)}
               disabled={publish.isPending}
-              className="rounded-xl bg-indigo-500 hover:bg-indigo-400"
+              className="rounded-xl bg-indigo-500 hover:bg-indigo-400 text-white"
             >
               {publish.isPending && <Loader2 className="h-4 w-4 animate-spin" />}
               {publish.isPending ? "Publishing..." : "Publish"}
@@ -118,6 +120,7 @@ function SectionCard({
   socials: SiteSocial[];
   onChange: (next: string[]) => void;
 }) {
+  const canEdit = useCurrentUser().can("socialLinks.edit");
   const sensors = useSensors(
     useSensor(MouseSensor, { activationConstraint: { distance: 4 } }),
     // The delay leaves a normal swipe free to scroll the page.
@@ -174,11 +177,13 @@ function SectionCard({
           </h2>
           <p className="text-xs text-zinc-500 dark:text-zinc-400">{hint}</p>
         </div>
-        <AddLinkMenu
-          label={label}
-          available={available}
-          onAdd={(id) => onChange([...ids, id])}
-        />
+        {canEdit && (
+          <AddLinkMenu
+            label={label}
+            available={available}
+            onAdd={(id) => onChange([...ids, id])}
+          />
+        )}
       </div>
 
       {selected.length === 0 ? (
@@ -200,6 +205,7 @@ function SectionCard({
                   key={social.id}
                   social={social}
                   section={label}
+                  editable={canEdit}
                   onRemove={() =>
                     onChange(ids.filter((id) => id !== social.id))
                   }
@@ -216,10 +222,12 @@ function SectionCard({
 function SortablePill({
   social,
   section,
+  editable,
   onRemove,
 }: {
   social: SiteSocial;
   section: string;
+  editable: boolean;
   onRemove: () => void;
 }) {
   const {
@@ -229,7 +237,7 @@ function SortablePill({
     transform,
     transition,
     isDragging,
-  } = useSortable({ id: social.id });
+  } = useSortable({ id: social.id, disabled: !editable });
 
   return (
     <li
@@ -240,10 +248,17 @@ function SortablePill({
       }}
       {...attributes}
       {...listeners}
-      aria-label={`${social.label} in ${section}. Drag to reorder.`}
+      aria-label={
+        editable
+          ? `${social.label} in ${section}. Drag to reorder.`
+          : `${social.label} in ${section}`
+      }
       title={displayHref(social.href)}
       className={cn(
-        "group flex cursor-grab touch-manipulation select-none items-center gap-2 rounded-full bg-zinc-100 py-1.5 pl-3 pr-1.5 text-sm font-medium text-zinc-800 outline-none transition-colors hover:bg-zinc-200/70 focus-visible:ring-2 focus-visible:ring-indigo-500 active:cursor-grabbing dark:bg-zinc-800 dark:text-zinc-100 dark:hover:bg-zinc-700",
+        "group flex touch-manipulation select-none items-center gap-2 rounded-full bg-zinc-100 py-1.5 pl-3 pr-1.5 text-sm font-medium text-zinc-800 outline-none transition-colors focus-visible:ring-2 focus-visible:ring-indigo-500 dark:bg-zinc-800 dark:text-zinc-100",
+        editable
+          ? "cursor-grab hover:bg-zinc-200/70 active:cursor-grabbing dark:hover:bg-zinc-700"
+          : "pr-3",
         isDragging && "relative z-10 bg-white shadow-lg ring-1 ring-indigo-500/40 dark:bg-zinc-800",
       )}
     >
@@ -253,6 +268,7 @@ function SortablePill({
         className="h-4 w-4 shrink-0 text-zinc-500 dark:text-zinc-300"
       />
       <span className="max-w-40 truncate">{social.label}</span>
+      {editable && (
       <button
         type="button"
         aria-label={`Remove ${social.label} from ${section}`}
@@ -263,6 +279,7 @@ function SortablePill({
       >
         <X className="h-3 w-3" />
       </button>
+      )}
     </li>
   );
 }

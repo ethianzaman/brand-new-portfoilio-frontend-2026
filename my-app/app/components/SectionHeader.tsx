@@ -1,6 +1,7 @@
 import type { LucideIcon } from "lucide-react";
 import { SocialLinks } from "@/app/components/brand/SocialLinks";
 import Reveal from "@/app/components/motion/Reveal";
+import { PageHeading } from "@/app/components/PageHeading";
 import type { SocialPlacement } from "@/lib/socials";
 import { cn } from "@/lib/utils";
 
@@ -45,14 +46,14 @@ export function SectionHeader({
       </Reveal>
 
       <Reveal delay={100}>
-        <h1
+        <PageHeading
           className={cn(
             "text-4xl sm:text-5xl font-bold text-zinc-900 dark:text-white mb-4",
             titleClassName,
           )}
         >
           {title}
-        </h1>
+        </PageHeading>
       </Reveal>
 
       <Reveal delay={200}>

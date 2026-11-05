@@ -1,11 +1,15 @@
-import { ExternalLink, Clock, ImageIcon } from "lucide-react";
+import Link from "next/link";
+import { ArrowRight, ExternalLink, Clock, ImageIcon } from "lucide-react";
+import { resizedImageUrl } from "@/lib/images";
 import SpotlightCard from "@/app/components/motion/SpotlightCard";
-import { GithubIcon } from "../icon/brandIcons";
+import { GithubIcon } from "../icon/BrandIcons";
 import { cn } from "@/lib/utils";
 import { Project } from "@/lib/types/project";
 
 export function ProjectCard({ project }: { project: Project }) {
   const isPlaceholder = project.isPlaceholder;
+  const detailHref =
+    project.slug && !isPlaceholder ? `/projects/${project.slug}` : null;
 
   return (
     <SpotlightCard
@@ -30,18 +34,13 @@ export function ProjectCard({ project }: { project: Project }) {
         {project.thumbnail ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
-            src={project.thumbnail}
+            src={resizedImageUrl(project.thumbnail, 640)}
             alt={project.title}
+            loading="lazy"
+            decoding="async"
             className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
           />
         ) : (
-          //jokhon api theke image asbe tokhon eita use korbo, tar age placeholder image show korbe
-          //   <Image
-          //         src={project.thumbnail}
-          //         alt={project.title}
-          //         fill
-          //         className="object-cover transition-transform duration-500 group-hover:scale-105"
-          // />
           <div
             className="w-full h-full flex flex-col items-center justify-center gap-2"
             style={{ backgroundColor: `${project.color}15` }}
@@ -65,12 +64,23 @@ export function ProjectCard({ project }: { project: Project }) {
         <div
           className={cn(
             "absolute inset-0 top-1.5 z-10 rounded-b-2xl",
-            "flex items-center justify-center gap-3",
+            "flex flex-wrap content-center items-center justify-center gap-3 p-4",
             "bg-zinc-900/80 dark:bg-zinc-950/85 backdrop-blur-sm",
             "hidden lg:flex opacity-0 lg:group-hover:opacity-100",
             "transition-opacity duration-300",
           )}
         >
+          {detailHref && (
+            <Link
+              href={detailHref}
+              className="flex items-center gap-2 px-5 py-2.5 rounded-xl
+                         bg-indigo-600 text-white font-medium text-sm
+                         hover:bg-indigo-700 transition-colors"
+            >
+              View details
+              <ArrowRight className="w-4 h-4" />
+            </Link>
+          )}
           <a
             href={project.liveUrl}
             target="_blank"
@@ -107,7 +117,16 @@ export function ProjectCard({ project }: { project: Project }) {
               style={{ backgroundColor: project.color }}
             />
             <h3 className="font-bold text-base text-zinc-900 dark:text-white leading-snug">
-              {project.title}
+              {detailHref ? (
+                <Link
+                  href={detailHref}
+                  className="transition-colors hover:text-indigo-600 dark:hover:text-indigo-400"
+                >
+                  {project.title}
+                </Link>
+              ) : (
+                project.title
+              )}
             </h3>
           </div>
 
@@ -147,6 +166,15 @@ export function ProjectCard({ project }: { project: Project }) {
             className="flex items-center gap-4 pt-2
                           border-t border-zinc-100 dark:border-zinc-800"
           >
+            {detailHref && (
+              <Link
+                href={detailHref}
+                className="flex items-center gap-1.5 text-xs font-medium
+                           text-indigo-600 dark:text-indigo-400 hover:underline lg:hidden"
+              >
+                <ArrowRight className="w-3.5 h-3.5" /> Details
+              </Link>
+            )}
             <a
               href={project.liveUrl}
               target="_blank"

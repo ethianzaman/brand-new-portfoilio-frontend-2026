@@ -44,7 +44,7 @@ export function SidebarNav({
   className,
 }: NavSharedProps) {
   const pathname = usePathname();
-  const { isAdmin } = useCurrentUser();
+  const { can } = useCurrentUser();
 
   return (
     <TooltipProvider delayDuration={0}>
@@ -53,7 +53,7 @@ export function SidebarNav({
         <nav className="sidebar-scroll flex-1 space-y-6 overflow-y-auto px-3 py-4">
           {sidebarSections.map((section) => {
             const links = section.links.filter(
-              (link) => !link.adminOnly || isAdmin,
+              (link) => !link.permission || can(link.permission),
             );
             if (links.length === 0) return null;
 

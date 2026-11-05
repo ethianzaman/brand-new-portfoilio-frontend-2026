@@ -1,4 +1,6 @@
 "use client";
+
+import { toast } from "sonner";
 import { useState } from "react";
 import { useCurrentUser } from "@/app/components/dashboard/useCurrentUser";
 import {
@@ -11,12 +13,11 @@ import {
   ImageIcon,
   Code2,
   Search,
-  Check,
 } from "lucide-react";
 import { SkillCategory, Skill, SkillFormData } from "@/lib/types/skill";
 import { SkillFormModal } from "./SkillFormModal";
 import { CategoryFormModal } from "./CategoryFormModal";
-import { DeleteConfirmModal } from "../projects/DeleteConfirmModal";
+import { ConfirmDeleteModal, DeleteTarget } from "@/app/components/dashboard/ConfirmDeleteModal";
 import {
   dashboardCreateCategory,
   dashboardUpdateCategory,
@@ -24,7 +25,7 @@ import {
   dashboardCreateSkill,
   dashboardUpdateSkill,
   dashboardDeleteSkill,
-} from "@/lib/services/skill.services";
+} from "@/lib/services/skill.service";
 
 // Reuse Project type for delete modal — just needs id + title
 type DeleteTarget =
@@ -32,12 +33,12 @@ type DeleteTarget =
   | { type: "skill"; categoryId: string; name: string; title: string };
 
 export function SkillsTable({ initial }: { initial: SkillCategory[] }) {
-  const { canDelete } = useCurrentUser();
+  const { can } = useCurrentUser();
+  const canDelete = can("skills.delete");
   const [categories, setCategories] = useState<SkillCategory[]>(initial);
   const [expanded, setExpanded] = useState<Set<string>>(
     new Set(initial.map((c) => c.id)), // all open by default
   );
-  const [toast, setToast] = useState<string | null>(null);
   const [search, setSearch] = useState("");
 
   // Modal state
@@ -47,12 +48,6 @@ export function SkillsTable({ initial }: { initial: SkillCategory[] }) {
   const [editSkillCatId, setEditSkillCatId] = useState("");
   const [editCategory, setEditCategory] = useState<SkillCategory | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<DeleteTarget | null>(null);
-
-  // ── Toast ─────────────────────────────────────────────────
-  function showToast(msg: string) {
-    setToast(msg);
-    setTimeout(() => setToast(null), 3000);
-  }
 
   // ── Toggle expand ──────────────────────────────────────────
   function toggleExpand(id: string) {
@@ -100,13 +95,13 @@ export function SkillsTable({ initial }: { initial: SkillCategory[] }) {
         setCategories((prev) =>
           prev.map((c) => (c.id === updated.id ? updated : c)),
         );
-        showToast("Category updated");
+        toast.success("Category updated");
       }
     } else {
       const created = await dashboardCreateCategory(data);
       setCategories((prev) => [...prev, created]);
       setExpanded((prev) => new Set([...prev, created.id]));
-      showToast("Category created");
+      toast.success("Category created");
     }
     setShowCatForm(false);
     setEditCategory(null);
@@ -118,8 +113,6 @@ export function SkillsTable({ initial }: { initial: SkillCategory[] }) {
     data: SkillFormData,
     oldName?: string,
   ) {
-    console.log("categoryId =", categoryId);
-    console.log("data =", data);
     if (editSkill && oldName) {
       const updated = await dashboardUpdateSkill(categoryId, oldName, data);
 
@@ -132,7 +125,7 @@ export function SkillsTable({ initial }: { initial: SkillCategory[] }) {
           }),
         );
 
-        showToast("Skill updated");
+        toast.success("Skill updated");
       }
     } else {
       const targetCategoryId = data.targetCategoryId || categoryId;
@@ -144,7 +137,7 @@ export function SkillsTable({ initial }: { initial: SkillCategory[] }) {
           prev.map((c) => (c.id === updated.id ? updated : c)),
         );
 
-        showToast("Skill added");
+        toast.success("Skill added");
       }
     }
 
@@ -160,7 +153,7 @@ export function SkillsTable({ initial }: { initial: SkillCategory[] }) {
       const ok = await dashboardDeleteCategory(deleteTarget.id);
       if (ok) {
         setCategories((prev) => prev.filter((c) => c.id !== deleteTarget.id));
-        showToast("Category deleted");
+        toast.success("Category deleted");
       }
     } else {
       const ok = await dashboardDeleteSkill(
@@ -178,7 +171,7 @@ export function SkillsTable({ initial }: { initial: SkillCategory[] }) {
               : c,
           ),
         );
-        showToast("Skill deleted");
+        toast.success("Skill deleted");
       }
     }
     setDeleteTarget(null);
@@ -292,6 +285,7 @@ export function SkillsTable({ initial }: { initial: SkillCategory[] }) {
         </button>
 
         {/* Add skill */}
+        {can("skills.create") && (
         <button
           onClick={() => {
             setEditSkill(null);
@@ -306,6 +300,7 @@ export function SkillsTable({ initial }: { initial: SkillCategory[] }) {
           <Plus className="w-4 h-4" />
           Add Skill
         </button>
+        )}
       </div>
 
       {/* ── Categories accordion ── */}
@@ -350,6 +345,7 @@ export function SkillsTable({ initial }: { initial: SkillCategory[] }) {
 
               {/* Category actions */}
               <div className="flex items-center gap-1">
+                {can("skills.create") && (
                 <button
                   title="Add skill to this category"
                   onClick={() => {
@@ -364,6 +360,8 @@ export function SkillsTable({ initial }: { initial: SkillCategory[] }) {
                 >
                   <Plus className="w-4 h-4" />
                 </button>
+                )}
+                {can("skills.edit") && (
                 <button
                   title="Edit category"
                   onClick={() => {
@@ -377,6 +375,7 @@ export function SkillsTable({ initial }: { initial: SkillCategory[] }) {
                 >
                   <Pencil className="w-4 h-4" />
                 </button>
+                )}
                 {canDelete && (
                   <button
                     title="Delete category"
@@ -465,6 +464,7 @@ export function SkillsTable({ initial }: { initial: SkillCategory[] }) {
                                         opacity-100 sm:opacity-0 sm:group-hover:opacity-100
                                         transition-opacity duration-200"
                         >
+                          {can("skills.edit") && (
                           <button
                             title="Edit skill"
                             onClick={() => {
@@ -478,6 +478,7 @@ export function SkillsTable({ initial }: { initial: SkillCategory[] }) {
                           >
                             <Pencil className="w-3.5 h-3.5" />
                           </button>
+                          )}
                           {canDelete && (
                             <button
                               title="Delete skill"
@@ -520,25 +521,6 @@ export function SkillsTable({ initial }: { initial: SkillCategory[] }) {
 
       {/* ── Toast ── */}
 
-      {toast && (
-        <div
-          className="fixed top-6 left-1/2 -translate-x-1/2 z-100
-               flex items-center gap-3 px-5 py-3 rounded-2xl
-               bg-zinc-900 dark:bg-white
-               text-white dark:text-zinc-900
-               text-sm font-semibold shadow-2xl
-               animate-in fade-in slide-in-from-top-4 duration-300
-               max-w-[calc(100vw-2rem)] text-center border border-white/10 dark:border-zinc-200"
-        >
-          {/* The Tick Icon */}
-          <div className="flex items-center justify-center w-5 h-5 rounded-full bg-emerald-500/20 text-emerald-500">
-            <Check className="w-3.5 h-3.5 stroke-[3px]" />
-          </div>
-
-          <span>{toast}</span>
-        </div>
-      )}
-
       {/* ── Skill form modal ── */}
       {showSkillForm && (
         <SkillFormModal
@@ -570,11 +552,14 @@ export function SkillsTable({ initial }: { initial: SkillCategory[] }) {
       {/* ── Delete confirm ── */}
 
       {deleteTarget && (
-        <DeleteConfirmModal
-          title={deleteTarget.title}
+        <ConfirmDeleteModal
+          title="Confirm Deletion"
           onConfirm={handleDelete}
           onCancel={() => setDeleteTarget(null)}
-        />
+        >
+          Are you sure you want to delete <DeleteTarget>{deleteTarget.title}</DeleteTarget>? This
+          action cannot be undone.
+        </ConfirmDeleteModal>
       )}
     </>
   );

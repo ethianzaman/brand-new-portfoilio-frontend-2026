@@ -1,6 +1,8 @@
-import { NextResponse } from "next/server";
+import { NextResponse, type NextRequest } from "next/server";
 
-import { submitContactMessage } from "@/lib/services/message.services";
+import { clientHeaders, upstreamStatus } from "@/lib/api/internal";
+import { isSameOriginRequest } from "@/lib/auth/origin";
+import { submitContactMessage } from "@/lib/services/message.service";
 
 /**
  * POST /api/contact — public contact-form submission.
@@ -9,7 +11,14 @@ import { submitContactMessage } from "@/lib/services/message.services";
  * and Resend dispatch server-side (never in the browser bundle) while giving
  * the contact form a simple, CORS-free target.
  */
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
+  if (!isSameOriginRequest(request)) {
+    return NextResponse.json(
+      { success: false, message: "Cross-origin request rejected." },
+      { status: 403 },
+    );
+  }
+
   let payload: Record<string, unknown>;
 
   try {
@@ -46,13 +55,16 @@ export async function POST(request: Request) {
   }
 
   try {
-    const created = await submitContactMessage({
-      name,
-      email,
-      subject: typeof payload.subject === "string" ? payload.subject : "",
-      budget: typeof payload.budget === "string" ? payload.budget : "",
-      message,
-    });
+    const created = await submitContactMessage(
+      {
+        name,
+        email,
+        subject: typeof payload.subject === "string" ? payload.subject : "",
+        budget: typeof payload.budget === "string" ? payload.budget : "",
+        message,
+      },
+      clientHeaders(request),
+    );
 
     return NextResponse.json({ success: true, message: created }, { status: 201 });
   } catch (error) {
@@ -63,6 +75,9 @@ export async function POST(request: Request) {
           ? error.message
           : "Something went wrong.";
 
-    return NextResponse.json({ success: false, message }, { status: 502 });
+    return NextResponse.json(
+      { success: false, message },
+      { status: upstreamStatus(error) },
+    );
   }
 }

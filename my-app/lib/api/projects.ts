@@ -86,4 +86,22 @@ export async function getProjects(
   };
 }
 
+/**
+ * One project for its detail page, or null when no project has that address.
+ * A failed read throws, so an outage is an error page and not a false 404.
+ */
+export async function getProjectBySlug(slug: string): Promise<Project | null> {
+  const data = await publicFetch<{ project?: Project | null }>(
+    `/projects/slug/${encodeURIComponent(slug)}`,
+    {
+      tag: TAGS.projects,
+      key: `${TAGS.projects}:slug:${slug}`,
+      fallback: { project: DEMO_PROJECTS.find((p) => p.slug === slug) ?? null },
+      tolerateStatuses: [404],
+      allowEmpty: true,
+    },
+  );
+  return data?.project ?? null;
+}
+
 export type { Category, Project, ProjectsResponse };

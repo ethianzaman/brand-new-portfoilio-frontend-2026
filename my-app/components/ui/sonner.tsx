@@ -2,8 +2,16 @@
 
 import { useTheme } from "next-themes"
 import { Toaster as Sonner, type ToasterProps } from "sonner"
-import { CircleCheckIcon, InfoIcon, TriangleAlertIcon, OctagonXIcon, Loader2Icon } from "lucide-react"
+import { Check, Info, Loader2, TriangleAlert, X } from "lucide-react"
 
+const iconBase =
+  "flex size-5 items-center justify-center rounded-full"
+
+/**
+ * The one toast of the app: a pill that inverts against the page, whose icon
+ * says what happened. Errors turn red, because they need the reader to act.
+ * Every dashboard page and the login form use it.
+ */
 const Toaster = ({ ...props }: ToasterProps) => {
   const { theme = "system" } = useTheme()
 
@@ -11,38 +19,47 @@ const Toaster = ({ ...props }: ToasterProps) => {
     <Sonner
       theme={theme as ToasterProps["theme"]}
       className="toaster group"
+      position="top-center"
+      closeButton
+      duration={3000}
       icons={{
         success: (
-          <CircleCheckIcon className=" size-4" />
+          <span className={`${iconBase} bg-emerald-500/20 text-emerald-500`}>
+            <Check className="size-3.5 stroke-3" />
+          </span>
         ),
         info: (
-          <InfoIcon className="size-4" />
+          <span className={`${iconBase} bg-indigo-500/20 text-indigo-500`}>
+            <Info className="size-3.5 stroke-3" />
+          </span>
         ),
         warning: (
-          <TriangleAlertIcon className="size-4" />
+          <span className={`${iconBase} bg-amber-500/20 text-amber-500`}>
+            <TriangleAlert className="size-3.5 stroke-3" />
+          </span>
         ),
         error: (
-          <OctagonXIcon className="size-4" />
+          <span className={`${iconBase} bg-white/20 text-white`}>
+            <X className="size-3.5 stroke-3" />
+          </span>
         ),
         loading: (
-          <Loader2Icon className="size-4 animate-spin" />
+          <span className={iconBase}>
+            <Loader2 className="size-3.5 animate-spin" />
+          </span>
         ),
       }}
-      style={
-        {
-          "--normal-bg": "var(--popover)",
-          "--normal-text": "var(--popover-foreground)",
-          "--normal-border": "var(--border)",
-          "--border-radius": "var(--radius)",
-        } as React.CSSProperties
-      }
       toastOptions={{
         classNames: {
-          toast: "cn-toast",
-          error: "bg-red-600! text-white! border-red-500! dark:bg-red-700!",
-          success: "bg-green-600! text-white! border-green-500! dark:bg-green-700!",
-          title: "text-white!",
-          description: "text-white/90!",
+          toast:
+            "inset-x-0! mx-auto! w-fit! max-w-[calc(100vw-2rem)]! gap-3! rounded-2xl! border! border-white/10! bg-zinc-900! px-5! py-3! text-white! shadow-2xl! [font-family:inherit]! dark:border-zinc-200! dark:bg-white! dark:text-zinc-900! data-[type=error]:border-red-500! data-[type=error]:bg-red-600! data-[type=error]:text-white! dark:data-[type=error]:border-red-500! dark:data-[type=error]:bg-red-600! dark:data-[type=error]:text-white!",
+          title: "text-sm! font-semibold! text-inherit!",
+          description: "text-xs! text-inherit! opacity-80!",
+          icon: "m-0! size-5! shrink-0!",
+          actionButton:
+            "ml-1! rounded-lg! bg-indigo-600! px-3! py-1.5! text-xs! font-semibold! text-white! hover:bg-indigo-700!",
+          closeButton:
+            "border-zinc-200! bg-white! text-zinc-500! hover:text-zinc-900! dark:border-zinc-700! dark:bg-zinc-900! dark:text-zinc-400! dark:hover:text-white!",
         },
       }}
       {...props}
@@ -52,68 +69,3 @@ const Toaster = ({ ...props }: ToasterProps) => {
 
 export { Toaster }
 
-
-
-// "use client";
-
-// import { useTheme } from "next-themes";
-// import { Toaster as Sonner, type ToasterProps } from "sonner";
-// import {
-//   CircleCheckIcon,
-//   InfoIcon,
-//   TriangleAlertIcon,
-//   OctagonXIcon,
-//   Loader2Icon,
-// } from "lucide-react";
-
-// const Toaster = ({ ...props }: ToasterProps) => {
-//   const { theme = "system" } = useTheme();
-
-//   return (
-//     <Sonner
-//       theme={theme as ToasterProps["theme"]}
-//       position="top-center"
-//       duration={3000}
-//       closeButton={false}
-//       richColors={false}
-//       className="toaster group"
-//       icons={{
-//         success: <CircleCheckIcon className="size-4" />,
-//         info: <InfoIcon className="size-4" />,
-//         warning: <TriangleAlertIcon className="size-4" />,
-//         error: <OctagonXIcon className="size-4" />,
-//         loading: <Loader2Icon className="size-4 animate-spin" />,
-//       }}
-//       style={
-//         {
-//           "--normal-bg": "var(--popover)",
-//           "--normal-text": "var(--popover-foreground)",
-//           "--normal-border": "var(--border)",
-//           "--border-radius": "1rem",
-//         } as React.CSSProperties
-//       }
-//       toastOptions={{
-//         classNames: {
-//           toast:
-//             "rounded-2xl! border! shadow-2xl! px-5! py-3! gap-3! font-semibold! text-sm!",
-//           success:
-//             "bg-zinc-900! text-white! border-zinc-700! dark:bg-white! dark:text-zinc-900! dark:border-zinc-200!",
-//           error:
-//             "bg-red-600! text-white! border-red-500! dark:bg-red-700! dark:border-red-600!",
-//           info:
-//             "bg-zinc-900! text-white! border-zinc-700! dark:bg-white! dark:text-zinc-900! dark:border-zinc-200!",
-//           warning:
-//             "bg-amber-500! text-white! border-amber-400! dark:bg-amber-600! dark:border-amber-500!",
-//           loading:
-//             "bg-zinc-900! text-white! border-zinc-700! dark:bg-white! dark:text-zinc-900! dark:border-zinc-200!",
-//           title: "font-semibold!",
-//           description: "opacity-90!",
-//           icon: "shrink-0!",
-//         },
-//       }}
-//       {...props}
-//     />
-//   );
-// };
-
-// export { Toaster };

@@ -282,7 +282,7 @@
  */
 .site-grid {
   --site-grid-color: rgba(99, 102, 241, 0.08);
-  --site-grid-size: 30px;
+  --site-grid-size: 28px;
   --site-grid-mask: radial-gradient(
     ellipse 70% 60% at 50% 30%,
     #000 40%,

@@ -26,6 +26,7 @@ export interface Project {
   isPlaceholder?: boolean   // true = "coming soon" card
   /** URL slug (backend-generated; optional for legacy records). */
   slug?: string
+  updatedAt?: string
   /** Per-project SEO overrides. */
   seo?: {
     metaTitle?: string

@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { X, Loader2, Save, ImageIcon, Clock } from "lucide-react";
 import { BlogPost, slugify } from "@/lib/types/blog";
-import { estimateReadTime } from "@/lib/services/blog.services";
+import { estimateReadTime } from "@/lib/services/blog.service";
 import { cn } from "@/lib/utils";
 import Image from "next/image";
 import {

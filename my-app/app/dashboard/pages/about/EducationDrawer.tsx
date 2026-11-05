@@ -62,7 +62,8 @@ export function EducationDrawer({
   onEdit,
   onDelete,
 }: Props) {
-  const { canDelete } = useCurrentUser();
+  const { can } = useCurrentUser();
+  const canDelete = can("about.delete");
   const isOpen = !!education;
 
   // ✅ Close on Escape key
@@ -244,6 +245,7 @@ export function EducationDrawer({
                   Delete
                 </button>
               )}
+              {can("about.edit") && (
               <button
                 onClick={() => onEdit(education)}
                 className="flex items-center justify-center gap-2
@@ -253,6 +255,7 @@ export function EducationDrawer({
               >
                 Edit
               </button>
+              )}
             </div>
           </>
         )}

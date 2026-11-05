@@ -70,6 +70,18 @@ export interface MessageListResponse {
   unread: number;
 }
 
+/** GET /api/messages/stats */
+export interface InboxStats {
+  total: number;
+  unread: number;
+  awaitingReply: number;
+  /** The last 30 calendar days in the requested time zone, oldest first. */
+  days: { date: string; count: number }[];
+  /** Messages in the 30 days before those. */
+  previous30: number;
+  budgets: { label: string; count: number }[];
+}
+
 export interface MessageListParams {
   status?: MessageStatus | "all";
   starred?: boolean;

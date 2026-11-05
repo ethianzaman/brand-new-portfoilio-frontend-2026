@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useRef, useState, type ChangeEvent } from "react";
+import { useCurrentUser } from "@/app/components/dashboard/useCurrentUser";
 import {
   Image as ImageIcon,
   Link2,
@@ -102,6 +103,7 @@ function Segmented<T extends string>({
 
 // ── Form ─────────────────────────────────────────────────────────
 function BrandForm({ initial }: { initial: SiteSettings }) {
+  const { can } = useCurrentUser();
   const publish = usePublishSiteSettings();
 
   const [name, setName] = useState(initial.brand.name);
@@ -317,10 +319,11 @@ function BrandForm({ initial }: { initial: SiteSettings }) {
         </span>
       </div>
 
+      {can("settings.edit") && (
       <Button
         onClick={handlePublish}
         disabled={!canPublish}
-        className="w-full rounded-xl bg-indigo-600 hover:bg-indigo-700 sm:w-auto"
+        className="w-full rounded-xl bg-indigo-600 hover:bg-indigo-700 sm:w-auto text-white"
       >
         {publish.isPending ? (
           <Loader2 className="h-4 w-4 animate-spin" />
@@ -329,6 +332,7 @@ function BrandForm({ initial }: { initial: SiteSettings }) {
         )}
         {publish.isPending ? "Publishing..." : "Publish Brand"}
       </Button>
+      )}
     </div>
   );
 }

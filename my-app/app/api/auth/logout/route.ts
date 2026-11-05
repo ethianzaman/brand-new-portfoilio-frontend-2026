@@ -1,4 +1,6 @@
-import { NextResponse } from "next/server";
+import { NextResponse, type NextRequest } from "next/server";
+
+import { isSameOriginRequest } from "@/lib/auth/origin";
 
 import { apiUrl } from "@/lib/api/config";
 import { destroySession, readSessionToken } from "@/lib/session";
@@ -16,7 +18,15 @@ import { destroySession, readSessionToken } from "@/lib/session";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-async function endSession(): Promise<NextResponse> {
+export async function POST(request: NextRequest): Promise<NextResponse> {
+  // A GET handler or a cross-site POST would let any page log the admin out.
+  if (!isSameOriginRequest(request)) {
+    return NextResponse.json(
+      { success: false, message: "Cross-origin request rejected." },
+      { status: 403 },
+    );
+  }
+
   const token = await readSessionToken();
 
   if (token) {
@@ -38,13 +48,4 @@ async function endSession(): Promise<NextResponse> {
     { success: true, message: "Logged out" },
     { headers: { "Cache-Control": "no-store" } },
   );
-}
-
-export async function POST() {
-  return endSession();
-}
-
-// GET /api/auth/logout — harmless fallback (e.g. link clicks)
-export async function GET() {
-  return endSession();
 }

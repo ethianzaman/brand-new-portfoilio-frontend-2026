@@ -1,11 +1,11 @@
 import React from "react";
-import { LucideIcon, FolderKey } from "lucide-react"; // বা আপনার প্রজেক্টের যেকোনো আইকন লাইব্রেরি
+import { LucideIcon, FolderKey } from "lucide-react";
 
 interface EmptyStateProps {
   title?: string;
   description?: string;
   icon?: LucideIcon;
-  actionButton?: React.ReactNode; // অপশনাল: কোনো বাটন দিতে চাইলে (যেমন: "Add Service")
+  actionButton?: React.ReactNode;
 }
 
 export const EmptyState: React.FC<EmptyStateProps> = ({

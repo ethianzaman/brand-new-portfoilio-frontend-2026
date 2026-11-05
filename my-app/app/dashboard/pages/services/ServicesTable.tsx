@@ -1,38 +1,14 @@
 "use client";
+
+import { toast } from "sonner";
 import { useMemo, useState } from "react";
 import { keepPreviousData, useQuery, useQueryClient } from "@tanstack/react-query";
+import { ServiceIcon } from "@/app/components/services/ServiceIcon";
 import { useCurrentUser } from "@/app/components/dashboard/useCurrentUser";
-import {
-  Plus,
-  Pencil,
-  Trash2,
-  Search,
-  Star,
-  ChevronUp,
-  ChevronDown,
-  Eye,
-  EyeOff,
-  Sparkles,
-  Monitor,
-  Server,
-  Layers,
-  Database,
-  Webhook,
-  Code2,
-  Globe,
-  Smartphone,
-  Shield,
-  Zap,
-  Cloud,
-  Lock,
-  Check,
-  AlertCircle,
-  RotateCcw,
-  X,
-} from "lucide-react";
+import { Plus, Pencil, Trash2, Search, Sparkles, Layers, AlertCircle, RotateCcw, X } from "lucide-react";
 import { Service } from "@/lib/types/services";
 import { ServiceFormModal } from "./ServiceFormModal";
-import { ServiceDeleteModal } from "./ServiceDeleteModal";
+import { ConfirmDeleteModal, DeleteTarget } from "@/app/components/dashboard/ConfirmDeleteModal";
 import { ServiceDrawer } from "./ServiceDrawer";
 import {
   dashboardCreateService,
@@ -41,7 +17,7 @@ import {
   dashboardGetServices,
   dashboardGetServiceStats,
   type ServiceStats,
-} from "@/lib/services/service.services";
+} from "@/lib/services/service.service";
 import { cn } from "@/lib/utils";
 import { Pagination } from "@/app/components/dashboard/Pagination";
 import {
@@ -49,32 +25,6 @@ import {
   DASHBOARD_PAGE_SIZES,
 } from "@/lib/constants/pagination";
 import { useDebouncedValue } from "@/lib/hooks/useDebouncedValue";
-
-// ── Icon map ──────────────────────────────────────────────────
-const ICON_MAP: Record<string, React.ElementType> = {
-  Plus,
-  Pencil,
-  Trash2,
-  Search,
-  Star,
-  ChevronUp,
-  ChevronDown,
-  Eye,
-  EyeOff,
-  Sparkles,
-  Monitor,
-  Server,
-  Layers,
-  Database,
-  Webhook,
-  Code2,
-  Globe,
-  Smartphone,
-  Shield,
-  Zap,
-  Cloud,
-  Lock,
-};
 
 // ── Stats card ────────────────────────────────────────────────
 function StatCard({
@@ -129,7 +79,7 @@ function ServiceRow({
   onDelete: (s: Service) => void;
   canDelete: boolean;
 }) {
-  const Icon = ICON_MAP[service.icon] ?? Code2;
+  const { can } = useCurrentUser();
 
   return (
     <div
@@ -154,7 +104,7 @@ function ServiceRow({
                         flex items-center justify-center"
           style={{ backgroundColor: `${service.color}18` }}
         >
-          <Icon className="w-5 h-5" style={{ color: service.color }} />
+          <ServiceIcon icon={service?.icon} color={service.color} className="w-5 h-5" />
         </div>
 
         {/* Title + badges */}
@@ -209,6 +159,7 @@ function ServiceRow({
 
         {/* Actions */}
         <div className="flex items-center gap-1 shrink-0">
+          {can("services.edit") && (
           <button
             title="Edit service"
             onClick={(e) => {
@@ -222,6 +173,7 @@ function ServiceRow({
           >
             <Pencil className="w-4 h-4" />
           </button>
+          )}
           {canDelete && (
             <button
               title="Delete service"
@@ -247,7 +199,8 @@ function ServiceRow({
 const EMPTY_STATS: ServiceStats = { total: 0, popular: 0, features: 0 };
 
 export function ServicesTable() {
-  const { canDelete } = useCurrentUser();
+  const { can } = useCurrentUser();
+  const canDelete = can("services.delete");
   const queryClient = useQueryClient();
 
   const [search, setSearch] = useState("");
@@ -258,16 +211,9 @@ export function ServicesTable() {
   const [editService, setEditService] = useState<Service | null>(null);
   const [deleteService, setDeleteService] = useState<Service | null>(null);
   const [drawerService, setDrawerService] = useState<Service | null>(null);
-  const [toast, setToast] = useState<string | null>(null);
 
   // The search box stays instant; the (server-side) query waits for a pause.
   const debouncedSearch = useDebouncedValue(search);
-
-  // ── Toast ─────────────────────────────────────────────────
-  function showToast(msg: string) {
-    setToast(msg);
-    setTimeout(() => setToast(null), 3000);
-  }
 
   // ── Data ──────────────────────────────────────────────────
   // The first page + the stats are prefetched on the server and hydrated
@@ -286,7 +232,7 @@ export function ServicesTable() {
 
   const statsQuery = useQuery({
     queryKey: ["services", "stats"],
-    queryFn: dashboardGetServiceStats,
+    queryFn: () => dashboardGetServiceStats(),
   });
 
   const services = listQuery.data?.services ?? [];
@@ -310,20 +256,20 @@ export function ServicesTable() {
         // ── UPDATE ──
         const updated = await dashboardUpdateService(editService.id, data);
         if (updated) {
-          showToast("Service updated successfully");
+          toast.success("Service updated successfully");
           queryClient.invalidateQueries({ queryKey: ["services"] });
         }
       } else {
         // ── CREATE ──
         const created = await dashboardCreateService(data);
         if (created) {
-          showToast("Service created successfully");
+          toast.success("Service created successfully");
           queryClient.invalidateQueries({ queryKey: ["services"] });
         }
       }
     } catch (err) {
       console.error("handleSave error:", err);
-      showToast("Something went wrong. Please try again.");
+      toast.error("Something went wrong. Please try again.");
     } finally {
       setShowForm(false);
       setEditService(null);
@@ -336,7 +282,7 @@ export function ServicesTable() {
     const ok = await dashboardDeleteService(deleteService.id);
 
     if (ok) {
-      showToast("Deleted");
+      toast.success("Deleted");
       queryClient.invalidateQueries({ queryKey: ["services"] });
     }
     setDeleteService(null);
@@ -428,6 +374,7 @@ export function ServicesTable() {
         </div>
 
         {/* Add service */}
+        {can("services.create") && (
         <button
           onClick={() => {
             setEditService(null);
@@ -441,6 +388,7 @@ export function ServicesTable() {
           <Plus className="w-4 h-4" />
           Add Service
         </button>
+        )}
       </div>
 
       {/* ── Service rows ── */}
@@ -536,26 +484,6 @@ export function ServicesTable() {
       />
 
 
-      {/* ── Toast ── */}
-      {toast && (
-        <div
-          className="fixed top-6 left-1/2 -translate-x-1/2 z-100
-               flex items-center gap-3 px-5 py-3 rounded-2xl
-               bg-zinc-900 dark:bg-white
-               text-white dark:text-zinc-900
-               text-sm font-semibold shadow-2xl
-               animate-in fade-in slide-in-from-top-4 duration-300
-               max-w-[calc(100vw-2rem)] text-center border border-white/10 dark:border-zinc-200"
-        >
-          {/* The Tick Icon */}
-          <div className="flex items-center justify-center w-5 h-5 rounded-full bg-emerald-500/20 text-emerald-500">
-            <Check className="w-3.5 h-3.5 stroke-[3px]" />
-          </div>
-
-          <span>{toast}</span>
-        </div>
-      )}
-
       {/* ── Service detail drawer ── */}
       <ServiceDrawer
         service={drawerService}
@@ -579,11 +507,14 @@ export function ServicesTable() {
 
       {/* ── Delete modal ── */}
       {deleteService && (
-        <ServiceDeleteModal
-          service={deleteService}
+        <ConfirmDeleteModal
+          title="Delete service?"
           onConfirm={handleDelete}
           onCancel={() => setDeleteService(null)}
-        />
+        >
+          You are about to delete <DeleteTarget>{deleteService.title}</DeleteTarget>. This will
+          remove it from your public services page. This action cannot be undone.
+        </ConfirmDeleteModal>
       )}
     </>
   );

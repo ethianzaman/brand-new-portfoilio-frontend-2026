@@ -44,3 +44,22 @@ export async function getServices(): Promise<Service[]> {
   );
   return normalizeServices(data);
 }
+
+/**
+ * One service for its detail page, or null when none has that address.
+ * A failed read throws, so an outage is an error page and not a false 404.
+ */
+export async function getServiceBySlug(slug: string): Promise<Service | null> {
+  const data = await publicFetch<{ service?: ApiService | null }>(
+    `/services/slug/${encodeURIComponent(slug)}`,
+    {
+      tag: TAGS.services,
+      key: `${TAGS.services}:slug:${slug}`,
+      fallback: { service: DEMO_SERVICES.find((s) => s.slug === slug) ?? null },
+      tolerateStatuses: [404],
+      allowEmpty: true,
+    },
+  );
+  const service = data?.service;
+  return service ? { ...service, id: service._id ?? service.id } : null;
+}

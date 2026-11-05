@@ -20,7 +20,7 @@ import {
   FacebookIcon,
   InstagramIcon,
   TiktokIcon,
-} from "@/app/components/icon/brandIcons";
+} from "@/app/components/icon/BrandIcons";
 import { socialLogoUrl } from "@/lib/socials";
 import { cn } from "@/lib/utils";
 

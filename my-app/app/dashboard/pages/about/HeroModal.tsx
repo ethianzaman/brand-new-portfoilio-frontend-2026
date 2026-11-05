@@ -9,6 +9,7 @@ import {
   Trash2,
   Upload,
 } from "lucide-react";
+import { toast } from "sonner";
 import { AboutHero } from "@/lib/types/about";
 import { inputCls, labelCls } from "@/components/ui/shared";
 import { cn } from "@/lib/utils";
@@ -21,7 +22,10 @@ import Image from "next/image";
 // }
 type HeroSaveData = Partial<AboutHero> & {
   imageFile?: File | null;
+  resumeFile?: File | null;
 };
+
+const MAX_RESUME_BYTES = 3 * 1024 * 1024;
 
 interface Props {
   hero: AboutHero;
@@ -40,6 +44,9 @@ export function HeroModal({ hero, onSave, onCancel }: Props) {
   const [location, setLocation] = useState(hero.location);
   const [experience, setExperience] = useState(hero.experience);
   const [resumeUrl, setResumeUrl] = useState(hero.resumeUrl);
+  const [resumeMode, setResumeMode] = useState<"url" | "upload">("url");
+  const [resumeFile, setResumeFile] = useState<File | null>(null);
+  const resumeInputRef = useRef<HTMLInputElement>(null);
   const [image, setImage] = useState(hero.image ?? "");
   const [imageError, setImageError] = useState(false);
   const [bio, setBio] = useState<string[]>(hero.bio.length ? hero.bio : [""]);
@@ -48,19 +55,6 @@ export function HeroModal({ hero, onSave, onCancel }: Props) {
   const [uploadMode, setUploadMode] = useState<"url" | "upload">(
     hero.image?.startsWith("data:") ? "upload" : "url",
   );
-
-  // FIX: Handle Image Upload (Converts file to Base64 string)
-  // const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-  //   const file = e.target.files?.[0];
-  //   if (file) {
-  //     const reader = new FileReader();
-  //     reader.onloadend = () => {
-  //       setImage(reader.result as string); // This string will be saved to MongoDB
-  //       setImageError(false);
-  //     };
-  //     reader.readAsDataURL(file);
-  //   }
-  // };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -75,6 +69,22 @@ export function HeroModal({ hero, onSave, onCancel }: Props) {
     setImage(previewUrl);
 
     setImageError(false);
+  };
+
+  const handleResumeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+
+    if (file.type !== "application/pdf") {
+      toast.error("The resume must be a PDF file.");
+      return;
+    }
+    if (file.size > MAX_RESUME_BYTES) {
+      toast.error("The resume must be 3 MB or smaller.");
+      return;
+    }
+    setResumeFile(file);
   };
 
   // Biography array helpers
@@ -104,6 +114,7 @@ export function HeroModal({ hero, onSave, onCancel }: Props) {
       bio: bio.filter((p) => p.trim()), 
       image: uploadMode === "url" ? image : undefined,
       imageFile: selectedFile,
+      resumeFile: resumeMode === "upload" ? resumeFile : null,
     });
     setLoading(false);
   }
@@ -311,14 +322,61 @@ export function HeroModal({ hero, onSave, onCancel }: Props) {
             </div>
 
             <div className="flex flex-col gap-1.5">
-              <label className={labelCls}>Resume / CV URL</label>
-              <input
-                type="text"
-                value={resumeUrl}
-                onChange={(e) => setResumeUrl(e.target.value)}
-                placeholder="/resume.pdf"
-                className={inputCls}
-              />
+              <div className="flex items-center justify-between">
+                <label className={labelCls}>Resume / CV</label>
+                <div className="flex rounded-lg bg-zinc-100 p-0.5 dark:bg-zinc-800">
+                  {(["url", "upload"] as const).map((mode) => (
+                    <button
+                      key={mode}
+                      type="button"
+                      aria-pressed={resumeMode === mode}
+                      onClick={() => setResumeMode(mode)}
+                      className={cn(
+                        "rounded-md px-3 py-1 text-[10px] font-bold uppercase transition-all",
+                        resumeMode === mode
+                          ? "bg-white text-indigo-600 shadow-sm dark:bg-zinc-700"
+                          : "text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300",
+                      )}
+                    >
+                      {mode}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              {resumeMode === "url" ? (
+                <input
+                  type="text"
+                  value={resumeUrl}
+                  onChange={(e) => setResumeUrl(e.target.value)}
+                  placeholder="https://.../resume.pdf"
+                  aria-label="Resume link"
+                  className={inputCls}
+                />
+              ) : (
+                <>
+                  <button
+                    type="button"
+                    onClick={() => resumeInputRef.current?.click()}
+                    className="group flex w-full items-center justify-center gap-2 rounded-xl border-2 border-dashed border-zinc-200 px-4 py-2.5 transition-colors hover:border-indigo-400 dark:border-zinc-700"
+                  >
+                    <Upload className="h-4 w-4 text-zinc-400 group-hover:text-indigo-500" />
+                    <span className="truncate text-xs font-medium text-zinc-500 group-hover:text-indigo-500">
+                      {resumeFile ? resumeFile.name : "Choose a PDF (up to 3 MB)"}
+                    </span>
+                  </button>
+                  <input
+                    ref={resumeInputRef}
+                    type="file"
+                    accept="application/pdf"
+                    onChange={handleResumeChange}
+                    aria-label="Upload resume"
+                    className="hidden"
+                  />
+                  <p className="text-[11px] text-zinc-400 dark:text-zinc-500">
+                    Saving replaces the current resume, and the old file is deleted.
+                  </p>
+                </>
+              )}
             </div>
 
             {/* Bio section - Remains same */}

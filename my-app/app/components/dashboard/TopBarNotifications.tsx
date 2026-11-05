@@ -99,9 +99,11 @@ export function TopBarNotifications({
   }, [open]);
 
   // A navigation elsewhere should not leave the panel hanging open.
-  useEffect(() => {
-    close();
-  }, [pathname, close]);
+  const [seenPath, setSeenPath] = useState(pathname);
+  if (seenPath !== pathname) {
+    setSeenPath(pathname);
+    setOpen(false);
+  }
 
   async function handleMarkAllRead() {
     if (marking) return;

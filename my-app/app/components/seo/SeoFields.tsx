@@ -4,6 +4,7 @@ import { ChevronDown, Search } from "lucide-react";
 import { useState } from "react";
 import { inputCls, labelCls } from "@/components/ui/shared";
 import { cn } from "@/lib/utils";
+import { OgImageField } from "./OgImageField";
 
 export interface SeoFormValue {
   metaTitle: string;
@@ -147,16 +148,11 @@ export function SeoFields({
 
           {/* OG image + canonical */}
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <div className="flex flex-col gap-1.5">
-              <label className={labelCls}>OG Image URL</label>
-              <input
-                type="text"
-                placeholder="https://... or /images/og.png"
-                value={value.ogImage}
-                onChange={(e) => set("ogImage", e.target.value)}
-                className={inputCls}
-              />
-            </div>
+            <OgImageField
+              label="OG Image"
+              value={value.ogImage}
+              onChange={(next) => set("ogImage", next)}
+            />
             <div className="flex flex-col gap-1.5">
               <label className={labelCls}>Canonical URL</label>
               <input

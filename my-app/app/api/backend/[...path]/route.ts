@@ -68,6 +68,9 @@ async function forward(
       headers,
       body: body.byteLength ? body : undefined,
       cache: "no-store",
+      // Reads stop with the browser, so a closed tab frees its live stream.
+      // Writes always finish.
+      signal: method === "GET" ? request.signal : undefined,
     });
   } catch {
     return Response.json(
@@ -79,6 +82,11 @@ async function forward(
   const responseHeaders = new Headers();
   const upstreamType = upstream.headers.get("content-type");
   if (upstreamType) responseHeaders.set("Content-Type", upstreamType);
+  if (upstreamType?.startsWith("text/event-stream")) {
+    // Compression and reverse proxies would otherwise hold events back.
+    responseHeaders.set("Cache-Control", "no-cache, no-transform");
+    responseHeaders.set("X-Accel-Buffering", "no");
+  }
 
   return new Response(upstream.body, {
     status: upstream.status,

@@ -85,7 +85,8 @@ function DetailRow({
 }
 
 export function ValueDrawer({ value, onClose, onEdit, onDelete }: Props) {
-  const { canDelete } = useCurrentUser();
+  const { can } = useCurrentUser();
+  const canDelete = can("about.delete");
   const isOpen = !!value;
   const Icon = ICON_MAP[value?.icon ?? ""] ?? Code2;
 
@@ -231,6 +232,7 @@ export function ValueDrawer({ value, onClose, onEdit, onDelete }: Props) {
                   Delete
                 </button>
               )}
+              {can("about.edit") && (
               <button
                 onClick={() => onEdit(value)}
                 className="flex items-center justify-center gap-2
@@ -240,6 +242,7 @@ export function ValueDrawer({ value, onClose, onEdit, onDelete }: Props) {
               >
                 Edit
               </button>
+              )}
             </div>
           </>
         )}

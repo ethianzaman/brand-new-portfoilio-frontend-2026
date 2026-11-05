@@ -11,6 +11,7 @@ import { verifyCurrentUser } from "@/lib/services/current-user.service";
 import { BrandMark } from "../components/brand/BrandMark";
 import { ThemeToggle } from "../components/ThemeToggle";
 import { LoginForm } from "./LoginForm";
+import { Toaster } from "@/components/ui/sonner";
 
 // ─────────────────────────────────────────────────────────────────────────
 //  LOGIN PAGE — PUBLIC.
@@ -60,8 +61,8 @@ const HIGHLIGHTS = [
   },
   {
     icon: BarChart3,
-    title: "Insights & analytics",
-    copy: "Watch visits, clicks and content performance at a glance.",
+    title: "Inbox & content insights",
+    copy: "See your messages, drafts and portfolio health at a glance.",
   },
 ] as const;
 
@@ -93,6 +94,9 @@ export default async function LoginPage({
 
   return (
     <div className="relative min-h-screen w-full overflow-hidden bg-zinc-950">
+      {/* Outside the animated card: a transform there would pull toasts off centre. */}
+      <Toaster duration={4000} />
+
       {/* ══════════════ FULL-PAGE BACKGROUND ARTWORK ══════════════
           The photo is the background of the WHOLE page, not just the left
           column. Each panel then lays its own scrim on top of it, so the

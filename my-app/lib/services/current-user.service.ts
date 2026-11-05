@@ -29,6 +29,7 @@ interface MeBody {
     role?: string;
     isActive?: boolean;
     createdAt?: string;
+    permissions?: string[];
   };
   message?: string;
 }
@@ -148,6 +149,7 @@ export async function verifyCurrentUser(): Promise<SessionVerification> {
       role,
       isActive: user.isActive !== false,
       createdAt: user.createdAt,
+      permissions: Array.isArray(user.permissions) ? user.permissions : [],
     },
   };
 }

@@ -59,7 +59,8 @@ function DetailRow({
 }
 
 export function BlogDrawer({ post, onClose, onEdit, onDelete }: Props) {
-  const { canDelete } = useCurrentUser();
+  const { can } = useCurrentUser();
+  const canDelete = can("blog.delete");
   const isOpen = !!post;
 
   // ✅ Close on Escape key
@@ -298,6 +299,7 @@ export function BlogDrawer({ post, onClose, onEdit, onDelete }: Props) {
                   View Post
                 </a>
               )}
+              {can("blog.edit") && (
               <button
                 onClick={() => onEdit(post)}
                 className="flex items-center justify-center gap-2
@@ -307,6 +309,7 @@ export function BlogDrawer({ post, onClose, onEdit, onDelete }: Props) {
               >
                 Edit
               </button>
+              )}
             </div>
           </>
         )}

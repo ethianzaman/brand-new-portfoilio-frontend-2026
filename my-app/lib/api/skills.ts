@@ -25,7 +25,7 @@ function normalizeSkills(data: SkillsApiResponse): SkillCategory[] {
 /**
  * PUBLIC skills — rendered by both `/skills` and the home page.
  *
- * Same one-file pattern as `lib/api/home.ts`. Keeping this off
+ * Same one-file pattern as `lib/api/hero.ts`. Keeping this off
  * `cache: "no-store"` is what allows the home page to stay statically
  * prerendered instead of degrading to a per-request render.
  */

@@ -24,12 +24,8 @@ const labelCls = 'text-xs font-semibold text-zinc-600 dark:text-zinc-400 upperca
 export function CategoryFormModal({ category, onSave, onCancel }: Props) {
   const isEdit = !!category
   const [loading, setLoading] = useState(false)
-//   const [label,   setLabel]   = useState('')
-//   const [id,      setId]      = useState('')
   const [label, setLabel] = useState(category?.label ?? '');
   const [id, setId] = useState(category?.id ?? '');
-
-
 
   // Auto-generate id from label
   function handleLabelChange(val: string) {

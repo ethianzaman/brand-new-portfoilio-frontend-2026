@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { usePathname, useRouter } from "next/navigation";
 
 import { buildLoginUrl } from "@/lib/auth/return-url";
@@ -67,6 +67,8 @@ export function useCurrentUser() {
     // shares the same key, so it still results in a single request.
     queryKey: ["me", pathname],
     queryFn: fetchCurrentUser,
+    // Keeps the sidebar and buttons in place while the new path re-verifies.
+    placeholderData: keepPreviousData,
     // Identity should never be cached for long — role changes must show up
     // on the next navigation/refresh.
     staleTime: 15_000,
@@ -75,6 +77,7 @@ export function useCurrentUser() {
   });
 
   const user = query.data ?? null;
+  const permissions = user?.permissions ?? [];
   const error = query.error;
 
   // 401 → the session is gone: send the user back to the login page and
@@ -90,12 +93,9 @@ export function useCurrentUser() {
     isLoading: query.isLoading,
     isError: query.isError,
     errorMessage: error instanceof Error ? error.message : null,
-    /** Admin-only: user management, and everything managers can do. */
-    isAdmin: user?.role === "admin",
-    /** Delete is allowed for admin + manager (never for editor). */
-    canDelete: user?.role === "admin" || user?.role === "manager",
-    /** Every authenticated role may create/edit content. */
-    canEdit: Boolean(user),
+    /** Whether this account may do something, such as can("blog.delete"). */
+    can: (permission: string) => permissions.includes(permission),
+    isSuperAdmin: user?.role === "super_admin",
     isReady: query.isSuccess,
   };
 }
