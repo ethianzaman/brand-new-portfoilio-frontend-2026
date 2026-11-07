@@ -16,7 +16,6 @@ import {
   Star,
   ExternalLink,
   ImageIcon,
-  Filter,
   ChevronUp,
   ChevronDown,
   AlertCircle,
@@ -35,6 +34,7 @@ import {
   dashboardGetProjectsAll,
   dashboardGetProjectStats,
   type ProjectStats,
+  type ProjectMedia,
 } from "@/lib/services/project.service";
 import { cn } from "@/lib/utils";
 import Image from "next/image";
@@ -44,9 +44,9 @@ import {
   DASHBOARD_PAGE_SIZES,
 } from "@/lib/constants/pagination";
 import { useDebouncedValue } from "@/lib/hooks/useDebouncedValue";
+import { CategoryFilter } from "@/app/components/CategoryFilter";
 
-const CATEGORIES: { value: Category | "all"; label: string }[] = [
-  { value: "all", label: "All" },
+const CATEGORIES: { value: Category; label: string }[] = [
   { value: "frontend", label: "Frontend" },
   { value: "fullstack", label: "Full-Stack" },
   { value: "backend", label: "Backend" },
@@ -161,21 +161,22 @@ export function ProjectsTable() {
     );
   };
 
-  async function handleSave(data: Omit<Project, "id">, image?: File) {
-    if (editProject) {
-      const updated = await dashboardUpdateProject(editProject.id, data, image);
-
-      if (updated) {
+  async function handleSave(data: Omit<Project, "id">, media: ProjectMedia) {
+    try {
+      if (editProject) {
+        await dashboardUpdateProject(editProject.id, data, media);
         toast.success("Project updated successfully");
-        queryClient.invalidateQueries({ queryKey: ["projects"] });
+      } else {
+        await dashboardCreateProject(data, media);
+        toast.success("Project created successfully");
       }
-    } else {
-      await dashboardCreateProject(data, image);
-
-      toast.success("Project created successfully");
-      queryClient.invalidateQueries({ queryKey: ["projects"] });
+    } catch (error) {
+      // The form stays open, so nothing typed is lost.
+      toast.error(error instanceof Error ? error.message : "Could not save the project");
+      return;
     }
 
+    queryClient.invalidateQueries({ queryKey: ["projects"] });
     setShowForm(false);
     setEditProject(null);
   }
@@ -226,7 +227,7 @@ export function ProjectsTable() {
             placeholder="Search projects or tags..."
             value={search}
             onChange={(e) => handleSearchChange(e.target.value)}
-            className="w-full pl-10 pr-4 py-2.5 rounded-xl text-sm
+            className="w-full h-11 pl-10 pr-4 rounded-xl text-sm
                        bg-white dark:bg-zinc-900
                        border border-zinc-200 dark:border-zinc-700
                        text-zinc-900 dark:text-white
@@ -249,24 +250,15 @@ export function ProjectsTable() {
           )}
         </div>
 
-        {/* Category pills */}
-        <div className="flex items-center gap-2 flex-wrap">
-          <Filter className="w-4 h-4 text-zinc-400 shrink-0" />
-          {CATEGORIES.map((c) => (
-            <button
-              key={c.value}
-              onClick={() => handleCategoryChange(c.value)}
-              className={cn(
-                "px-3 py-2 rounded-xl text-xs font-medium transition-all",
-                category === c.value
-                  ? "bg-indigo-600 text-white shadow-sm"
-                  : "bg-white dark:bg-zinc-900 text-zinc-600 dark:text-zinc-400 border border-zinc-200 dark:border-zinc-700 hover:border-indigo-300 dark:hover:border-indigo-700",
-              )}
-            >
-              {c.label}
-            </button>
-          ))}
-        </div>
+        {/* All + category */}
+        <CategoryFilter
+          options={CATEGORIES.map((c) => ({
+            ...c,
+            count: stats.byCategory[c.value] ?? 0,
+          }))}
+          value={category === "all" ? null : category}
+          onChange={(value) => handleCategoryChange((value ?? "all") as Category | "all")}
+        />
 
         {/* Add project */}
         {can("projects.create") && (
@@ -275,7 +267,7 @@ export function ProjectsTable() {
             setEditProject(null);
             setShowForm(true);
           }}
-          className="flex items-center gap-2 px-4 py-2.5 rounded-xl
+          className="flex h-11 items-center gap-2 px-4 rounded-xl
                      bg-indigo-600 hover:bg-indigo-700
                      text-white text-sm font-medium
                      transition-colors shrink-0"

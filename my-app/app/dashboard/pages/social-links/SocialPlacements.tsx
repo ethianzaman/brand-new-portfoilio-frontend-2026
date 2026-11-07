@@ -3,12 +3,7 @@
 import { useMemo, useState } from "react";
 import {
   DndContext,
-  KeyboardSensor,
-  MouseSensor,
-  TouchSensor,
   closestCenter,
-  useSensor,
-  useSensors,
   type Announcements,
   type DragEndEvent,
 } from "@dnd-kit/core";
@@ -16,10 +11,10 @@ import {
   SortableContext,
   arrayMove,
   rectSortingStrategy,
-  sortableKeyboardCoordinates,
   useSortable,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
+import { DRAGGABLE_CLASS, notDraggable, useDragSensors } from "@/app/components/dashboard/dragSensors";
 import { Loader2, Plus, Search, X } from "lucide-react";
 import { Popover } from "radix-ui";
 import { Button } from "@/components/ui/button";
@@ -121,16 +116,7 @@ function SectionCard({
   onChange: (next: string[]) => void;
 }) {
   const canEdit = useCurrentUser().can("socialLinks.edit");
-  const sensors = useSensors(
-    useSensor(MouseSensor, { activationConstraint: { distance: 4 } }),
-    // The delay leaves a normal swipe free to scroll the page.
-    useSensor(TouchSensor, {
-      activationConstraint: { delay: 200, tolerance: 6 },
-    }),
-    useSensor(KeyboardSensor, {
-      coordinateGetter: sortableKeyboardCoordinates,
-    }),
-  );
+  const sensors = useDragSensors();
 
   const byId = useMemo(
     () => new Map(socials.map((social) => [social.id, social])),
@@ -255,9 +241,9 @@ function SortablePill({
       }
       title={displayHref(social.href)}
       className={cn(
-        "group flex touch-manipulation select-none items-center gap-2 rounded-full bg-zinc-100 py-1.5 pl-3 pr-1.5 text-sm font-medium text-zinc-800 outline-none transition-colors focus-visible:ring-2 focus-visible:ring-indigo-500 dark:bg-zinc-800 dark:text-zinc-100",
+        "group flex items-center gap-2 rounded-full bg-zinc-100 py-1.5 pl-3 pr-1.5 text-sm font-medium text-zinc-800 outline-none transition-colors focus-visible:ring-2 focus-visible:ring-indigo-500 dark:bg-zinc-800 dark:text-zinc-100",
         editable
-          ? "cursor-grab hover:bg-zinc-200/70 active:cursor-grabbing dark:hover:bg-zinc-700"
+          ? cn("cursor-grab hover:bg-zinc-200/70 active:cursor-grabbing dark:hover:bg-zinc-700", DRAGGABLE_CLASS)
           : "pr-3",
         isDragging && "relative z-10 bg-white shadow-lg ring-1 ring-indigo-500/40 dark:bg-zinc-800",
       )}
@@ -273,8 +259,7 @@ function SortablePill({
         type="button"
         aria-label={`Remove ${social.label} from ${section}`}
         onClick={onRemove}
-        onMouseDown={(e) => e.stopPropagation()}
-        onTouchStart={(e) => e.stopPropagation()}
+        {...notDraggable}
         className="grid h-5 w-5 shrink-0 cursor-pointer place-items-center rounded-full text-zinc-400 transition-colors hover:bg-zinc-300 hover:text-zinc-800 dark:hover:bg-zinc-600 dark:hover:text-white"
       >
         <X className="h-3 w-3" />

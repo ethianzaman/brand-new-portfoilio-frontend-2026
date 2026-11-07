@@ -3,22 +3,17 @@
 import { useState } from "react";
 import {
   DndContext,
-  KeyboardSensor,
-  MouseSensor,
-  TouchSensor,
   closestCenter,
-  useSensor,
-  useSensors,
   type DragEndEvent,
 } from "@dnd-kit/core";
 import {
   SortableContext,
   arrayMove,
   rectSortingStrategy,
-  sortableKeyboardCoordinates,
   useSortable,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
+import { DRAGGABLE_CLASS, notDraggable, useDragSensors } from "@/app/components/dashboard/dragSensors";
 import { useQuery } from "@tanstack/react-query";
 import { Check, ListChecks, Loader2, Pencil, Plus, X } from "lucide-react";
 import { Popover } from "radix-ui";
@@ -204,16 +199,7 @@ function OptionList({
   showServicePicker: boolean;
 }) {
   const [draft, setDraft] = useState("");
-  const sensors = useSensors(
-    useSensor(MouseSensor, { activationConstraint: { distance: 4 } }),
-    // The delay leaves a normal swipe free to scroll the page.
-    useSensor(TouchSensor, {
-      activationConstraint: { delay: 200, tolerance: 6 },
-    }),
-    useSensor(KeyboardSensor, {
-      coordinateGetter: sortableKeyboardCoordinates,
-    }),
-  );
+  const sensors = useDragSensors();
 
   function handleDragEnd({ active, over }: DragEndEvent) {
     if (!over || active.id === over.id) return;
@@ -351,8 +337,7 @@ function OptionPill({
   }
 
   const stopDrag = {
-    onMouseDown: (e: React.MouseEvent) => e.stopPropagation(),
-    onTouchStart: (e: React.TouchEvent) => e.stopPropagation(),
+    ...notDraggable,
   };
 
   if (editing) {
@@ -399,7 +384,8 @@ function OptionPill({
       {...listeners}
       aria-label={`${item.text}. Drag to reorder.`}
       className={cn(
-        "group flex h-8 max-w-full cursor-grab touch-manipulation select-none items-center gap-0.5 rounded-full bg-white pl-3 pr-1 text-sm font-medium text-zinc-800 shadow-sm outline-none ring-1 ring-zinc-950/5 transition-shadow hover:shadow focus-visible:ring-2 focus-visible:ring-indigo-500 active:cursor-grabbing dark:bg-zinc-900 dark:text-zinc-100 dark:ring-white/10",
+        DRAGGABLE_CLASS,
+        "group flex h-8 max-w-full cursor-grab items-center gap-0.5 rounded-full bg-white pl-3 pr-1 text-sm font-medium text-zinc-800 shadow-sm outline-none ring-1 ring-zinc-950/5 transition-shadow hover:shadow focus-visible:ring-2 focus-visible:ring-indigo-500 active:cursor-grabbing dark:bg-zinc-900 dark:text-zinc-100 dark:ring-white/10",
         isDragging && "relative z-10 shadow-lg ring-indigo-500/40",
       )}
     >

@@ -1,5 +1,7 @@
+import Link from "next/link";
 import type { ComponentType } from "react";
 import {
+  ArrowRight,
   Code2,
   Database,
   Globe,
@@ -8,6 +10,7 @@ import {
   Smartphone,
   Layers,
 } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import Reveal from "@/app/components/motion/Reveal";
 import SpotlightCard from "@/app/components/motion/SpotlightCard";
 import type { SkillCategory } from "@/lib/types/skill";
@@ -38,7 +41,7 @@ export default function HeroSkills({
       {allSkillNames.length > 0 && (
         <div
           aria-hidden
-          className="overflow-hidden border-b border-zinc-100 py-5 mask-[linear-gradient(to_right,transparent,#000_12%,#000_88%,transparent)] dark:border-zinc-800"
+          className="overflow-hidden border-zinc-100 py-5 mask-[linear-gradient(to_right,transparent,#000_12%,#000_88%,transparent)] dark:border-zinc-800"
         >
           <div className="animate-marquee flex w-max gap-3">
             {[...allSkillNames, ...allSkillNames].map((name, i) => (
@@ -96,6 +99,20 @@ export default function HeroSkills({
             );
           })}
         </div>
+
+        <Reveal className="mt-10 flex justify-center">
+          <Button
+            asChild
+            size="lg"
+            variant="outline"
+            className="gap-2 bg-white/60 backdrop-blur transition-all hover:-translate-y-0.5 dark:bg-zinc-900/60"
+          >
+            <Link href="/skills">
+              View all skills
+              <ArrowRight className="h-4 w-4 transition-transform group-hover/button:translate-x-1" />
+            </Link>
+          </Button>
+        </Reveal>
       </section>
     </>
   );

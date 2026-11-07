@@ -41,6 +41,8 @@ export function SkillCard({ name, icon }: Props) {
             alt={name}
             width={48}
             height={48}
+            // An icon can be a link from any site, and it is too small to need resizing.
+            unoptimized
             className="object-contain w-full h-full"
             onError={() => setImgError(true)}   // ✅ safe inside client component
           />

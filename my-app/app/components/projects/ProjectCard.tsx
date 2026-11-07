@@ -1,20 +1,28 @@
 import Link from "next/link";
-import { ArrowRight, ExternalLink, Clock, ImageIcon } from "lucide-react";
-import { resizedImageUrl } from "@/lib/images";
+import type { ReactNode } from "react";
+import { Clock, ExternalLink, Eye, ImageIcon } from "lucide-react";
+import { ImageCarousel } from "@/app/components/media/ImageCarousel";
 import SpotlightCard from "@/app/components/motion/SpotlightCard";
 import { GithubIcon } from "../icon/BrandIcons";
 import { cn } from "@/lib/utils";
+import { CATEGORIES } from "@/lib/constants/project";
 import { Project } from "@/lib/types/project";
+
+const isWebLink = (url?: string) => Boolean(url && /^https?:\/\//i.test(url));
 
 export function ProjectCard({ project }: { project: Project }) {
   const isPlaceholder = project.isPlaceholder;
   const detailHref =
     project.slug && !isPlaceholder ? `/projects/${project.slug}` : null;
+  const category = CATEGORIES.find((c) => c.value === project.category)?.label;
+  const hasLive = isWebLink(project.liveUrl);
+  const hasGithub = isWebLink(project.githubUrl);
+  const images = [project.thumbnail, ...(project.images ?? [])].filter((src): src is string => Boolean(src));
 
   return (
     <SpotlightCard
       className={cn(
-        "rounded-2xl",
+        "h-full rounded-2xl",
         "bg-white dark:bg-zinc-900",
         "border border-zinc-200 dark:border-zinc-800",
         "transition-all duration-300",
@@ -22,6 +30,7 @@ export function ProjectCard({ project }: { project: Project }) {
           "hover:-translate-y-1 hover:shadow-xl hover:shadow-zinc-200/60 dark:hover:shadow-zinc-900/60",
         isPlaceholder && "opacity-60",
       )}
+      contentClassName="flex h-full flex-col"
     >
       {/* Color top bar */}
       <div
@@ -31,14 +40,13 @@ export function ProjectCard({ project }: { project: Project }) {
 
       {/* ── Image area ── */}
       <div className="relative w-full aspect-video overflow-hidden bg-zinc-100 dark:bg-zinc-800">
-        {project.thumbnail ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={resizedImageUrl(project.thumbnail, 640)}
+        {images.length > 0 ? (
+          <ImageCarousel
+            images={images}
             alt={project.title}
-            loading="lazy"
-            decoding="async"
-            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+            width={640}
+            hoverScope=".spotlight-card"
+            imageClassName="group-hover:scale-105 [transition:opacity_700ms_ease-in-out,transform_500ms]"
           />
         ) : (
           <div
@@ -59,54 +67,6 @@ export function ProjectCard({ project }: { project: Project }) {
         )}
       </div>
 
-      {/* Hover overlay — only on real projects */}
-      {!isPlaceholder && (
-        <div
-          className={cn(
-            "absolute inset-0 top-1.5 z-10 rounded-b-2xl",
-            "flex flex-wrap content-center items-center justify-center gap-3 p-4",
-            "bg-zinc-900/80 dark:bg-zinc-950/85 backdrop-blur-sm",
-            "hidden lg:flex opacity-0 lg:group-hover:opacity-100",
-            "transition-opacity duration-300",
-          )}
-        >
-          {detailHref && (
-            <Link
-              href={detailHref}
-              className="flex items-center gap-2 px-5 py-2.5 rounded-xl
-                         bg-indigo-600 text-white font-medium text-sm
-                         hover:bg-indigo-700 transition-colors"
-            >
-              View details
-              <ArrowRight className="w-4 h-4" />
-            </Link>
-          )}
-          <a
-            href={project.liveUrl}
-            target="_blank"
-            rel="noreferrer"
-            className="flex items-center gap-2 px-5 py-2.5 rounded-xl
-                       bg-white text-zinc-900 font-medium text-sm
-                       hover:bg-zinc-100 transition-colors"
-          >
-            <ExternalLink className="w-4 h-4" />
-            Live Demo
-          </a>
-
-          <a
-            href={project.githubUrl}
-            target="_blank"
-            rel="noreferrer"
-            className="flex items-center gap-2 px-5 py-2.5 rounded-xl
-                       bg-zinc-800 text-white font-medium text-sm
-                       hover:bg-zinc-700 transition-colors"
-          >
-            <GithubIcon className="w-4 h-4" />
-            GitHub
-          </a>
-        </div>
-      )}
-
       {/* Card body */}
       <div className="flex flex-col flex-1 p-6 gap-4">
         {/* Title row */}
@@ -118,9 +78,11 @@ export function ProjectCard({ project }: { project: Project }) {
             />
             <h3 className="font-bold text-base text-zinc-900 dark:text-white leading-snug">
               {detailHref ? (
+                // Stretched over the whole card, so a click anywhere opens the
+                // details. The action buttons sit above it.
                 <Link
                   href={detailHref}
-                  className="transition-colors hover:text-indigo-600 dark:hover:text-indigo-400"
+                  className="transition-colors after:absolute after:inset-0 after:z-10 group-hover:text-indigo-600 focus-visible:outline-none dark:group-hover:text-indigo-400"
                 >
                   {project.title}
                 </Link>
@@ -142,7 +104,10 @@ export function ProjectCard({ project }: { project: Project }) {
           )}
         </div>
 
-        <p className="text-sm text-zinc-500 dark:text-zinc-400 leading-relaxed flex-1">
+        {/* Long descriptions end in "…"; the project page shows all of it. */}
+        <p
+          className="flex-1 line-clamp-3 text-sm leading-relaxed text-zinc-500 dark:text-zinc-400"
+        >
           {project.description}
         </p>
 
@@ -160,43 +125,80 @@ export function ProjectCard({ project }: { project: Project }) {
           ))}
         </div>
 
-        {/* Mobile links — always visible on touch devices */}
         {!isPlaceholder && (
-          <div
-            className="flex items-center gap-4 pt-2
-                          border-t border-zinc-100 dark:border-zinc-800"
-          >
-            {detailHref && (
-              <Link
-                href={detailHref}
-                className="flex items-center gap-1.5 text-xs font-medium
-                           text-indigo-600 dark:text-indigo-400 hover:underline lg:hidden"
-              >
-                <ArrowRight className="w-3.5 h-3.5" /> Details
-              </Link>
-            )}
-            <a
-              href={project.liveUrl}
-              target="_blank"
-              rel="noreferrer"
-              className="flex items-center gap-1.5 text-xs font-medium
-                         text-indigo-600 dark:text-indigo-400 hover:underline"
-            >
-              <ExternalLink className="w-3.5 h-3.5" /> Live
-            </a>
+          <div className="flex items-center justify-between gap-3 pt-3 border-t border-zinc-100 dark:border-zinc-800">
+            <span className="text-xs font-medium text-zinc-400 dark:text-zinc-500">
+              {[category, project.year].filter(Boolean).join(" · ")}
+            </span>
 
-            <a
-              href={project.githubUrl}
-              target="_blank"
-              rel="noreferrer"
-              className="flex items-center gap-1.5 text-xs font-medium
-                         text-zinc-500 dark:text-zinc-400 hover:underline"
-            >
-              <GithubIcon className="w-3.5 h-3.5" /> GitHub
-            </a>
+            <div className="flex items-center gap-2">
+              {detailHref && (
+                <IconAction href={detailHref} label="View details">
+                  <Eye className="h-4 w-4" />
+                </IconAction>
+              )}
+              {hasGithub && (
+                <IconAction href={project.githubUrl} label="GitHub" external>
+                  <GithubIcon className="h-4 w-4" />
+                </IconAction>
+              )}
+              {hasLive && (
+                <IconAction href={project.liveUrl} label="Live Demo" external>
+                  <ExternalLink className="h-4 w-4" />
+                </IconAction>
+              )}
+            </div>
           </div>
         )}
       </div>
     </SpotlightCard>
+  );
+}
+
+/** An icon button whose name shows above it on hover or keyboard focus. */
+function IconAction({
+  href,
+  label,
+  external,
+  children,
+}: {
+  href: string;
+  label: string;
+  external?: boolean;
+  children: ReactNode;
+}) {
+  const className = cn(
+    "group/action relative z-20 grid h-9 w-9 place-items-center rounded-xl border transition-all duration-200",
+    "border-zinc-200 bg-white text-zinc-500 hover:-translate-y-0.5 hover:border-indigo-300 hover:bg-indigo-50 hover:text-indigo-600",
+    "dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-400 dark:hover:border-indigo-700 dark:hover:bg-indigo-950 dark:hover:text-indigo-400",
+    "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500",
+  );
+  const tooltip = (
+    <span
+      aria-hidden
+      className={cn(
+        "pointer-events-none absolute bottom-full left-1/2 mb-2 -translate-x-1/2 translate-y-1 whitespace-nowrap",
+        "rounded-md bg-zinc-900 px-2 py-1 text-[11px] font-semibold text-white opacity-0 shadow-lg transition-all duration-150",
+        "group-hover/action:translate-y-0 group-hover/action:opacity-100 group-focus-visible/action:translate-y-0 group-focus-visible/action:opacity-100",
+        "dark:bg-white dark:text-zinc-900",
+      )}
+    >
+      {label}
+    </span>
+  );
+
+  if (external) {
+    return (
+      <a href={href} target="_blank" rel="noreferrer" aria-label={label} className={className}>
+        {children}
+        {tooltip}
+      </a>
+    );
+  }
+  return (
+    <Link href={href} aria-label={label} className={className}>
+      {children}
+      {tooltip}
+    </Link>
   );
 }
