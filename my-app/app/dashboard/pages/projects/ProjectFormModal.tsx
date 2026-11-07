@@ -1,9 +1,12 @@
 "use client";
 import { useState } from "react";
-import { X, Loader2, Save, ImageIcon } from "lucide-react";
-import { Project, Category } from "@/lib/types/project";
+import { X, Loader2, Save } from "lucide-react";
+import { Project, Category, PROJECT_STATUS_LABELS, type ProjectStatus } from "@/lib/types/project";
+import { CaseStudyFields, type CaseStudyValue } from "./CaseStudyFields";
 import { cn } from "@/lib/utils";
-import Image from "next/image";
+import { itemsFromUrls, type ImageItem } from "@/lib/media";
+import type { ProjectMedia } from "@/lib/services/project.service";
+import { ImageListField } from "@/app/components/dashboard/ImageListField";
 import {
   SeoFields,
   EMPTY_SEO_FORM,
@@ -33,22 +36,23 @@ const COLORS = [
   "#84cc16",
 ];
 
-type FormData = Omit<Project, "id" | "tags" | "thumbnail"> & {
+/** The thumbnail plus three more; matches the API. */
+const MAX_CARD_IMAGES = 4;
+
+type FormData = Omit<Project, "id" | "tags" | "thumbnail" | "images" | keyof CaseStudyValue> & {
   title: string;
   description: string;
   category: Category;
   tags: string;
   liveUrl: string;
   githubUrl: string;
-  thumbnail: string;
   color: string;
   featured: boolean;
 };
 
 interface Props {
   project?: Project | null; // null = create, Project = edit
-  // onSave: (data: Omit<Project, "id">) => Promise<void>;
-  onSave: (data: Omit<Project, "id">, image?: File) => Promise<void>;
+  onSave: (data: Omit<Project, "id">, media: ProjectMedia) => Promise<void>;
   onCancel: () => void;
 }
 
@@ -68,7 +72,20 @@ const labelCls =
 export function ProjectFormModal({ project, onSave, onCancel }: Props) {
   const isEdit = !!project;
   const [loading, setLoading] = useState(false);
-  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [cardImages, setCardImages] = useState<ImageItem[]>(() =>
+    itemsFromUrls([project?.thumbnail, ...(project?.images ?? [])]),
+  );
+  const [caseStudy, setCaseStudy] = useState<CaseStudyValue>({
+    goal: project?.goal ?? "",
+    features: (project?.features ?? []).join("\n"),
+    approach: project?.approach ?? "",
+    challenges: project?.challenges ?? "",
+    outcome: project?.outcome ?? "",
+    role: project?.role ?? "",
+    year: project?.year ?? "",
+    status: (project?.status ?? "") as ProjectStatus,
+    gallery: itemsFromUrls(project?.gallery ?? []),
+  });
   const [seo, setSeo] = useState<SeoFormValue>(
     project ? toSeoFormValue(project.seo) : EMPTY_SEO_FORM,
   );
@@ -79,7 +96,6 @@ export function ProjectFormModal({ project, onSave, onCancel }: Props) {
     tags: project?.tags.join(", ") ?? "",
     liveUrl: project?.liveUrl ?? "",
     githubUrl: project?.githubUrl ?? "",
-    thumbnail: project?.thumbnail ?? "",
     color: project?.color ?? "#6366f1",
     featured: project?.featured ?? false,
   });
@@ -93,20 +109,22 @@ export function ProjectFormModal({ project, onSave, onCancel }: Props) {
     e.preventDefault();
     setLoading(true);
 
+    const { gallery, ...story } = caseStudy;
     const payload: Omit<Project, "id"> = {
       ...form,
-      // Convert string back to Array for the Backend/Project type
       tags: form.tags
         .split(",")
         .map((t) => t.trim())
         .filter(Boolean),
-      // Ensure empty strings are handled as undefined if optional
-      thumbnail: form.thumbnail.trim() || undefined,
       seo: fromSeoFormValue(seo),
+      ...story,
+      features: story.features
+        .split("\n")
+        .map((line) => line.trim())
+        .filter(Boolean),
     };
 
-    // await onSave(payload);
-    await onSave(payload, imageFile ?? undefined);
+    await onSave(payload, { cardImages, gallery });
     setLoading(false);
   }
 
@@ -253,64 +271,24 @@ export function ProjectFormModal({ project, onSave, onCancel }: Props) {
               </div>
             </div>
 
-            {/* Thumbnail */}
-            {/* Thumbnail */}
-            <div className="flex flex-col gap-1.5">
-              <label className={labelCls}>Thumbnail URL</label>
-              <div className="flex gap-3 items-start">
-                <input
-                  type="text"
-                  placeholder="https://... or /images/project.png"
-                  value={form.thumbnail}
-                  onChange={(e) => set("thumbnail", e.target.value)}
-                  className={cn(inputCls, "flex-1")}
-                />
+            {/* Card images: the first is the thumbnail */}
+            <ImageListField
+              id="project-card-images"
+              label="Card images"
+              hint="The first one is the main image. Two or more play as a slideshow on the card and at the top of the project page."
+              items={cardImages}
+              onChange={setCardImages}
+              max={MAX_CARD_IMAGES}
+              firstIsMain
+              allowLinks
+            />
 
-                {/* 1. Hidden file input */}
-                <input
-                  type="file"
-                  id="project-image-upload"
-                  className="hidden"
-                  accept="image/*"
-                  onChange={(e) => {
-                    const file = e.target.files?.[0];
-
-                    if (!file) return;
-
-                    setImageFile(file);
-
-                    set("thumbnail", URL.createObjectURL(file));
-                  }}
-                />
-
-                {/* 2. Changed div to label + added htmlFor */}
-                <label
-                  htmlFor="project-image-upload"
-                  className="w-12 h-12 rounded-xl overflow-hidden shrink-0
-                 border border-zinc-200 dark:border-zinc-700
-                 bg-zinc-100 dark:bg-zinc-800
-                 flex items-center justify-center
-                 cursor-pointer hover:border-indigo-500 hover:bg-zinc-200 
-                 dark:hover:bg-zinc-700 transition-all"
-                >
-                  {form.thumbnail ? (
-                    <Image
-                      src={form.thumbnail}
-                      alt="preview"
-                      width={48} // Required for next/image
-                      height={48} // Required for next/image
-                      className="w-full h-full object-cover"
-                      unoptimized // 2. Crucial: allows any URL/Blob without config errors
-                    />
-                  ) : (
-                    <ImageIcon className="w-5 h-5 text-zinc-400" />
-                  )}
-                </label>
-              </div>
-              <p className="text-xs text-zinc-400">
-                Paste a URL or click the icon to upload an image.
-              </p>
-            </div>
+            {/* Case study for the detail page */}
+            <CaseStudyFields
+              value={caseStudy}
+              onChange={setCaseStudy}
+              statusLabels={PROJECT_STATUS_LABELS}
+            />
 
             {/* SEO overrides */}
             <SeoFields value={seo} onChange={setSeo} />

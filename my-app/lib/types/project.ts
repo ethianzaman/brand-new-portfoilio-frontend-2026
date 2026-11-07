@@ -12,10 +12,21 @@ export type Category =
   | 'devops'    
   | 'ai'        
 
+export type ProjectStatus = '' | 'live' | 'in-progress' | 'archived'
+
+export const PROJECT_STATUS_LABELS: Record<Exclude<ProjectStatus, ''>, string> = {
+  live: 'Live',
+  'in-progress': 'In progress',
+  archived: 'Archived',
+}
+
 export interface Project {
   id: string
   title: string
+  /** Main image: first on the card and at the top of the project page. */
   thumbnail?: string
+  /** More card images after the thumbnail, shown as a slideshow. */
+  images?: string[]
   description: string
   category: Category
   tags: string[]
@@ -24,6 +35,18 @@ export interface Project {
   color: string
   featured?: boolean
   isPlaceholder?: boolean   // true = "coming soon" card
+  // Case study for the detail page. Older projects may not have these.
+  goal?: string
+  features?: string[]
+  /** How it's built. */
+  approach?: string
+  challenges?: string
+  outcome?: string
+  role?: string
+  year?: string
+  status?: ProjectStatus
+  /** Screenshots, in order. */
+  gallery?: string[]
   /** URL slug (backend-generated; optional for legacy records). */
   slug?: string
   updatedAt?: string

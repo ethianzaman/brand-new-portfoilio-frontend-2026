@@ -1,6 +1,7 @@
 import { dashboardApiUrl } from "@/lib/api/config";
 import { DEMO_PROJECTS } from "@/lib/data/projects.demo";
 import { buildQuery } from "@/lib/services/pagination";
+import { appendImageList, type ImageItem } from "@/lib/media";
 import {
   Project,
   ProjectsParams,
@@ -9,6 +10,25 @@ import {
 } from "@/lib/types/project";
 
 const API_BASE_URL = `${dashboardApiUrl()}/projects`;
+
+const CASE_STUDY_TEXT = ["goal", "approach", "challenges", "outcome", "role", "year", "status"] as const;
+
+/** Card images (the first is the thumbnail) and case study screenshots, in order. */
+export interface ProjectMedia {
+  cardImages: ImageItem[];
+  gallery: ImageItem[];
+}
+
+/**
+ * Sent on every save, empty included, so clearing a field in the form clears
+ * it on the site. Image lists go in the order the form shows them.
+ */
+function appendCaseStudyAndMedia(formData: FormData, data: Partial<Project>, media: ProjectMedia) {
+  for (const field of CASE_STUDY_TEXT) formData.append(field, data[field] ?? "");
+  formData.append("features", JSON.stringify(data.features ?? []));
+  appendImageList(formData, "cardImages", media.cardImages);
+  appendImageList(formData, "gallery", media.gallery);
+}
 
 // ── Internal: base fetch (used when API is ready) ─────────────────
 async function fetchFromApi<T>(
@@ -89,7 +109,7 @@ export async function dashboardGetProject(id: string): Promise<Project | null> {
 
 export async function dashboardCreateProject(
   data: Omit<Project, "id">,
-  image?: File,
+  media: ProjectMedia,
 ): Promise<Project> {
   const formData = new FormData();
 
@@ -109,9 +129,7 @@ export async function dashboardCreateProject(
     formData.append("seo", JSON.stringify(data.seo));
   }
 
-  if (image) {
-    formData.append("image", image);
-  }
+  appendCaseStudyAndMedia(formData, data, media);
 
   const response = await fetch(`${API_BASE_URL}/create`, {
     method: "POST",
@@ -119,7 +137,8 @@ export async function dashboardCreateProject(
   });
 
   if (!response.ok) {
-    throw new Error("Failed to create project");
+    const body = await response.json().catch(() => ({}));
+    throw new Error(body.message || "Failed to create project");
   }
 
   const json = await response.json();
@@ -130,7 +149,7 @@ export async function dashboardCreateProject(
 export async function dashboardUpdateProject(
   id: string,
   data: Partial<Omit<Project, "id">>,
-  image?: File,
+  media: ProjectMedia,
 ): Promise<Project> {
   const formData = new FormData();
 
@@ -155,9 +174,7 @@ export async function dashboardUpdateProject(
     formData.append("seo", JSON.stringify(data.seo));
   }
 
-  if (image) {
-    formData.append("image", image);
-  }
+  appendCaseStudyAndMedia(formData, data, media);
 
   const response = await fetch(`${API_BASE_URL}/${id}`, {
     method: "PUT",
@@ -165,7 +182,8 @@ export async function dashboardUpdateProject(
   });
 
   if (!response.ok) {
-    throw new Error("Failed to update project");
+    const body = await response.json().catch(() => ({}));
+    throw new Error(body.message || "Failed to update project");
   }
 
   const json = await response.json();

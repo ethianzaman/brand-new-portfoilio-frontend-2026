@@ -54,14 +54,20 @@ export interface CategoryOption {
   count?: number;
 }
 
-/** An "All" button and a category dropdown, driven by the URL. */
+/**
+ * An "All" button and a category dropdown. Driven by the URL unless `onChange`
+ * is given, which keeps the choice in the caller's own state instead.
+ */
 export function CategoryFilter({
   options,
   value,
+  onChange = setCategoryParam,
   className,
 }: {
   options: CategoryOption[];
   value: string | null;
+  /** Gets the chosen category, or null for All. */
+  onChange?: (category: string | null) => void;
   className?: string;
 }) {
   return (
@@ -70,7 +76,7 @@ export function CategoryFilter({
         type="button"
         aria-pressed={value === null}
         onClick={() => {
-          if (value !== null) setCategoryParam(null);
+          if (value !== null) onChange(null);
         }}
         className={cn(
           "h-11 shrink-0 rounded-xl border px-5 text-sm font-medium transition-colors",
@@ -83,7 +89,7 @@ export function CategoryFilter({
         All
       </button>
 
-      <Select.Root value={value ?? ""} onValueChange={setCategoryParam}>
+      <Select.Root value={value ?? ""} onValueChange={onChange}>
         <Select.Trigger
           aria-label="Filter by category"
           className={cn(
